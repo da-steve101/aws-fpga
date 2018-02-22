@@ -13,7 +13,7 @@
 // implied. See the License for the specific language governing permissions and
 // limitations under the License.
 
-module cl_hello_world 
+module cl_hello_world
 
 (
    `include "cl_ports.vh" // Fixed port definition
@@ -25,7 +25,6 @@ module cl_hello_world
 `include "cl_hello_world_defines.vh" // CL Defines for cl_hello_world
 
 logic rst_main_n_sync;
-
 
 //--------------------------------------------0
 // Start with Tie-Off of Unused Interfaces
@@ -39,8 +38,9 @@ logic rst_main_n_sync;
 `include "unused_flr_template.inc"
 `include "unused_ddr_a_b_d_template.inc"
 `include "unused_ddr_c_template.inc"
-`include "unused_pcim_template.inc"
-`include "unused_dma_pcis_template.inc"
+// use pcim and dma pcis
+// `include "unused_pcim_template.inc"
+// `include "unused_dma_pcis_template.inc"
 `include "unused_cl_sda_template.inc"
 `include "unused_sh_bar1_template.inc"
 `include "unused_apppf_irq_template.inc"
@@ -51,11 +51,6 @@ logic rst_main_n_sync;
   logic        arvalid_q;
   logic [31:0] araddr_q;
   logic [31:0] hello_world_q_byte_swapped;
-  logic [15:0] vled_q;
-  logic [15:0] pre_cl_sh_status_vled;
-  logic [15:0] sh_cl_status_vdip_q;
-  logic [15:0] sh_cl_status_vdip_q2;
-  logic [31:0] hello_world_q;
 
 //-------------------------------------------------
 // ID Values (cl_hello_world_defines.vh)
@@ -63,6 +58,14 @@ logic rst_main_n_sync;
   assign cl_sh_id0[31:0] = `CL_SH_ID0;
   assign cl_sh_id1[31:0] = `CL_SH_ID1;
 
+// 512b input bus
+   axi_bus_t sh_cl_dma_pcis_bus();
+
+// 512b output bus
+   axi_bus_t cl_sh_pcim_bus();
+
+   logic       clk;
+   assign clk = clk_main_a0;
 //-------------------------------------------------
 // Reset Synchronization
 //-------------------------------------------------
@@ -84,28 +87,28 @@ always_ff @(negedge rst_main_n or posedge clk_main_a0)
 // PCIe OCL AXI-L (SH to CL) Timing Flops
 //-------------------------------------------------
 
-  // Write address                                                                                                              
+  // Write address
   logic        sh_ocl_awvalid_q;
   logic [31:0] sh_ocl_awaddr_q;
   logic        ocl_sh_awready_q;
-                                                                                                                              
-  // Write data                                                                                                                
+
+  // Write data
   logic        sh_ocl_wvalid_q;
   logic [31:0] sh_ocl_wdata_q;
   logic [ 3:0] sh_ocl_wstrb_q;
   logic        ocl_sh_wready_q;
-                                                                                                                              
-  // Write response                                                                                                            
+
+  // Write response
   logic        ocl_sh_bvalid_q;
   logic [ 1:0] ocl_sh_bresp_q;
   logic        sh_ocl_bready_q;
-                                                                                                                              
-  // Read address                                                                                                              
+
+  // Read address
   logic        sh_ocl_arvalid_q;
   logic [31:0] sh_ocl_araddr_q;
   logic        ocl_sh_arready_q;
-                                                                                                                              
-  // Read data/response                                                                                                        
+
+  // Read data/response
   logic        ocl_sh_rvalid_q;
   logic [31:0] ocl_sh_rdata_q;
   logic [ 1:0] ocl_sh_rresp_q;
@@ -218,10 +221,10 @@ assign wready  =  wr_active && wvalid;
 
 // Write Response
 always_ff @(posedge clk_main_a0)
-  if (!rst_main_n_sync) 
+  if (!rst_main_n_sync)
     bvalid <= 0;
   else
-    bvalid <=  bvalid &&  bready           ? 1'b0  : 
+    bvalid <=  bvalid &&  bready           ? 1'b0  :
                          ~bvalid && wready ? 1'b1  :
                                              bvalid;
 assign bresp = 0;
@@ -253,12 +256,11 @@ always_ff @(posedge clk_main_a0)
       rdata  <= 0;
       rresp  <= 0;
    end
-   else if (arvalid_q) 
+   else if (arvalid_q)
    begin
       rvalid <= 1;
-      rdata  <= (araddr_q == `HELLO_WORLD_REG_ADDR) ? hello_world_q_byte_swapped[31:0]:
-                (araddr_q == `VLED_REG_ADDR       ) ? {16'b0,vled_q[15:0]            }:
-                                                      `UNIMPLEMENTED_REG_VALUE        ;
+      rdata  <= (araddr_q == `HELLO_WORLD_REG_ADDR) ? hello_world_q:
+                (araddr_q == `VLED_REG_ADDR       ) ? 32'b0 : `UNIMPLEMENTED_REG_VALUE;
       rresp  <= 0;
    end
 
@@ -271,48 +273,12 @@ always_ff @(posedge clk_main_a0)
    if (!rst_main_n_sync) begin                    // Reset
       hello_world_q[31:0] <= 32'h0000_0000;
    end
-   else if (wready & (wr_addr == `HELLO_WORLD_REG_ADDR)) begin  
+   else if (wready & (wr_addr == `HELLO_WORLD_REG_ADDR)) begin
       hello_world_q[31:0] <= wdata[31:0];
    end
    else begin                                // Hold Value
       hello_world_q[31:0] <= hello_world_q[31:0];
    end
-
-assign hello_world_q_byte_swapped[31:0] = {hello_world_q[7:0],   hello_world_q[15:8],
-                                           hello_world_q[23:16], hello_world_q[31:24]};
-
-//-------------------------------------------------
-// Virtual LED Register
-//-------------------------------------------------
-// Flop/synchronize interface signals
-always_ff @(posedge clk_main_a0)
-   if (!rst_main_n_sync) begin                    // Reset
-      sh_cl_status_vdip_q[15:0]  <= 16'h0000;
-      sh_cl_status_vdip_q2[15:0] <= 16'h0000;
-      cl_sh_status_vled[15:0]    <= 16'h0000;
-   end
-   else begin
-      sh_cl_status_vdip_q[15:0]  <= sh_cl_status_vdip[15:0];
-      sh_cl_status_vdip_q2[15:0] <= sh_cl_status_vdip_q[15:0];
-      cl_sh_status_vled[15:0]    <= pre_cl_sh_status_vled[15:0];
-   end
-
-// The register contains 16 read-only bits corresponding to 16 LED's.
-// For this example, the virtual LED register shadows the hello_world
-// register.
-// The same LED values can be read from the CL to Shell interface
-// by using the linux FPGA tool: $ fpga-get-virtual-led -S 0
-
-always_ff @(posedge clk_main_a0)
-   if (!rst_main_n_sync) begin                    // Reset
-      vled_q[15:0] <= 16'h0000;
-   end
-   else begin
-      vled_q[15:0] <= hello_world_q[15:0];
-   end
-
-// The Virtual LED outputs will be masked with the Virtual DIP switches.
-assign pre_cl_sh_status_vled[15:0] = vled_q[15:0] & sh_cl_status_vdip_q2[15:0];
 
 //-------------------------------------------
 // Tie-Off Unused Global Signals
@@ -321,149 +287,216 @@ assign pre_cl_sh_status_vled[15:0] = vled_q[15:0] & sh_cl_status_vdip_q2[15:0];
   assign cl_sh_status0[31:0] = 32'h0;
   assign cl_sh_status1[31:0] = 32'h0;
 
-//-----------------------------------------------
-// Debug bridge, used if need Virtual JTAG
-//-----------------------------------------------
-`ifndef DISABLE_VJTAG_DEBUG
+// buffer the output AXI
+axi_register_slice PCI_AXI4_REG_SLC
+(
+ .aclk           (aclk),
+ .aresetn        (aresetn),
 
-// Flop for timing global clock counter
-logic[63:0] sh_cl_glcount0_q;
+ .s_axi_awid     ({7'b0, cl_sh_pcim_bus.awid[8:0]}),
+ .s_axi_awaddr   (cl_sh_pcim_bus.awaddr),
+ .s_axi_awlen    (cl_sh_pcim_bus.awlen),
+ .s_axi_awsize   (3'h6),
+ .s_axi_awvalid  (cl_sh_pcim_bus.awvalid),
+ .s_axi_awready  (cl_sh_pcim_bus.awready),
+ .s_axi_wdata    (cl_sh_pcim_bus.wdata),
+ .s_axi_wstrb    (cl_sh_pcim_bus.wstrb),
+ .s_axi_wlast    (cl_sh_pcim_bus.wlast),
+ .s_axi_wvalid   (cl_sh_pcim_bus.wvalid),
+ .s_axi_wready   (cl_sh_pcim_bus.wready),
+ .s_axi_bid      (cl_sh_pcim_bus.bid),
+ .s_axi_bresp    (cl_sh_pcim_bus.bresp),
+ .s_axi_bvalid   (cl_sh_pcim_bus.bvalid),
+ .s_axi_bready   (cl_sh_pcim_bus.bready),
+ .s_axi_arid     ({7'b0, cl_sh_pcim_bus.arid[8:0]}),
+ .s_axi_araddr   (cl_sh_pcim_bus.araddr),
+ .s_axi_arlen    (cl_sh_pcim_bus.arlen),
+ .s_axi_arsize   (3'h6),
+ .s_axi_arvalid  (cl_sh_pcim_bus.arvalid),
+ .s_axi_arready  (cl_sh_pcim_bus.arready),
+ .s_axi_rid      (cl_sh_pcim_bus.rid),
+ .s_axi_rdata    (cl_sh_pcim_bus.rdata),
+ .s_axi_rresp    (cl_sh_pcim_bus.rresp),
+ .s_axi_rlast    (cl_sh_pcim_bus.rlast),
+ .s_axi_rvalid   (cl_sh_pcim_bus.rvalid),
+ .s_axi_rready   (cl_sh_pcim_bus.rready),
 
-always_ff @(posedge clk_main_a0)
-   if (!rst_main_n_sync)
-      sh_cl_glcount0_q <= 0;
-   else
-      sh_cl_glcount0_q <= sh_cl_glcount0;
+ .m_axi_awid     (cl_sh_pcim_awid),
+ .m_axi_awaddr   (cl_sh_pcim_awaddr),
+ .m_axi_awlen    (cl_sh_pcim_awlen),
+ .m_axi_awsize   (cl_sh_pcim_awsize),
+ .m_axi_awvalid  (cl_sh_pcim_awvalid),
+ .m_axi_awready  (cl_sh_pcim_awready),
+ .m_axi_wdata    (cl_sh_pcim_wdata),
+ .m_axi_wstrb    (cl_sh_pcim_wstrb),
+ .m_axi_wlast    (cl_sh_pcim_wlast),
+ .m_axi_wvalid   (cl_sh_pcim_wvalid),
+ .m_axi_wready   (cl_sh_pcim_wready),
+ .m_axi_bid      (cl_sh_pcim_bid),
+ .m_axi_bresp    (cl_sh_pcim_bresp),
+ .m_axi_bvalid   (cl_sh_pcim_bvalid),
+ .m_axi_bready   (cl_sh_pcim_bready),
+ .m_axi_arid     (cl_sh_pcim_arid),
+ .m_axi_araddr   (cl_sh_pcim_araddr),
+ .m_axi_arlen    (cl_sh_pcim_arlen),
+ .m_axi_arsize   (cl_sh_pcim_arsize),
+ .m_axi_arvalid  (cl_sh_pcim_arvalid),
+ .m_axi_arready  (cl_sh_pcim_arready),
+ .m_axi_rid      (cl_sh_pcim_rid),
+ .m_axi_rdata    (cl_sh_pcim_rdata),
+ .m_axi_rresp    (cl_sh_pcim_rresp),
+ .m_axi_rlast    (cl_sh_pcim_rlast),
+ .m_axi_rvalid   (cl_sh_pcim_rvalid),
+ .m_axi_rready   (cl_sh_pcim_rready)
+);
 
+// buffer the input AXI
+axi_register_slice PCI_AXL_REG_SLC
+(
+ .aclk          (aclk),
+ .aresetn       (slr0_sync_aresetn),
 
-// Integrated Logic Analyzers (ILA)
-   ila_0 CL_ILA_0 (
-                   .clk    (clk_main_a0),
-                   .probe0 (sh_ocl_awvalid_q),
-                   .probe1 (sh_ocl_awaddr_q ),
-                   .probe2 (ocl_sh_awready_q),
-                   .probe3 (sh_ocl_arvalid_q),
-                   .probe4 (sh_ocl_araddr_q ),
-                   .probe5 (ocl_sh_arready_q)
-                   );
+ .s_axi_awid    (sh_cl_dma_pcis_awid),
+ .s_axi_awaddr  (sh_cl_dma_pcis_awaddr),
+ .s_axi_awlen   (sh_cl_dma_pcis_awlen),
+ .s_axi_awvalid (sh_cl_dma_pcis_awvalid),
+ .s_axi_awsize  (sh_cl_dma_pcis_awsize),
+ .s_axi_awready (sh_cl_dma_pcis_awready),
+ .s_axi_wdata   (sh_cl_dma_pcis_wdata),
+ .s_axi_wstrb   (sh_cl_dma_pcis_wstrb),
+ .s_axi_wlast   (sh_cl_dma_pcis_wlast),
+ .s_axi_wvalid  (sh_cl_dma_pcis_wvalid),
+ .s_axi_wready  (sh_cl_dma_pcis_wready),
+ .s_axi_bid     (sh_cl_dma_pcis_bid),
+ .s_axi_bresp   (sh_cl_dma_pcis_bresp),
+ .s_axi_bvalid  (sh_cl_dma_pcis_bvalid),
+ .s_axi_bready  (sh_cl_dma_pcis_bready),
+ .s_axi_arid    (sh_cl_dma_pcis_arid),
+ .s_axi_araddr  (sh_cl_dma_pcis_araddr),
+ .s_axi_arlen   (sh_cl_dma_pcis_arlen),
+ .s_axi_arvalid (sh_cl_dma_pcis_arvalid),
+ .s_axi_arsize  (sh_cl_dma_pcis_arsize),
+ .s_axi_arready (sh_cl_dma_pcis_arready),
+ .s_axi_rid     (sh_cl_dma_pcis_rid),
+ .s_axi_rdata   (sh_cl_dma_pcis_rdata),
+ .s_axi_rresp   (sh_cl_dma_pcis_rresp),
+ .s_axi_rlast   (sh_cl_dma_pcis_rlast),
+ .s_axi_rvalid  (sh_cl_dma_pcis_rvalid),
+ .s_axi_rready  (sh_cl_dma_pcis_rready),
 
-   ila_0 CL_ILA_1 (
-                   .clk    (clk_main_a0),
-                   .probe0 (ocl_sh_bvalid_q),
-                   .probe1 (sh_cl_glcount0_q),
-                   .probe2 (sh_ocl_bready_q),
-                   .probe3 (ocl_sh_rvalid_q),
-                   .probe4 ({32'b0,ocl_sh_rdata_q[31:0]}),
-                   .probe5 (sh_ocl_rready_q)
-                   );
+ .m_axi_awid    (sh_cl_dma_pcis_bus.awid),
+ .m_axi_awaddr  (sh_cl_dma_pcis_bus.awaddr),
+ .m_axi_awlen   (sh_cl_dma_pcis_bus.awlen),
+ .m_axi_awvalid (sh_cl_dma_pcis_bus.awvalid),
+ .m_axi_awsize  (sh_cl_dma_pcis_bus.awsize),
+ .m_axi_awready (sh_cl_dma_pcis_bus.awready),
+ .m_axi_wdata   (sh_cl_dma_pcis_bus.wdata),
+ .m_axi_wstrb   (sh_cl_dma_pcis_bus.wstrb),
+ .m_axi_wvalid  (sh_cl_dma_pcis_bus.wvalid),
+ .m_axi_wlast   (sh_cl_dma_pcis_bus.wlast),
+ .m_axi_wready  (sh_cl_dma_pcis_bus.wready),
+ .m_axi_bresp   (sh_cl_dma_pcis_bus.bresp),
+ .m_axi_bvalid  (sh_cl_dma_pcis_bus.bvalid),
+ .m_axi_bid     (sh_cl_dma_pcis_bus.bid),
+ .m_axi_bready  (sh_cl_dma_pcis_bus.bready),
+ .m_axi_arid    (sh_cl_dma_pcis_bus.arid),
+ .m_axi_araddr  (sh_cl_dma_pcis_bus.araddr),
+ .m_axi_arlen   (sh_cl_dma_pcis_bus.arlen),
+ .m_axi_arsize  (sh_cl_dma_pcis_bus.arsize),
+ .m_axi_arvalid (sh_cl_dma_pcis_bus.arvalid),
+ .m_axi_arready (sh_cl_dma_pcis_bus.arready),
+ .m_axi_rid     (sh_cl_dma_pcis_bus.rid),
+ .m_axi_rdata   (sh_cl_dma_pcis_bus.rdata),
+ .m_axi_rresp   (sh_cl_dma_pcis_bus.rresp),
+ .m_axi_rlast   (sh_cl_dma_pcis_bus.rlast),
+ .m_axi_rvalid  (sh_cl_dma_pcis_bus.rvalid),
+ .m_axi_rready  (sh_cl_dma_pcis_bus.rready)
+);
 
-// Debug Bridge 
- cl_debug_bridge CL_DEBUG_BRIDGE (
-      .clk(clk_main_a0),
-      .S_BSCAN_drck(drck),
-      .S_BSCAN_shift(shift),
-      .S_BSCAN_tdi(tdi),
-      .S_BSCAN_update(update),
-      .S_BSCAN_sel(sel),
-      .S_BSCAN_tdo(tdo),
-      .S_BSCAN_tms(tms),
-      .S_BSCAN_tck(tck),
-      .S_BSCAN_runtest(runtest),
-      .S_BSCAN_reset(reset),
-      .S_BSCAN_capture(capture),
-      .S_BSCAN_bscanid_en(bscanid_en)
-   );
+// cnn wiring
+   logic [63:0] fifo_in_bits;
+   logic 	fifo_in_valid;
+   logic 	fifo_in_ready;
 
-//-----------------------------------------------
-// VIO Example - Needs Virtual JTAG
-//-----------------------------------------------
-   // Counter running at 125MHz
+   logic [63:0] data_in_bits;
+   logic 	data_in_valid;
+   logic 	data_in_ready;
+
+   logic [63:0] data_out_bits;
+   logic 	data_out_valid;
+   logic 	data_out_ready;
    
-   logic      vo_cnt_enable;
-   logic      vo_cnt_load;
-   logic      vo_cnt_clear;
-   logic      vo_cnt_oneshot;
-   logic [7:0]  vo_tick_value;
-   logic [15:0] vo_cnt_load_value;
-   logic [15:0] vo_cnt_watermark;
+   logic [63:0] fifo_out_bits;
+   logic 	fifo_out_valid;
+   logic 	fifo_out_ready;
 
-   logic      vo_cnt_enable_q = 0;
-   logic      vo_cnt_load_q = 0;
-   logic      vo_cnt_clear_q = 0;
-   logic      vo_cnt_oneshot_q = 0;
-   logic [7:0]  vo_tick_value_q = 0;
-   logic [15:0] vo_cnt_load_value_q = 0;
-   logic [15:0] vo_cnt_watermark_q = 0;
+// Read the data from input into a AXI Data Width Converter ( xilinx IP ) using sh_cl_dma_pcis_bus
+// Convert from 512 to 64 bits
+axi_dwidth_converter_512_to_64 AXI_DWIDTH_TO_64
+(
+ .aclk( clk ),
+ .aresetn( slr0_sync_aresetn ),
 
-   logic        vi_tick;
-   logic        vi_cnt_ge_watermark;
-   logic [7:0]  vi_tick_cnt = 0;
-   logic [15:0] vi_cnt = 0;
+ .s_axis_tvalid( sh_cl_dma_pcis_bus.wvalid ),
+ .s_axis_tready( sh_cl_dma_pcis_bus.wready ),
+ .s_axis_tdata( sh_cl_dma_pcis_bus.wdata ),
+
+ .m_axis_tvalid( fifo_in_valid ),
+ .m_axis_tready( fifo_in_ready ),
+ .m_axis_tdata( fifo_in_bits )
+);
    
-   // Tick counter and main counter
-   always @(posedge clk_main_a0) begin
+// Put the 64 bits into a AXI Data FIFO (xilinx ip)
+axi_data_fifo_sync_64 AXI_DATA_FIFO_IN
+(
+ .s_axis_aclk( clk ),
+ .s_axis_aresetn( slr0_sync_aresetn ),
 
-      vo_cnt_enable_q     <= vo_cnt_enable    ;
-      vo_cnt_load_q       <= vo_cnt_load      ;
-      vo_cnt_clear_q      <= vo_cnt_clear     ;
-      vo_cnt_oneshot_q    <= vo_cnt_oneshot   ;
-      vo_tick_value_q     <= vo_tick_value    ;
-      vo_cnt_load_value_q <= vo_cnt_load_value;
-      vo_cnt_watermark_q  <= vo_cnt_watermark ;
+ .s_axis_tvalid( fifo_in_valid ),
+ .s_axis_tready( fifo_in_ready ),
+ .s_axis_tdata( fifo_in_bits ),
 
-      vi_tick_cnt = vo_cnt_clear_q ? 0 :
-                    ~vo_cnt_enable_q ? vi_tick_cnt :
-                    (vi_tick_cnt >= vo_tick_value_q) ? 0 :
-                    vi_tick_cnt + 1;
-
-      vi_cnt = vo_cnt_clear_q ? 0 :
-               vo_cnt_load_q ? vo_cnt_load_value_q :
-               ~vo_cnt_enable_q ? vi_cnt :
-               (vi_tick_cnt >= vo_tick_value_q) && (~vo_cnt_oneshot_q || (vi_cnt <= 16'hFFFF)) ? vi_cnt + 1 :
-               vi_cnt;
-
-      vi_tick = (vi_tick_cnt >= vo_tick_value_q);
-
-      vi_cnt_ge_watermark = (vi_cnt >= vo_cnt_watermark_q);
-      
-   end // always @ (posedge clk_main_a0)
+ .m_axis_tvalid( data_in_valid ),
+ .m_axis_tready( data_in_ready ),
+ .m_axis_tdata( data_in_bits )
+);
    
+// Insert CNN here ...
+assign data_out_valid = data_in_valid;
+assign data_out_bits = data_in_bits;
+assign data_in_ready = data_out_ready;
 
-   vio_0 CL_VIO_0 (
-                   .clk    (clk_main_a0),
-                   .probe_in0  (vi_tick),
-                   .probe_in1  (vi_cnt_ge_watermark),
-                   .probe_in2  (vi_tick_cnt),
-                   .probe_in3  (vi_cnt),
-                   .probe_out0 (vo_cnt_enable),
-                   .probe_out1 (vo_cnt_load),
-                   .probe_out2 (vo_cnt_clear),
-                   .probe_out3 (vo_cnt_oneshot),
-                   .probe_out4 (vo_tick_value),
-                   .probe_out5 (vo_cnt_load_value),
-                   .probe_out6 (vo_cnt_watermark)
-                   );
+axi_data_fifo_sync_64 AXI_DATA_FIFO_IN
+(
+ .s_axis_aclk( clk ),
+ .s_axis_aresetn( slr0_sync_aresetn ),
+
+ .s_axis_tvalid( data_out_valid ),
+ .s_axis_tready( data_out_ready ),
+ .s_axis_tdata( data_out_bits ),
+
+ .m_axis_tvalid( fifo_out_valid ),
+ .m_axis_tready( fifo_out_ready ),
+ .m_axis_tdata( fifo_out_bits )
+);
    
-   ila_vio_counter CL_VIO_ILA (
-                   .clk     (clk_main_a0),
-                   .probe0  (vi_tick),
-                   .probe1  (vi_cnt_ge_watermark),
-                   .probe2  (vi_tick_cnt),
-                   .probe3  (vi_cnt),
-                   .probe4  (vo_cnt_enable_q),
-                   .probe5  (vo_cnt_load_q),
-                   .probe6  (vo_cnt_clear_q),
-                   .probe7  (vo_cnt_oneshot_q),
-                   .probe8  (vo_tick_value_q),
-                   .probe9  (vo_cnt_load_value_q),
-                   .probe10 (vo_cnt_watermark_q)
-                   );
-   
-`endif //  `ifndef DISABLE_VJTAG_DEBUG
+// Read the data from the AXI Data FIFO into a AXI Data Width Converter( Xilinx IP )
+// Convert from 64 bits to 512 bits
+// Send to the output using cl_sh_pcim_bus
+axi_dwidth_converter_64_to_512 AXI_DWIDTH_TO_512
+(
+ .aclk( clk ),
+ .aresetn( slr0_sync_aresetn ),
+
+ .s_axis_tvalid( fifo_out_valid ),
+ .s_axis_tready( fifo_out_ready ),
+ .s_axis_tdata( fifo_out_bits ),
+
+ .m_axis_tvalid( cl_sh_pcim_bus.wvalid ),
+ .m_axis_tready( cl_sh_pcim_bus.wready ),
+ .m_axis_tdata( cl_sh_pcim_bus.wdata )
+);
+
+// connect the rest of cl_sh_pcim_bus wires
 
 endmodule
-
-
-
-
-
