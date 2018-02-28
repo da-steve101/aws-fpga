@@ -65,27 +65,27 @@ axi_register_slice PCI_AXL_REG_SLC
  .s_axi_awlen   (sh_cl_dma_pcis_awlen),
  .s_axi_awvalid (sh_cl_dma_pcis_awvalid),
  .s_axi_awsize  (sh_cl_dma_pcis_awsize),
- .s_axi_awready (sh_cl_dma_pcis_awready),
+ .s_axi_awready (cl_sh_dma_pcis_awready),
  .s_axi_wdata   (sh_cl_dma_pcis_wdata),
  .s_axi_wstrb   (sh_cl_dma_pcis_wstrb),
  .s_axi_wlast   (sh_cl_dma_pcis_wlast),
  .s_axi_wvalid  (sh_cl_dma_pcis_wvalid),
- .s_axi_wready  (sh_cl_dma_pcis_wready),
- .s_axi_bid     (sh_cl_dma_pcis_bid),
- .s_axi_bresp   (sh_cl_dma_pcis_bresp),
- .s_axi_bvalid  (sh_cl_dma_pcis_bvalid),
+ .s_axi_wready  (cl_sh_dma_pcis_wready),
+ .s_axi_bid     (cl_sh_dma_pcis_bid),
+ .s_axi_bresp   (cl_sh_dma_pcis_bresp),
+ .s_axi_bvalid  (cl_sh_dma_pcis_bvalid),
  .s_axi_bready  (sh_cl_dma_pcis_bready),
  .s_axi_arid    (sh_cl_dma_pcis_arid),
  .s_axi_araddr  (sh_cl_dma_pcis_araddr),
  .s_axi_arlen   (sh_cl_dma_pcis_arlen),
  .s_axi_arvalid (sh_cl_dma_pcis_arvalid),
  .s_axi_arsize  (sh_cl_dma_pcis_arsize),
- .s_axi_arready (sh_cl_dma_pcis_arready),
- .s_axi_rid     (sh_cl_dma_pcis_rid),
- .s_axi_rdata   (sh_cl_dma_pcis_rdata),
- .s_axi_rresp   (sh_cl_dma_pcis_rresp),
- .s_axi_rlast   (sh_cl_dma_pcis_rlast),
- .s_axi_rvalid  (sh_cl_dma_pcis_rvalid),
+ .s_axi_arready (cl_sh_dma_pcis_arready),
+ .s_axi_rid     (cl_sh_dma_pcis_rid),
+ .s_axi_rdata   (cl_sh_dma_pcis_rdata),
+ .s_axi_rresp   (cl_sh_dma_pcis_rresp),
+ .s_axi_rlast   (cl_sh_dma_pcis_rlast),
+ .s_axi_rvalid  (cl_sh_dma_pcis_rvalid),
  .s_axi_rready  (sh_cl_dma_pcis_rready),
 
  .m_axi_awid    (sh_cl_dma_pcis_bus.awid),
@@ -222,7 +222,9 @@ always_ff @(posedge clk)
   end
 
 assign sh_cl_dma_pcis_bus.awready = 1;
-assign sh_cl_dma_pcis_bus.bready = 1;
+assign sh_cl_dma_pcis_bus.bid = 0;
+assign sh_cl_dma_pcis_bus.bresp = 0;
+assign sh_cl_dma_pcis_bus.bvalid = 0;
 assign sh_cl_dma_pcis_bus.arready = 1;
 assign sh_cl_dma_pcis_bus.rid = 0; // should be incremented?
 assign sh_cl_dma_pcis_bus.rdata = axi_out_bits;
