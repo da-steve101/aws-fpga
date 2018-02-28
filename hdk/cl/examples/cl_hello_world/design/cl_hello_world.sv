@@ -206,10 +206,10 @@ axi_dwidth_converter_64_to_512 AXI_DWIDTH_TO_512
  .m_axis_tdata( axi_out_bits )
 );
 
-logic [6:0] 	 img_cntr;
+logic [5:0] 	 img_cntr;
 
 always_ff @(posedge clk)
-  if ( rst_n )
+  if ( !rst_n )
     begin
        img_cntr <= 0;
     end
