@@ -6,9 +6,10 @@ module test_pass_through();
    initial begin
 
       logic [63:0] host_memory_buffer_address;
-      int 	   len0 = 4096;
+      int 	   len0 = 8192;
       int 	   timeout_count;
       logic [3:0]  status = 0;
+      logic [8:0]  cmp_data;
       int 	   error_count;
 
       tb.power_up(.clk_recipe_a(ClockRecipe::A1),
@@ -25,30 +26,30 @@ module test_pass_through();
       tb.que_buffer_to_cl(.chan(0), .src_addr(host_memory_buffer_address), .cl_addr(64'h0000_0000_0000), .len(len0) ); // move buffer to DDR 0
 
       //Queue data to be transfered to CL DDR
-      tb.que_buffer_to_cl(.chan(0), .src_addr(host_memory_buffer_address + 16'h0800), .cl_addr(64'h0000_0000_0800), .len(len0) ); // move buffer to DDR 0
+      tb.que_buffer_to_cl(.chan(0), .src_addr(host_memory_buffer_address + 16'h2000), .cl_addr(64'h0000_0000_2000), .len(len0) ); // move buffer to DDR 0
 
       //Queue data to be transfered to CL DDR
-      tb.que_buffer_to_cl(.chan(0), .src_addr(host_memory_buffer_address + 16'h1000), .cl_addr(64'h0000_0000_1000), .len(len0) ); // move buffer to DDR 0
+      tb.que_buffer_to_cl(.chan(0), .src_addr(host_memory_buffer_address + 16'h4000), .cl_addr(64'h0000_0000_4000), .len(len0) ); // move buffer to DDR 0
 
       //Queue data to be transfered to CL DDR
-      tb.que_buffer_to_cl(.chan(0), .src_addr(host_memory_buffer_address + 16'h1800), .cl_addr(64'h0000_0000_1800), .len(len0) ); // move buffer to DDR 0
+      tb.que_buffer_to_cl(.chan(0), .src_addr(host_memory_buffer_address + 16'h6000), .cl_addr(64'h0000_0000_6000), .len(len0) ); // move buffer to DDR 0
 
       // Put test pattern in host memory
-      for (int i = 0 ; i < len0 ; i++) begin
+      for (int i = 0 ; i < 4*len0; i++) begin
          tb.hm_put_byte(.addr(host_memory_buffer_address), .d( i % 256 ));
          host_memory_buffer_address++;
       end
       $display("[%t] : Start transfers", $realtime);
 
       // read the data from cl and put it in the host memory
-      host_memory_buffer_address = 64'h2000;
-      tb.que_cl_to_buffer(.chan(1), .dst_addr(host_memory_buffer_address), .cl_addr(64'h0000_0000_0000), .len(len0) ); // move DDR0 to buffer
+      host_memory_buffer_address = 64'h8000;
+      tb.que_cl_to_buffer(.chan(1), .dst_addr(host_memory_buffer_address), .cl_addr(64'h0000_0000_8000), .len(len0) ); // move DDR0 to buffer
 
-      tb.que_cl_to_buffer(.chan(1), .dst_addr(host_memory_buffer_address + 16'h0800), .cl_addr(64'h0000_0000_0800), .len(len0) ); // move DDR0 to buffer
+      tb.que_cl_to_buffer(.chan(1), .dst_addr(host_memory_buffer_address + 16'h2000), .cl_addr(64'h0000_0000_a000), .len(len0) ); // move DDR0 to buffer
 
-      tb.que_cl_to_buffer(.chan(1), .dst_addr(host_memory_buffer_address + 16'h1000), .cl_addr(64'h0000_0000_0800), .len(len0) ); // move DDR0 to buffer
+      tb.que_cl_to_buffer(.chan(1), .dst_addr(host_memory_buffer_address + 16'h4000), .cl_addr(64'h0000_0000_c000), .len(len0) ); // move DDR0 to buffer
 
-      tb.que_cl_to_buffer(.chan(1), .dst_addr(host_memory_buffer_address + 16'h1800), .cl_addr(64'h0000_0000_0800), .len(len0) ); // move DDR0 to buffer
+      tb.que_cl_to_buffer(.chan(1), .dst_addr(host_memory_buffer_address + 16'h6000), .cl_addr(64'h0000_0000_e000), .len(len0) ); // move DDR0 to buffer
 
       //Start transfers of data to CL
       tb.start_que_to_cl(.chan(0));
@@ -88,11 +89,12 @@ module test_pass_through();
 
       $display("[%t] : DMA buffer from DDR 0", $realtime);
 
-      host_memory_buffer_address = 64'h2000;
-      for (int i = 0 ; i<len0*4; i++) begin
-         if (tb.hm_get_byte(.addr(host_memory_buffer_address + i)) !== ( i % 256 )) begin
-            $display("[%t] : *** ERROR *** DDR0 Data mismatch, addr:%0x read data is: %0x",
-                     $realtime, (host_memory_buffer_address + i), tb.hm_get_byte(.addr(host_memory_buffer_address + i)));
+      host_memory_buffer_address = 64'h4000;
+      for (int i = 0 ; i<4*len0; i++) begin
+	 cmp_data = ( i % 256 );
+         if (tb.hm_get_byte(.addr(host_memory_buffer_address + i)) !== cmp_data ) begin
+            $display("[%t] : *** ERROR *** DDR0 Data mismatch, addr:%0x read data is: %0x != %0x",
+                     $realtime, (host_memory_buffer_address + i), tb.hm_get_byte(.addr(host_memory_buffer_address + i)), cmp_data);
             error_count++;
          end
       end
