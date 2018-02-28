@@ -9,7 +9,7 @@ module test_pass_through();
       int 	   len0 = 8192;
       int 	   timeout_count;
       logic [3:0]  status = 0;
-      logic [8:0]  cmp_data;
+      logic [7:0]  cmp_data;
       int 	   error_count;
 
       tb.power_up(.clk_recipe_a(ClockRecipe::A1),
