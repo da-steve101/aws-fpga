@@ -226,7 +226,7 @@ assign sh_cl_dma_pcis_bus.bid = 0;
 assign sh_cl_dma_pcis_bus.bresp = 0;
 assign sh_cl_dma_pcis_bus.bvalid = 0;
 assign sh_cl_dma_pcis_bus.arready = 1;
-assign sh_cl_dma_pcis_bus.rid = 0; // should be incremented?
+assign sh_cl_dma_pcis_bus.rid = 1;
 assign sh_cl_dma_pcis_bus.rdata = axi_out_bits;
 assign sh_cl_dma_pcis_bus.rresp = 0;
 assign sh_cl_dma_pcis_bus.rlast = ( img_cntr == 6'h3f ); // indicate last bit
