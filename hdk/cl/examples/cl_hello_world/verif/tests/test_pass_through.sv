@@ -11,6 +11,7 @@ module test_pass_through();
       int 	    len0 = 64;
       int 	    timeout_count;
       logic [3:0]   status = 0;
+      int 	    error_count;
 
       tb.power_up(.clk_recipe_a(ClockRecipe::A1),
                   .clk_recipe_b(ClockRecipe::B0),
