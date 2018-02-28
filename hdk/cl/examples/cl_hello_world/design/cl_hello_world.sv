@@ -50,7 +50,7 @@ logic rst_main_n_sync;
 //-------------------------------------------------
   logic        arvalid_q;
   logic [31:0] araddr_q;
-  logic [31:0] hello_world_q_byte_swapped;
+  logic [31:0] hello_world_q;
 
 //-------------------------------------------------
 // ID Values (cl_hello_world_defines.vh)
@@ -430,6 +430,11 @@ axi_register_slice PCI_AXL_REG_SLC
    logic 	fifo_out_valid;
    logic 	fifo_out_ready;
 
+   logic [511:0] axi_out_bits;
+   logic 	 axi_out_valid;
+   logic 	 axi_out_ready;
+
+
 // Read the data from input into a AXI Data Width Converter ( xilinx IP ) using sh_cl_dma_pcis_bus
 // Convert from 512 to 64 bits
 axi_dwidth_converter_512_to_64 AXI_DWIDTH_TO_64
@@ -466,7 +471,7 @@ assign data_out_valid = data_in_valid;
 assign data_out_bits = data_in_bits;
 assign data_in_ready = data_out_ready;
 
-axi_data_fifo_sync_64 AXI_DATA_FIFO_IN
+axi_data_fifo_sync_64 AXI_DATA_FIFO_OUT
 (
  .s_axis_aclk( clk ),
  .s_axis_aresetn( slr0_sync_aresetn ),
@@ -492,11 +497,21 @@ axi_dwidth_converter_64_to_512 AXI_DWIDTH_TO_512
  .s_axis_tready( fifo_out_ready ),
  .s_axis_tdata( fifo_out_bits ),
 
- .m_axis_tvalid( cl_sh_pcim_bus.wvalid ),
- .m_axis_tready( cl_sh_pcim_bus.wready ),
- .m_axis_tdata( cl_sh_pcim_bus.wdata )
+ .m_axis_tvalid( axi_out_valid ),
+ .m_axis_tready( axi_out_ready ),
+ .m_axis_tdata( axi_out_bits )
 );
 
 // connect the rest of cl_sh_pcim_bus wires
+assign cl_sh_pcim_bus.awid[8:0] = 0;
+assign cl_sh_pcim_bus.awaddr = 64'h2;
+assign cl_sh_pcim_bus.awlen = 64;
+assign cl_sh_pcim_bus.awvalid = axi_out_valid;
+assign cl_sh_pcim_bus.wdata = axi_out_bits;
+assign cl_sh_pcim_bus.wstrb = 64'h0;
+assign cl_sh_pcim_bus.wlast = 1;
+assign cl_sh_pcim_bus.wvalid = axi_out_valid;
+assign axi_out_ready = cl_sh_pcim_bus.wready;
+assign cl_sh_pcim_bus.bid = 0;
 
 endmodule
