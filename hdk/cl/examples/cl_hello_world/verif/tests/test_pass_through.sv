@@ -8,7 +8,10 @@ module test_pass_through();
       logic [63:0] host_memory_buffer_address;
       logic [511:0] data_in;
       logic [511:0] data_out;
-      
+      int 	    len0 = 64;
+      int 	    timeout_count;
+      logic [3:0]   status = 0;
+
       tb.power_up(.clk_recipe_a(ClockRecipe::A1),
                   .clk_recipe_b(ClockRecipe::B0),
                   .clk_recipe_c(ClockRecipe::C0));
@@ -69,7 +72,7 @@ module test_pass_through();
          // status[3] = tb.is_dma_to_cl_done(.chan(3));
          #10ns;
          timeout_count++;
-      end while ((status != 4'hf) && (timeout_count < 4000));
+      end while ((status == 4'h0) && (timeout_count < 4000));
 
       if (timeout_count >= 4000) begin
          $display("[%t] : *** ERROR *** Timeout waiting for dma transfers from cl", $realtime);
@@ -106,7 +109,7 @@ module test_pass_through();
          // status[3] = tb.is_dma_to_buffer_done(.chan(3));
          #10ns;
          timeout_count++;
-      end while ((status != 4'hf) && (timeout_count < 1000));
+      end while ((status == 4'h0) && (timeout_count < 1000));
 
       if (timeout_count >= 1000) begin
          $display("[%t] : *** ERROR *** Timeout waiting for dma transfers from cl", $realtime);
