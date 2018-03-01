@@ -7,7 +7,7 @@ module test_image();
 
       logic [63:0] host_memory_buffer_address;
       int 	   len0 = 8192;
-      logic [2:0]  byte_addr = 0;
+      int 	   byte_addr;
       int 	   timeout_count;
       logic [3:0]  status = 0;
       logic [7:0]  cmp_data;
@@ -33,8 +33,8 @@ module test_image();
 
       // Put test pattern in host memory
       for (int i = 0 ; i < 4*len0; i++) begin
-	 byte_addr = (i % 8);
-         tb.hm_put_byte(.addr(host_memory_buffer_address), .d( airplane4_image[( i >> 3 ) % 1024][(byte_addr*8 + 7):byte_addr*8]));
+         byte_addr = ( i % 8 )*8;
+         tb.hm_put_byte(.addr(host_memory_buffer_address), .d( airplane4_image[( i >> 3 ) % 1024][byte_addr +: 8]));
          host_memory_buffer_address++;
       end
       $display("[%t] : Start transfers", $realtime);
