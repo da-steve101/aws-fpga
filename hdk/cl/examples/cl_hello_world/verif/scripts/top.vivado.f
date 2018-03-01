@@ -68,6 +68,11 @@ ${HDK_SHELL_DESIGN_DIR}/ip/axi_data_fifo_sync_64/hdl/axis_data_fifo_v1_1_vl_rfs.
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_data_fifo_sync_64/hdl/axis_infrastructure_v1_1_vl_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_data_fifo_sync_64/hdl/fifo_generator_v13_1_rfs.v
 ${SH_LIB_DIR}/../ip/axi_clock_converter_0/sim/axi_clock_converter_0.v
+${CL_ROOT}/design/Queue_1024.v
+${CL_ROOT}/design/Queue_2048.v
+${CL_ROOT}/design/Queue_4096.v
+${CL_ROOT}/design/Vgg7.v
+${CL_ROOT}/design/AWSVggWrapper.v
 ${CL_ROOT}/design/cl_hello_world.sv
 
 -f ${HDK_COMMON_DIR}/verif/tb/filelists/tb.${SIMULATOR}.f

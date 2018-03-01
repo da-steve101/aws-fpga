@@ -127,6 +127,10 @@ axi_register_slice PCI_AXL_REG_SLC
    logic 	data_in_ready;
 
    logic [63:0] data_out_bits;
+   logic [15:0] data_out_bits_0;
+   logic [15:0] data_out_bits_1;
+   logic [15:0] data_out_bits_2;
+   logic [15:0] data_out_bits_3;
    logic 	data_out_valid;
    logic 	data_out_ready;
    
@@ -170,10 +174,25 @@ axi_data_fifo_sync_64 AXI_DATA_FIFO_IN
  .m_axis_tdata( data_in_bits )
 );
    
-// Insert CNN here ...
-assign data_out_valid = data_in_valid;
-assign data_out_bits = data_in_bits;
-assign data_in_ready = data_out_ready;
+// Insert CNN here
+assign data_out_bits = { data_out_bits_3, data_out_bits_2, data_out_bits_1, data_out_bits_0 };
+
+AWSVggWrapper cifar10
+(
+ .clock( clk ),
+ .reset( !rst_n ),
+ .io_dataIn_ready( data_in_ready ),
+ .io_dataIn_valid( data_in_valid ),
+ .io_dataIn_bits_0( data_in_bits[15:0] ),
+ .io_dataIn_bits_1( data_in_bits[31:16] ),
+ .io_dataIn_bits_2( data_in_bits[47:32] ),
+ .io_dataOut_ready( data_out_ready ),
+ .io_dataOut_valid( data_out_valid ),
+ .io_dataOut_bits_0( data_out_bits_0 ),
+ .io_dataOut_bits_1( data_out_bits_1 ),
+ .io_dataOut_bits_2( data_out_bits_2 ),
+ .io_dataOut_bits_3( data_out_bits_3 )
+)
 
 axi_data_fifo_sync_64 AXI_DATA_FIFO_OUT
 (
