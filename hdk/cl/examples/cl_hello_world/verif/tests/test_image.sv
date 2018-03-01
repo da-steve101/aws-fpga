@@ -75,9 +75,9 @@ module test_image();
          status[0] = tb.is_dma_to_buffer_done(.chan(1));
          #10ns;
          timeout_count++;
-      end while ((status == 4'h0) && (timeout_count < 1000));
+      end while ((status == 4'h0) && (timeout_count < 4000));
 
-      if (timeout_count >= 1000) begin
+      if (timeout_count >= 4000) begin
          $display("[%t] : *** ERROR *** Timeout waiting for dma transfers from cl", $realtime);
          error_count++;
       end
