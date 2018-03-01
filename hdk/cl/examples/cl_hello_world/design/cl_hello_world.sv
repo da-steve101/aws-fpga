@@ -174,9 +174,13 @@ axi_data_fifo_sync_64 AXI_DATA_FIFO_IN
  .m_axis_tdata( data_in_bits )
 );
    
+`ifndef IMPLEMENT_CNN
+assign data_out_bits = data_in_bits;
+assign data_out_valid = data_in_valid;
+assign data_in_ready = data_out_ready;
+`else
 // Insert CNN here
 assign data_out_bits = { data_out_bits_3, data_out_bits_2, data_out_bits_1, data_out_bits_0 };
-
 AWSVggWrapper cifar10
 (
  .clock( clk ),
@@ -193,6 +197,7 @@ AWSVggWrapper cifar10
  .io_dataOut_bits_2( data_out_bits_2 ),
  .io_dataOut_bits_3( data_out_bits_3 )
 );
+`endif // IMPLEMENT_CNN
 
 axi_data_fifo_sync_64 AXI_DATA_FIFO_OUT
 (

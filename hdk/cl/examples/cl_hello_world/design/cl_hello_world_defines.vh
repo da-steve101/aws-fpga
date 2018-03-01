@@ -23,6 +23,8 @@
 // FPGA flop init capability).  This will help with routing resources.
 `define FPGA_LESS_RST
 
+`define IMPLEMENT_CNN
+
 // Uncomment to disable Virtual JTAG
 //`define DISABLE_VJTAG_DEBUG
 

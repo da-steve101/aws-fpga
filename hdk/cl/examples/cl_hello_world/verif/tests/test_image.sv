@@ -92,9 +92,9 @@ module test_image();
             error_count++;
          end
       end
-      
+
       $display("[%t] : Done", $realtime);
-      
+
       // Power down
       #500ns;
       tb.power_down();
