@@ -192,7 +192,7 @@ AWSVggWrapper cifar10
  .io_dataOut_bits_1( data_out_bits_1 ),
  .io_dataOut_bits_2( data_out_bits_2 ),
  .io_dataOut_bits_3( data_out_bits_3 )
-)
+);
 
 axi_data_fifo_sync_64 AXI_DATA_FIFO_OUT
 (
