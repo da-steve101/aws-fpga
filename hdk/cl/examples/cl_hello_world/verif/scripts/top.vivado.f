@@ -56,6 +56,7 @@ ${HDK_SHELL_DESIGN_DIR}/ip/axi_register_slice/sim/axi_register_slice.v
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_dwidth_converter_512_to_64/sim/axi_dwidth_converter_512_to_64.v
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_dwidth_converter_64_to_512/sim/axi_dwidth_converter_64_to_512.v
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_data_fifo_sync_64/sim/axi_data_fifo_sync_64.v
+${HDK_SHELL_DESIGN_DIR}/ip/fifo_1024bits/sim/fifo_1024bits.v
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_register_slice_light/hdl/axi_register_slice_v2_1_vl_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_register_slice_light/hdl/axi_infrastructure_v1_1_vl_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_dwidth_converter_512_to_64/hdl/axis_dwidth_converter_v1_1_vl_rfs.v
@@ -67,6 +68,7 @@ ${HDK_SHELL_DESIGN_DIR}/ip/axi_dwidth_converter_64_to_512/hdl/axis_register_slic
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_data_fifo_sync_64/hdl/axis_data_fifo_v1_1_vl_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_data_fifo_sync_64/hdl/axis_infrastructure_v1_1_vl_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_data_fifo_sync_64/hdl/fifo_generator_v13_1_rfs.v
+${HDK_SHELL_DESIGN_DIR}/ip/fifo_1024bits/hdl/fifo_generator_v13_1_rfs.v
 ${SH_LIB_DIR}/../ip/axi_clock_converter_0/sim/axi_clock_converter_0.v
 ${CL_ROOT}/design/Queue_1024.v
 ${CL_ROOT}/design/Queue_2048.v
