@@ -175,9 +175,24 @@ axi_data_fifo_sync_64 AXI_DATA_FIFO_IN
 );
    
 `ifndef IMPLEMENT_CNN
-assign data_out_bits = data_in_bits;
-assign data_out_valid = data_in_valid;
+parameter N = 10;
+// make a shift reg ...
+logic [(N*64)-1:0] bits_reg;
+logic [N-1:0] valid_reg = 0;
+
+assign data_out_bits = bits_reg[63:0];
+assign data_out_valid = valid_reg[0];
 assign data_in_ready = data_out_ready;
+
+always_ff @(posedge clk)
+begin
+  if ( data_out_ready )
+  begin
+    bits_reg <= { data_in_bits, bits_reg[(N*64)-1:64] };
+    valid_reg <= { data_in_valid, valid_reg[N-1:1]};
+  end
+end
+
 `else
 // Insert CNN here
 assign data_out_bits = { data_out_bits_3, data_out_bits_2, data_out_bits_1, data_out_bits_0 };
