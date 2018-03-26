@@ -41,7 +41,9 @@ puts "AWS FPGA: ([clock format [clock seconds] -format %T]) Reading developer's 
 # Reading the .sv and .v files, as proper designs would not require
 # reading .v, .vh, nor .inc files
 
-read_verilog -sv [glob $ENC_SRC_DIR/*.?v]
+puts [glob $ENC_SRC_DIR/*.{v,sv}]
+
+read_verilog -sv [glob $ENC_SRC_DIR/*.{v,sv}]
 
 #---- End of section replaced by User ----
 
@@ -71,7 +73,11 @@ read_ip [ list \
   $HDK_SHELL_DESIGN_DIR/ip/ila_0/ila_0.xci\
   $HDK_SHELL_DESIGN_DIR/ip/cl_debug_bridge/cl_debug_bridge.xci \
   $HDK_SHELL_DESIGN_DIR/ip/ila_vio_counter/ila_vio_counter.xci \
-  $HDK_SHELL_DESIGN_DIR/ip/vio_0/vio_0.xci
+  $HDK_SHELL_DESIGN_DIR/ip/vio_0/vio_0.xci \
+  ${HDK_SHELL_DESIGN_DIR}/ip/axi_dwidth_converter_512_to_64/axi_dwidth_converter_512_to_64.xci \
+  ${HDK_SHELL_DESIGN_DIR}/ip/axi_dwidth_converter_64_to_512/axi_dwidth_converter_64_to_512.xci \
+  ${HDK_SHELL_DESIGN_DIR}/ip/axi_data_fifo_sync_64/axi_data_fifo_sync_64.xci \
+  ${HDK_SHELL_DESIGN_DIR}/ip/fifo_1024bits/fifo_1024bits.xci
 ]
 
 # Additional IP's that might be needed if using the DDR
