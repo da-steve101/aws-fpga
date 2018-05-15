@@ -47,6 +47,8 @@ logic rst_main_n_sync;
 
 logic       clk;
 logic       rst_n;
+assign cl_sh_id0[31:0] = `CL_SH_ID0;
+assign cl_sh_id1[31:0] = `CL_SH_ID1;
 
 // 512b input bus
 axi_bus_t sh_cl_dma_pcis_bus();
