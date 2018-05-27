@@ -20,11 +20,11 @@ INCLUDES += -I $(HDK_DIR)/common/software/include
 INCLUDES += -I ./include
 
 CC = gcc
-CFLAGS = -DCONFIG_LOGLEVEL=4 -g -Wall $(INCLUDES)
+CFLAGS = -DCONFIG_LOGLEVEL=4 -std=gnu99 -g -Wall -Werror $(INCLUDES)
 
 LDLIBS = -lfpga_mgmt -lrt -lpthread
 
-SRC = ${SDK_DIR}/userspace/utils/sh_dpi_tasks.c test_hello_world.c
+SRC = common_dma.c ${SDK_DIR}/userspace/utils/sh_dpi_tasks.c test_hello_world.c
 OBJ = $(SRC:.c=.o)
 BIN = test_hello_world
 
