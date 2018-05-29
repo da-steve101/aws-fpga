@@ -24,9 +24,9 @@ CFLAGS = -DCONFIG_LOGLEVEL=4 -std=gnu99 -g -Wall -Werror $(INCLUDES)
 
 LDLIBS = -lfpga_mgmt -lrt -lpthread
 
-SRC = common_dma.c ${SDK_DIR}/userspace/utils/sh_dpi_tasks.c test_hello_world.c
+SRC = common_dma.c ${SDK_DIR}/userspace/utils/sh_dpi_tasks.c test_loopback.c
 OBJ = $(SRC:.c=.o)
-BIN = test_hello_world
+BIN = test_loopback
 
 all: $(BIN) check_env
 
