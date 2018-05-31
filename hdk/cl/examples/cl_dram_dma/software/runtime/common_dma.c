@@ -169,7 +169,6 @@ void fpga_read_cl_to_buffer(int slot_id, int channel, int fd, size_t buffer_size
 #else
   fpga_driver_read_cl_to_buffer(slot_id, channel, fd, buffer_size, address);
 #endif
-  dma_memcmp(buffer_size);
 }
 
 void fpga_write_buffer_to_cl(int slot_id, int channel, int fd, size_t buffer_size, size_t address){
@@ -180,7 +179,7 @@ void fpga_write_buffer_to_cl(int slot_id, int channel, int fd, size_t buffer_siz
 #endif
 }
 
-int dma_memcmp (size_t buffer_size) {
+int dma_memcmp (size_t buffer_size, int channel ) {
    int rc = 0;
    if (memcmp(write_buffer, read_buffer, buffer_size) == 0) {
       printf("DRAM DMA read the same string as it wrote on channel %d (it worked correctly!)\n", channel);
@@ -224,13 +223,8 @@ int send_rdbuf_to_c(char* rd_buf)
    int i;
 
    //For Questa simulator the first 8 bytes are not transmitted correctly, so the buffer is transferred with 8 extra bytes and those bytes are removed here. Made this default for all the simulators.
-   for (i = 0; i < buffer_size; ++i) {
-      read_buffer[i] = rd_buf[i+8];
-   }
-
-   //end of line character is not transferered correctly. So assign that here. 
-   read_buffer[buffer_size-1] = '\0';
-
+   for (i = 0; i < buffer_size; ++i)
+     read_buffer[i] = rd_buf[i + 8];
    return 0;
 
 } 

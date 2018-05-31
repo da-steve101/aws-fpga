@@ -35,6 +35,8 @@ int main(int argc, char **argv) {
   int slot_id = 0;
   int rc = 0;
 
+  printf("start init \n");
+  cosim_printf("start init \n");
 #ifndef SV_TEST
   rc = fpga_mgmt_init();
   fail_on(rc, out, "Unable to initialize the fpga_mgmt library");
@@ -54,47 +56,10 @@ int main(int argc, char **argv) {
    *exit_code = 0;
 #endif
 }
-
-#ifndef SV_TEST
-static int
-check_slot_config(int slot_id)
-{
-    int rc;
-    struct fpga_mgmt_image_info info = {0};
-
-    /* get local image description, contains status, vendor id, and device id */
-    rc = fpga_mgmt_describe_local_image(slot_id, &info, 0);
-    fail_on(rc, out, "Unable to get local image information. Are you running as root?");
-
-    /* check to see if the slot is ready */
-    if (info.status != FPGA_STATUS_LOADED) {
-        rc = 1;
-        fail_on(rc, out, "Slot %d is not ready", slot_id);
-    }
-    /* confirm that the AFI that we expect is in fact loaded */
-    if (info.spec.map[FPGA_APP_PF].vendor_id != pci_vendor_id ||
-        info.spec.map[FPGA_APP_PF].device_id != pci_device_id) {
-        rc = 1;
-        printf("The slot appears loaded, but the pci vendor or device ID doesn't "
-               "match the expected values. You may need to rescan the fpga with \n"
-               "fpga-describe-local-image -S %i -R\n"
-               "Note that rescanning can change which device file in /dev/ a FPGA will map to.\n"
-               "To remove and re-add your edma driver and reset the device file mappings, run\n"
-               "`sudo rmmod edma-drv && sudo insmod <aws-fpga>/sdk/linux_kernel_drivers/edma/edma-drv.ko`\n",
-               slot_id);
-        fail_on(rc, out, "The PCI vendor id and device of the loaded image are "
-                         "not the expected values.");
-    }
-
-out:
-    return rc;
-}
-#endif
  
 int verify_image( int slot_id ) {
   int fd, rc;
-  char device_file_name[256];
-  char *write_buffer, *read_buffer;
+  int i, j;
   static const size_t image_size = 8192;
 
   int write_channel = 0;
@@ -104,22 +69,27 @@ int verify_image( int slot_id ) {
   write_buffer = NULL;
   fd = -1;
 
-  write_buffer = (char *)malloc(image_size);
-  read_buffer = (char *)malloc(image_size);
+  char * image = ( char * ) malloc( image_size );
+  write_buffer = (char *)malloc(buffer_size);
+  read_buffer = (char *)malloc(buffer_size);
   if (write_buffer == NULL || read_buffer == NULL) {
     rc = ENOMEM;
     goto out;
   }
 
+  cosim_printf("opening queue ... \n");
 #ifndef SV_TEST
   fd = open_dma_queue(slot_id);
-#else
-  init_ddr();
 #endif
 
-  rand_string(write_buffer, buffer_size);
-  
-  fpga_write_buffer_to_cl(slot_id, write_channel, fd, buffer_size, (0x10000000 + write_channel*MEM_16G));
+  cosim_printf("starting the write in %d blocks... ", image_size/buffer_size);
+  for ( i = 0; i < image_size; i++ )
+    image[i] = ( i - 64 + 256 ) % 256;
+  // rand_string( image, image_size );
+  for ( i = 0; i < image_size/buffer_size; i++ ) {
+    memcpy( write_buffer, image + i*buffer_size, buffer_size );
+    fpga_write_buffer_to_cl(slot_id, write_channel, fd, buffer_size, (0x10000000 + write_channel*MEM_16G) + i*buffer_size );
+  }
 
   /* fsync() will make sure the write made it to the target buffer 
    * before read is done
@@ -129,7 +99,16 @@ int verify_image( int slot_id ) {
   fail_on((rc = (rc < 0)? errno:0), out, "call to fsync failed.");
 #endif
 
-  fpga_read_cl_to_buffer(slot_id, read_channel, fd, buffer_size, (0x10000000 + read_channel*MEM_16G));
+  cosim_printf("starting the read ... ");
+  for ( i = 0; i < image_size/buffer_size; i++ ) {
+    fpga_read_cl_to_buffer(slot_id, read_channel, fd, buffer_size, (0x10000000 + read_channel*MEM_16G)  + i*buffer_size );
+    if ( memcmp( image + i*buffer_size, read_buffer, buffer_size) != 0 ) {
+      cosim_printf( "image differs on iter %i", i );
+      for ( j = 0; j < buffer_size; j++ )
+	cosim_printf( "%x --- %x", image[i*buffer_size + j], read_buffer[j] );
+    } else
+      cosim_printf( "image is same on iter %i", i );
+  }
 
  out:
   if (write_buffer != NULL) {

@@ -16,6 +16,10 @@
 `ifndef SV_SH_DPI_TASKS
 `define SV_SH_DPI_TASKS
 
+//`ifndef BUFFER_SIZE
+`define BUFFER_SIZE 8192
+//`endif
+
 import tb_type_defines_pkg::*;
 
    import "DPI-C" context task test_main(output int unsigned exit_code);
@@ -24,7 +28,7 @@ import tb_type_defines_pkg::*;
    import "DPI-C" context function byte  host_memory_getc(input longint unsigned addr);
 
 `ifdef DMA_TEST
-   import "DPI-C" context task send_rdbuf_to_c(input string a);
+   import "DPI-C" context task send_rdbuf_to_c(input byte a[`BUFFER_SIZE + 8]);
 `endif
       
    export "DPI-C" task sv_printf;
@@ -216,18 +220,19 @@ end
 
 `ifdef DMA_TEST
    //DPI task to transfer HOST to CL data.
-   task sv_fpga_start_buffer_to_cl(input int slot_id = 0, int chan, input int buf_size, input string wr_buffer, input longint unsigned cl_addr);
+   task sv_fpga_start_buffer_to_cl(input int slot_id = 0, int chan, input int buf_size, input byte wr_buffer[`BUFFER_SIZE], input longint unsigned cl_addr);
       int timeout_count, status, error_count;
       logic [63:0] host_memory_buffer_address;
       
       host_memory_buffer_address = 64'h0 + chan*64'h0_0000_3000;
       que_buffer_to_cl(.slot_id(0), .chan(chan), .src_addr(host_memory_buffer_address), .cl_addr(cl_addr), .len(buf_size));
       // Put test pattern in host memory
-      for (int i = 0 ; i < buf_size ; i++) begin
+      for (int i = 0 ; i < `BUFFER_SIZE; i++) begin
          hm_put_byte(.addr(host_memory_buffer_address), .d(wr_buffer[i]));
          host_memory_buffer_address++;
       end
       start_que_to_cl(.slot_id(0), .chan(chan));
+      /*
       timeout_count = 0;
       do begin
          status[chan] = tb.is_dma_to_cl_done(.chan(chan));
@@ -239,6 +244,7 @@ end
          $display("[%t] : *** ERROR *** Timeout waiting for dma transfers to cl", $realtime);
          error_count++;
       end
+       */
    endtask // sv_fpga_start_buffer_to_cl
    
    //DPI task to transfer CL to HOST data.
@@ -246,7 +252,7 @@ end
       int timeout_count, status, error_count;
       logic [63:0] host_memory_buffer_address;
       byte         rd_buf_t;
-      string       rd_buffer_t, rd_buffer;
+      byte 	   rd_buffer[`BUFFER_SIZE + 8];
       
       host_memory_buffer_address = 64'h0 + (chan+1)*64'h0_0001_3000;
       
@@ -265,14 +271,14 @@ end
       end
       //For Questa simulator the first 8 bytes are not transmitted correctly, so the buffer is transferred with 8 extra bytes and those bytes are removed here.
       for (int i = 0 ; i < 8; i++) begin
-         rd_buffer = {rd_buffer, "A"};
+         rd_buffer[i] = 8'h41;
       end
-      for (int i = 0 ; i < buf_size ; i++) begin
+      for (int i = 0 ; i < `BUFFER_SIZE; i++) begin
          rd_buf_t = hm_get_byte(.addr(host_memory_buffer_address + i));
          //Change the ascii characters back to string.
-         $sformat(rd_buffer_t, "%s", rd_buf_t);
+         // $sformat(rd_buffer_t, "%s", rd_buf_t);
          //Construct the rd_buffer.
-         rd_buffer = {rd_buffer, rd_buffer_t};
+         rd_buffer[i+8] = rd_buf_t;
       end
       //This function is needed to update buffer on C side.
       send_rdbuf_to_c(rd_buffer);
