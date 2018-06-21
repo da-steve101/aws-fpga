@@ -47,16 +47,39 @@ logic rst_main_n_sync;
 
 logic       clk;
 logic       rst_n;
+(* dont_touch = "true" *) logic pipe_rst_n;
+logic pre_sync_rst_n;
+(* dont_touch = "true" *) logic sync_rst_n;
 assign cl_sh_id0[31:0] = `CL_SH_ID0;
 assign cl_sh_id1[31:0] = `CL_SH_ID1;
 assign cl_sh_status0[31:0] = 32'h0;
 assign cl_sh_status1[31:0] = 32'h0;
+assign cl_sh_pcim_awuser = 18'h0;
+assign cl_sh_pcim_aruser = 18'h0;
 
 // 512b input bus
 axi_bus_t sh_cl_dma_pcis_bus();
 
 assign clk = clk_main_a0;
-assign rst_n = rst_main_n;
+
+lib_pipe #(.WIDTH(1), .STAGES(4)) PIPE_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(rst_main_n), .out_bus(pipe_rst_n));
+
+always_ff @(negedge pipe_rst_n or posedge clk)
+   if (!pipe_rst_n)
+   begin
+      pre_sync_rst_n <= 0;
+      sync_rst_n <= 0;
+   end
+   else
+   begin
+      pre_sync_rst_n <= 1;
+      sync_rst_n <= pre_sync_rst_n;
+   end
+
+assign rst_n = sync_rst_n;
+
+(* dont_touch = "true" *) logic cnn_rst_n;
+lib_pipe #(.WIDTH(1), .STAGES(4)) DMA_PCIS_SLV_SLC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(cnn_rst_n));
 
 // buffer the input AXI
 axi_register_slice PCI_AXL_REG_SLC
@@ -203,7 +226,7 @@ assign data_out_bits = { data_out_bits_3, data_out_bits_2, data_out_bits_1, data
 AWSVggWrapper cifar10
 (
  .clock( clk ),
- .reset( !rst_n ),
+ .reset( !cnn_rst_n ),
  .io_dataIn_ready( data_in_ready ),
  .io_dataIn_valid( data_in_valid ),
  .io_dataIn_bits_0( data_in_bits[15:0] ),

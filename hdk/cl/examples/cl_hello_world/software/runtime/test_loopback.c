@@ -20,11 +20,6 @@
 
 #define	MEM_16G		(1ULL << 34)
 
-#ifndef SV_TEST
-static uint16_t pci_vendor_id = 0x1D0F; /* Amazon PCI Vendor ID */
-static uint16_t pci_device_id = 0xF000;
-#endif
-
 int verify_image( int slot_id );
 
 #ifdef SV_TEST
@@ -60,7 +55,7 @@ int main(int argc, char **argv) {
 int verify_image( int slot_id ) {
   int fd, rc;
   int i, j;
-  static const size_t image_size = 8192;
+  static const size_t image_size = 64;
 
   int write_channel = 0;
   int read_channel = 1;
@@ -85,6 +80,9 @@ int verify_image( int slot_id ) {
   cosim_printf("starting the write in %d blocks... ", image_size/buffer_size);
   for ( i = 0; i < image_size; i++ )
     image[i] = ( i - 64 + 256 ) % 256;
+  fpga_read_cl_to_buffer(slot_id, read_channel, fd, buffer_size, (0x10000000 + read_channel*MEM_16G)  + i*buffer_size );
+  for ( j = 0; j < buffer_size; j++ )
+    cosim_printf( "%x --- %x\n", image[j], read_buffer[j] );
   // rand_string( image, image_size );
   for ( i = 0; i < image_size/buffer_size; i++ ) {
     memcpy( write_buffer, image + i*buffer_size, buffer_size );
@@ -105,7 +103,7 @@ int verify_image( int slot_id ) {
     if ( memcmp( image + i*buffer_size, read_buffer, buffer_size) != 0 ) {
       cosim_printf( "image differs on iter %i", i );
       for ( j = 0; j < buffer_size; j++ )
-	cosim_printf( "%x --- %x", image[i*buffer_size + j], read_buffer[j] );
+	cosim_printf( "%x --- %x\n", image[i*buffer_size + j], read_buffer[j] );
     } else
       cosim_printf( "image is same on iter %i", i );
   }

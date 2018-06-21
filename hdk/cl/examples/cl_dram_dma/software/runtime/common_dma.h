@@ -32,7 +32,7 @@
 #endif
 
 
-static const size_t buffer_size = 8192;
+static const size_t buffer_size = 64;
 int error_count;
 char *write_buffer, *read_buffer;
 
