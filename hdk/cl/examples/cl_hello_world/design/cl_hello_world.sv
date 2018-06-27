@@ -54,8 +54,6 @@ assign cl_sh_id0[31:0] = `CL_SH_ID0;
 assign cl_sh_id1[31:0] = `CL_SH_ID1;
 assign cl_sh_status0[31:0] = 32'h0;
 assign cl_sh_status1[31:0] = 32'h0;
-assign cl_sh_pcim_awuser = 18'h0;
-assign cl_sh_pcim_aruser = 18'h0;
 
 // 512b input bus
 axi_bus_t sh_cl_dma_pcis_bus();
