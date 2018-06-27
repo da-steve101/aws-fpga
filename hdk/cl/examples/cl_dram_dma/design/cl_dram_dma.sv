@@ -31,6 +31,10 @@ module cl_dram_dma #(parameter NUM_DDR=4)
 // that the CL will use
 
 `include "unused_sh_bar1_template.inc"
+`include "unused_flr_template.inc"
+`include "unused_apppf_irq_template.inc"
+`include "unused_cl_sda_template.inc"
+`include "unused_pcim_template.inc"
 
 // Define the addition pipeline stag
 // needed to close timing for the various
@@ -124,19 +128,6 @@ always_ff @(negedge pipe_rst_n or posedge clk)
       sync_rst_n <= pre_sync_rst_n;
    end
 
-//FLR response 
-always_ff @(negedge sync_rst_n or posedge clk)
-   if (!sync_rst_n)
-   begin
-      sh_cl_flr_assert_q <= 0;
-      cl_sh_flr_done <= 0;
-   end
-   else
-   begin
-      sh_cl_flr_assert_q <= sh_cl_flr_assert;
-      cl_sh_flr_done <= sh_cl_flr_assert_q && !cl_sh_flr_done;
-   end
-
 ///////////////////////////////////////////////////////////////////////
 ///////////////// Scrubber enable and status //////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -169,15 +160,9 @@ assign cl_sh_status0 = 32'h0;
 assign cl_sh_status1 = 32'h0;
 
 always_ff @(posedge clk)
-    cl_sh_id0 <= dbg_scrb_en ? (dbg_scrb_mem_sel == 3'd3 ? ddrc_scrb_bus.addr[31:0] :
-                                dbg_scrb_mem_sel == 3'd2 ? ddrd_scrb_bus.addr[31:0] :
-                                dbg_scrb_mem_sel == 3'd1 ? ddrb_scrb_bus.addr[31:0] : ddra_scrb_bus.addr[31:0]) :
-                                `CL_SH_ID0; 
+    cl_sh_id0 <= `CL_SH_ID0; 
 always_ff @(posedge clk)
-    cl_sh_id1 <= dbg_scrb_en ? (dbg_scrb_mem_sel == 3'd3 ? ddrc_scrb_bus.addr[63:32] :
-                                dbg_scrb_mem_sel == 3'd2 ? ddrd_scrb_bus.addr[63:32] :
-                                dbg_scrb_mem_sel == 3'd1 ? ddrb_scrb_bus.addr[63:32] : ddra_scrb_bus.addr[63:32]) :
-                                `CL_SH_ID1;
+    cl_sh_id1 <= `CL_SH_ID1;
 
 logic sh_cl_ddr_is_ready_q;
 always_ff @(posedge clk or negedge sync_rst_n)
@@ -308,54 +293,6 @@ cl_dram_dma_axi_mstr  CL_DRAM_DMA_AXI_MSTR (
 ///////////////////////////////////////////////////////////////////////
 ///////////////// Secondary AXI Master module /////////////////////////
 ///////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////
-///////////////// PCIM MSTR module ////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-
-assign cl_sh_pcim_awid = cl_sh_pcim_bus.awid;
-assign cl_sh_pcim_awaddr = cl_sh_pcim_bus.awaddr;
-assign cl_sh_pcim_awlen = cl_sh_pcim_bus.awlen;
-assign cl_sh_pcim_awvalid = cl_sh_pcim_bus.awvalid;
-assign cl_sh_pcim_awsize = cl_sh_pcim_bus.awsize;
-assign cl_sh_pcim_bus.awready = sh_cl_pcim_awready;
-assign cl_sh_pcim_wdata = cl_sh_pcim_bus.wdata;
-assign cl_sh_pcim_wstrb = cl_sh_pcim_bus.wstrb;
-assign cl_sh_pcim_wlast = cl_sh_pcim_bus.wlast;
-assign cl_sh_pcim_wvalid = cl_sh_pcim_bus.wvalid;
-assign cl_sh_pcim_bus.wready = sh_cl_pcim_wready;
-assign cl_sh_pcim_bus.bid = sh_cl_pcim_bid;
-assign cl_sh_pcim_bus.bresp = sh_cl_pcim_bresp;
-assign cl_sh_pcim_bus.bvalid = sh_cl_pcim_bvalid;
-assign cl_sh_pcim_bready = cl_sh_pcim_bus.bready;
-assign cl_sh_pcim_arid = cl_sh_pcim_bus.arid;
-assign cl_sh_pcim_araddr = cl_sh_pcim_bus.araddr;
-assign cl_sh_pcim_arlen = cl_sh_pcim_bus.arlen;
-assign cl_sh_pcim_arvalid = cl_sh_pcim_bus.arvalid;
-assign cl_sh_pcim_bus.arready = sh_cl_pcim_arready;
-assign cl_sh_pcim_arsize = cl_sh_pcim_bus.arsize;
-assign cl_sh_pcim_bus.rid = sh_cl_pcim_rid;
-assign cl_sh_pcim_bus.rresp = sh_cl_pcim_rresp;
-assign cl_sh_pcim_bus.rvalid = sh_cl_pcim_rvalid;
-assign cl_sh_pcim_bus.rdata = sh_cl_pcim_rdata;
-assign cl_sh_pcim_bus.rlast = sh_cl_pcim_rlast;
-assign cl_sh_pcim_rready = cl_sh_pcim_bus.rready;
-
-// note: cl_sh_pcim_aruser/awuser are ignored by the shell
-// and the axi4 size is set fixed for 64-bytes
-//  cl_sh_pcim_arsize/awsize = 3'b6;
-
-(* dont_touch = "true" *) logic pcim_mstr_sync_rst_n;
-lib_pipe #(.WIDTH(1), .STAGES(4)) PCIM_MSTR_SLC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(pcim_mstr_sync_rst_n));
-cl_pcim_mstr CL_PCIM_MSTR (
-
-     .aclk(clk),
-     .aresetn(pcim_mstr_sync_rst_n),
-
-     .cfg_bus(pcim_tst_cfg_bus),
-
-     .cl_sh_pcim_bus     (cl_sh_pcim_bus)
-);
 
 ///////////////////////////////////////////////////////////////////////
 ///////////////// OCL SLAVE module ////////////////////////////////////
@@ -503,8 +440,6 @@ assign {lcl_cl_sh_ddrd.bresp, lcl_cl_sh_ddrb.bresp, lcl_cl_sh_ddra.bresp} = {sh_
 assign {lcl_cl_sh_ddrd.bvalid, lcl_cl_sh_ddrb.bvalid, lcl_cl_sh_ddra.bvalid} = sh_cl_ddr_bvalid_2d;
 
 assign cl_sh_ddr_bready_2d = {lcl_cl_sh_ddrd.bready, lcl_cl_sh_ddrb.bready, lcl_cl_sh_ddra.bready};
-
-
 
 assign cl_sh_ddr_arid_2d = '{lcl_cl_sh_ddrd.arid, lcl_cl_sh_ddrb.arid, lcl_cl_sh_ddra.arid};
 assign cl_sh_ddr_araddr_2d = '{lcl_cl_sh_ddrd.araddr, lcl_cl_sh_ddrb.araddr, lcl_cl_sh_ddra.araddr};
@@ -657,109 +592,6 @@ sh_ddr #(
 // DDR controller instantiation   
 //-----------------------------------------
 
-
-//----------------------------------------- 
-// Interrrupt example  
-//-----------------------------------------
-
-(* dont_touch = "true" *) logic int_slv_sync_rst_n;
-lib_pipe #(.WIDTH(1), .STAGES(4)) INT_SLV_SLC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(int_slv_sync_rst_n));
-cl_int_slv CL_INT_TST 
-(
-  .clk                 (clk),
-  .rst_n               (int_slv_sync_rst_n),
-
-  .cfg_bus             (int_tst_cfg_bus),
-
-  .cl_sh_apppf_irq_req (cl_sh_apppf_irq_req),
-  .sh_cl_apppf_irq_ack (sh_cl_apppf_irq_ack)
-       
-);
-
-//----------------------------------------- 
-// Interrrupt example  
-//-----------------------------------------
-
-//----------------------------------------- 
-// SDA SLAVE module 
-//-----------------------------------------
-
-
-assign sda_cl_bus.awvalid = sda_cl_awvalid;
-assign sda_cl_bus.awaddr[31:0] = sda_cl_awaddr;
-assign cl_sda_awready = sda_cl_bus.awready;
-assign sda_cl_bus.wvalid = sda_cl_wvalid;
-assign sda_cl_bus.wdata[31:0] = sda_cl_wdata;
-assign sda_cl_bus.wstrb[3:0] = sda_cl_wstrb;
-assign cl_sda_wready = sda_cl_bus.wready;
-assign cl_sda_bvalid = sda_cl_bus.bvalid;
-assign cl_sda_bresp = sda_cl_bus.bresp;
-assign sda_cl_bus.bready = sda_cl_bready;
-assign sda_cl_bus.arvalid = sda_cl_arvalid;
-assign sda_cl_bus.araddr[31:0] = sda_cl_araddr;
-assign cl_sda_arready = sda_cl_bus.arready;
-assign cl_sda_rvalid = sda_cl_bus.rvalid;
-assign cl_sda_rresp = sda_cl_bus.rresp;
-assign cl_sda_rdata = sda_cl_bus.rdata[31:0];
-assign sda_cl_bus.rready = sda_cl_rready;
-
-(* dont_touch = "true" *) logic sda_slv_sync_rst_n;
-lib_pipe #(.WIDTH(1), .STAGES(4)) SDA_SLV_SLC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(sda_slv_sync_rst_n));
-cl_sda_slv CL_SDA_SLV (
-
-  .aclk(clk),
-  .aresetn(sda_slv_sync_rst_n),
-  
-  .sda_cl_bus(sda_cl_bus)
-);
-
-//----------------------------------------- 
-// SDA SLAVE module 
-//-----------------------------------------
-
-
-//----------------------------------------- 
-// Virtual JTAG ILA Debug core example 
-//-----------------------------------------
-
-
-`ifndef DISABLE_VJTAG_DEBUG
-
-   cl_ila #(.DDR_A_PRESENT(`DDR_A_PRESENT) ) CL_ILA   (
-
-   .aclk(clk),
-   .drck(drck),
-   .shift(shift),
-      .tdi(tdi),
-   .update(update),
-   .sel(sel),
-   .tdo(tdo),
-   .tms(tms),
-   .tck(tck),
-   .runtest(runtest),
-   .reset(reset),
-   .capture(capture),
-   .bscanid_en(bscanid_en),
-   .sh_cl_dma_pcis_q(sh_cl_dma_pcis_q),
-`ifndef DDR_A_ABSENT   
-   .lcl_cl_sh_ddra(lcl_cl_sh_ddra)
-`else
-   .lcl_cl_sh_ddra(axi_bus_tied)
-`endif
-);
-
-cl_vio CL_VIO (
-
-   .clk_extra_a1(clk_extra_a1)
-
-);
-
-
-`endif //  `ifndef DISABLE_VJTAG_DEBUG
-
-//----------------------------------------- 
-// Virtual JATG ILA Debug core example 
-//-----------------------------------------
 // tie off for ILA port when probing block not present
    assign axi_bus_tied.awvalid = 1'b0 ;
    assign axi_bus_tied.awaddr = 64'b0 ;
@@ -786,12 +618,5 @@ cl_vio CL_VIO (
    assign axi_bus_tied.bvalid = 1'b0 ;
    assign axi_bus_tied.bid = 16'b0 ;
    assign axi_bus_tied.bready = 1'b0 ;
-
-
-// Temporal workaround until these signals removed from the shell
-
-     assign cl_sh_pcim_awuser = 18'h0;
-     assign cl_sh_pcim_aruser = 18'h0;
-
 
 endmodule   

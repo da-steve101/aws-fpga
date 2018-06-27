@@ -89,6 +89,7 @@ const struct logger *logger = &logger_stdout;
 out:
 
 #ifndef SV_TEST
+   printf("No SV TEST\n");
    return rc;
 #else
    if (error_count > 0) {

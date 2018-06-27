@@ -33,7 +33,6 @@ const struct logger *logger = &logger_stdout;
 int main(int argc, char **argv) {
     int rc;
     int slot_id = 0;
-    int interrupt_number;
 
     switch (argc) {
     case 1:
@@ -58,14 +57,6 @@ int main(int argc, char **argv) {
 
     rc = dma_example(slot_id);
     fail_on(rc, out, "DMA example failed");
-
-    interrupt_number = 0;
-
-    rc = interrupt_example(slot_id, interrupt_number);
-    fail_on(rc, out, "Interrupt example failed");
-
-    rc = axi_mstr_example(slot_id);
-    fail_on(rc, out, "AXI Master example failed");
 
 out:
     return rc;
