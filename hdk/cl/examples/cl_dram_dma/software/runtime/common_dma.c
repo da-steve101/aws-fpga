@@ -32,8 +32,8 @@ void usage(const char* program_name) {
 void
 rand_string(char *str, size_t size)
 {
-  //static const char charset[] =
-  //      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRTSUVWXYZ1234567890";
+    static const char charset[] =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRTSUVWXYZ1234567890";
     static bool seeded = false;
     int i;
 
@@ -43,11 +43,11 @@ rand_string(char *str, size_t size)
     }
 
     for(i = 0; i < size; ++i) {
-      //unsigned int key = rand() % (sizeof charset - 1);
-      str[i] = i % 256; // charset[key];
+        unsigned int key = rand() % (sizeof charset - 1);
+        str[i] = charset[key];
     }
 
-    // str[size-1] = '\0';
+    str[size-1] = '\0';
 }
 
 #ifndef SV_TEST

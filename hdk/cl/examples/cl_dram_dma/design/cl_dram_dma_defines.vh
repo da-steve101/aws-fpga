@@ -34,7 +34,7 @@
 
 
 // Uncomment to disable Virtual JTAG
-`define DISABLE_VJTAG_DEBUG
+//`define DISABLE_VJTAG_DEBUG
 
 // AXI Master Block Registers
 `define CL_DRAM_DMA_AXI_MSTR_CCR_ADDR   32'h0000_0000
