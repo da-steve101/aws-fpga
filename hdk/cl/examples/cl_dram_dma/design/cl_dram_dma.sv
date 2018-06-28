@@ -50,6 +50,9 @@ logic clk;
 logic pre_sync_rst_n;
 (* dont_touch = "true" *) logic sync_rst_n;
 
+assign cl_sh_id0[31:0] = `CL_SH_ID0;
+assign cl_sh_id1[31:0] = `CL_SH_ID1;
+
 //----------------------------
 // End Internal signals
 //----------------------------
