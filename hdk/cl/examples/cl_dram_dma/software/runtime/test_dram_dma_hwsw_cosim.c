@@ -130,14 +130,16 @@ int dma_example_hwsw_cosim(int slot_id) {
 #ifndef SV_TEST
     fd = open_dma_queue(slot_id);
 #else
-    init_ddr();
+    //    init_ddr();
 #endif
 
     rand_string(write_buffer, buffer_size);
 
-    for (channel=0; channel < 4; channel++) {
-      fpga_write_buffer_to_cl(slot_id, channel, fd, buffer_size, (0x10000000 + channel*MEM_16G));
-    }
+    // for (channel=0; channel < 4; channel++) {
+    int write_channel = 0;
+    int read_channel = 0;
+    fpga_write_buffer_to_cl(slot_id, write_channel, fd, buffer_size, (0x10000000 + write_channel*MEM_16G));
+    // }
 
     /* fsync() will make sure the write made it to the target buffer 
      * before read is done
@@ -147,9 +149,9 @@ int dma_example_hwsw_cosim(int slot_id) {
     fail_on((rc = (rc < 0)? errno:0), out, "call to fsync failed.");
 #endif
 
-    for (channel=0; channel < 4; channel++) {
-      fpga_read_cl_to_buffer(slot_id, channel, fd, buffer_size, (0x10000000 + channel*MEM_16G));
-    }
+    // for (channel=0; channel < 4; channel++) {
+    fpga_read_cl_to_buffer(slot_id, read_channel, fd, buffer_size, (0x10000000 + read_channel*MEM_16G));
+    // }
 
 out:
 
