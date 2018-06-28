@@ -28,10 +28,12 @@
 `define SH_CL_ASYNC
 
 //comment below to remove DDRs from CL
-`define DDR_A_EXISTS 
-`define DDR_B_EXISTS 
-`define DDR_D_EXISTS
-
+//`define DDR_A_EXISTS 
+//`define DDR_B_EXISTS 
+//`define DDR_D_EXISTS
+`define DDR_A_ABSENT
+`define DDR_B_ABSENT
+`define DDR_D_ABSENT
 
 // Uncomment to disable Virtual JTAG
 `define DISABLE_VJTAG_DEBUG
