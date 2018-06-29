@@ -1,8 +1,8 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.1_sdxop (lin64) Build 1933108 Fri Jul 14 11:54:19 MDT 2017
--- Date        : Thu Jun 28 13:18:23 2018
--- Host        : ip-172-31-26-60.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.4.1708 (Core)
+-- Date        : Fri Jun 29 04:13:05 2018
+-- Host        : ip-172-31-16-238.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.4.1708 (Core)
 -- Command     : write_vhdl -force -mode funcsim
 --               /home/centos/cifar/cifar.srcs/sources_1/ip/fifo_sync_512/fifo_sync_512_sim_netlist.vhdl
 -- Design      : fifo_sync_512
@@ -1398,6 +1398,7 @@ entity fifo_sync_512_builtin_prim_13 is
     rd_rst_busy : out STD_LOGIC;
     wr_rst_busy : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 71 downto 0 );
+    valid : out STD_LOGIC;
     clk : in STD_LOGIC;
     rd_en : in STD_LOGIC;
     srst : in STD_LOGIC;
@@ -1409,6 +1410,7 @@ entity fifo_sync_512_builtin_prim_13 is
 end fifo_sync_512_builtin_prim_13;
 
 architecture STRUCTURE of fifo_sync_512_builtin_prim_13 is
+  signal \^empty\ : STD_LOGIC;
   signal \gf36e2_inst.sngfifo36e2_n_0\ : STD_LOGIC;
   signal \gf36e2_inst.sngfifo36e2_n_1\ : STD_LOGIC;
   signal \gf36e2_inst.sngfifo36e2_n_100\ : STD_LOGIC;
@@ -1527,6 +1529,7 @@ architecture STRUCTURE of fifo_sync_512_builtin_prim_13 is
   attribute box_type : string;
   attribute box_type of \gf36e2_inst.sngfifo36e2\ : label is "PRIMITIVE";
 begin
+  empty <= \^empty\;
 \gf36e2_inst.sngfifo36e2\: unisim.vcomponents.FIFO36E2
     generic map(
       CASCADE_ORDER => "NONE",
@@ -1649,7 +1652,7 @@ begin
       ECCPARITY(2) => \gf36e2_inst.sngfifo36e2_n_189\,
       ECCPARITY(1) => \gf36e2_inst.sngfifo36e2_n_190\,
       ECCPARITY(0) => \gf36e2_inst.sngfifo36e2_n_191\,
-      EMPTY => empty,
+      EMPTY => \^empty\,
       FULL => full,
       INJECTDBITERR => '0',
       INJECTSBITERR => '0',
@@ -1696,6 +1699,14 @@ begin
       WREN => wr_en,
       WRERR => p_8_out,
       WRRSTBUSY => wr_rst_busy
+    );
+valid_INST_0: unisim.vcomponents.LUT1
+    generic map(
+      INIT => X"1"
+    )
+        port map (
+      I0 => \^empty\,
+      O => valid
     );
 end STRUCTURE;
 library IEEE;
@@ -2640,6 +2651,7 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity fifo_sync_512_builtin_extdepth is
   port (
+    valid : out STD_LOGIC;
     empty : out STD_LOGIC;
     full : out STD_LOGIC;
     prog_empty : out STD_LOGIC;
@@ -2674,10 +2686,11 @@ begin
       rd_en => rd_en,
       rd_rst_busy => rd_rst_busy,
       srst => srst,
+      valid => valid,
       wr_en => wr_en,
       wr_rst_busy => wr_rst_busy
     );
-\rst_val_sym.gextw_sym[1].inst_extdi_0\: unisim.vcomponents.LUT1
+i_0: unisim.vcomponents.LUT1
     generic map(
       INIT => X"2"
     )
@@ -2685,7 +2698,7 @@ begin
       I0 => '1',
       O => srst_qr(1)
     );
-\rst_val_sym.gextw_sym[1].inst_extdi_1\: unisim.vcomponents.LUT1
+i_1: unisim.vcomponents.LUT1
     generic map(
       INIT => X"2"
     )
@@ -3056,6 +3069,7 @@ entity fifo_sync_512_builtin_top is
     rd_rst_busy : out STD_LOGIC;
     wr_rst_busy : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 511 downto 0 );
+    valid : out STD_LOGIC;
     clk : in STD_LOGIC;
     rd_en : in STD_LOGIC;
     srst : in STD_LOGIC;
@@ -3079,6 +3093,7 @@ begin
       rd_en => rd_en,
       rd_rst_busy => rd_rst_busy,
       srst => srst,
+      valid => valid,
       wr_en => wr_en,
       wr_rst_busy => wr_rst_busy
     );
@@ -3158,6 +3173,7 @@ entity fifo_sync_512_fifo_generator_v13_1_4_builtin is
     rd_rst_busy : out STD_LOGIC;
     wr_rst_busy : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 511 downto 0 );
+    valid : out STD_LOGIC;
     clk : in STD_LOGIC;
     rd_en : in STD_LOGIC;
     srst : in STD_LOGIC;
@@ -3181,6 +3197,7 @@ begin
       rd_en => rd_en,
       rd_rst_busy => rd_rst_busy,
       srst => srst,
+      valid => valid,
       wr_en => wr_en,
       wr_rst_busy => wr_rst_busy
     );
@@ -3197,6 +3214,7 @@ entity fifo_sync_512_fifo_generator_top is
     rd_rst_busy : out STD_LOGIC;
     wr_rst_busy : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 511 downto 0 );
+    valid : out STD_LOGIC;
     clk : in STD_LOGIC;
     rd_en : in STD_LOGIC;
     srst : in STD_LOGIC;
@@ -3220,6 +3238,7 @@ begin
       rd_en => rd_en,
       rd_rst_busy => rd_rst_busy,
       srst => srst,
+      valid => valid,
       wr_en => wr_en,
       wr_rst_busy => wr_rst_busy
     );
@@ -3236,6 +3255,7 @@ entity fifo_sync_512_fifo_generator_v13_1_4_synth is
     rd_rst_busy : out STD_LOGIC;
     wr_rst_busy : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 511 downto 0 );
+    valid : out STD_LOGIC;
     clk : in STD_LOGIC;
     rd_en : in STD_LOGIC;
     srst : in STD_LOGIC;
@@ -3259,6 +3279,7 @@ begin
       rd_en => rd_en,
       rd_rst_busy => rd_rst_busy,
       srst => srst,
+      valid => valid,
       wr_en => wr_en,
       wr_rst_busy => wr_rst_busy
     );
@@ -3686,7 +3707,7 @@ entity fifo_sync_512_fifo_generator_v13_1_4 is
   attribute C_HAS_UNDERFLOW : integer;
   attribute C_HAS_UNDERFLOW of fifo_sync_512_fifo_generator_v13_1_4 : entity is 0;
   attribute C_HAS_VALID : integer;
-  attribute C_HAS_VALID of fifo_sync_512_fifo_generator_v13_1_4 : entity is 0;
+  attribute C_HAS_VALID of fifo_sync_512_fifo_generator_v13_1_4 : entity is 1;
   attribute C_HAS_WR_ACK : integer;
   attribute C_HAS_WR_ACK of fifo_sync_512_fifo_generator_v13_1_4 : entity is 0;
   attribute C_HAS_WR_DATA_COUNT : integer;
@@ -4421,7 +4442,6 @@ begin
   s_axis_tready <= \<const0>\;
   sbiterr <= \<const0>\;
   underflow <= \<const0>\;
-  valid <= \<const0>\;
   wr_ack <= \<const0>\;
   wr_data_count(8) <= \<const0>\;
   wr_data_count(7) <= \<const0>\;
@@ -4451,6 +4471,7 @@ inst_fifo_gen: entity work.fifo_sync_512_fifo_generator_v13_1_4_synth
       rd_en => rd_en,
       rd_rst_busy => rd_rst_busy,
       srst => srst,
+      valid => valid,
       wr_en => wr_en,
       wr_rst_busy => wr_rst_busy
     );
@@ -4469,6 +4490,7 @@ entity fifo_sync_512 is
     dout : out STD_LOGIC_VECTOR ( 511 downto 0 );
     full : out STD_LOGIC;
     empty : out STD_LOGIC;
+    valid : out STD_LOGIC;
     prog_empty : out STD_LOGIC;
     wr_rst_busy : out STD_LOGIC;
     rd_rst_busy : out STD_LOGIC
@@ -4542,7 +4564,6 @@ architecture STRUCTURE of fifo_sync_512 is
   signal NLW_U0_s_axis_tready_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_sbiterr_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_underflow_UNCONNECTED : STD_LOGIC;
-  signal NLW_U0_valid_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_wr_ack_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_axi_ar_data_count_UNCONNECTED : STD_LOGIC_VECTOR ( 4 downto 0 );
   signal NLW_U0_axi_ar_rd_data_count_UNCONNECTED : STD_LOGIC_VECTOR ( 4 downto 0 );
@@ -4789,7 +4810,7 @@ architecture STRUCTURE of fifo_sync_512 is
   attribute C_HAS_UNDERFLOW : integer;
   attribute C_HAS_UNDERFLOW of U0 : label is 0;
   attribute C_HAS_VALID : integer;
-  attribute C_HAS_VALID of U0 : label is 0;
+  attribute C_HAS_VALID of U0 : label is 1;
   attribute C_HAS_WR_ACK : integer;
   attribute C_HAS_WR_ACK of U0 : label is 0;
   attribute C_HAS_WR_DATA_COUNT : integer;
@@ -5235,7 +5256,7 @@ U0: entity work.fifo_sync_512_fifo_generator_v13_1_4
       sleep => '0',
       srst => srst,
       underflow => NLW_U0_underflow_UNCONNECTED,
-      valid => NLW_U0_valid_UNCONNECTED,
+      valid => valid,
       wr_ack => NLW_U0_wr_ack_UNCONNECTED,
       wr_clk => '0',
       wr_data_count(8 downto 0) => NLW_U0_wr_data_count_UNCONNECTED(8 downto 0),

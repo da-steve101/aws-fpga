@@ -1,8 +1,8 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2017.1_sdxop (lin64) Build 1933108 Fri Jul 14 11:54:19 MDT 2017
-// Date        : Thu Jun 28 13:18:23 2018
-// Host        : ip-172-31-26-60.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.4.1708 (Core)
+// Date        : Fri Jun 29 04:13:05 2018
+// Host        : ip-172-31-16-238.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.4.1708 (Core)
 // Command     : write_verilog -force -mode funcsim
 //               /home/centos/cifar/cifar.srcs/sources_1/ip/fifo_sync_512/fifo_sync_512_sim_netlist.v
 // Design      : fifo_sync_512
@@ -23,6 +23,7 @@ module fifo_sync_512
     dout,
     full,
     empty,
+    valid,
     prog_empty,
     wr_rst_busy,
     rd_rst_busy);
@@ -34,6 +35,7 @@ module fifo_sync_512
   (* x_interface_info = "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_DATA" *) output [511:0]dout;
   (* x_interface_info = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE FULL" *) output full;
   (* x_interface_info = "xilinx.com:interface:fifo_read:1.0 FIFO_READ EMPTY" *) output empty;
+  output valid;
   output prog_empty;
   output wr_rst_busy;
   output rd_rst_busy;
@@ -47,6 +49,7 @@ module fifo_sync_512
   wire rd_en;
   wire rd_rst_busy;
   wire srst;
+  wire valid;
   wire wr_en;
   wire wr_rst_busy;
   wire NLW_U0_almost_empty_UNCONNECTED;
@@ -107,7 +110,6 @@ module fifo_sync_512
   wire NLW_U0_s_axis_tready_UNCONNECTED;
   wire NLW_U0_sbiterr_UNCONNECTED;
   wire NLW_U0_underflow_UNCONNECTED;
-  wire NLW_U0_valid_UNCONNECTED;
   wire NLW_U0_wr_ack_UNCONNECTED;
   wire [4:0]NLW_U0_axi_ar_data_count_UNCONNECTED;
   wire [4:0]NLW_U0_axi_ar_rd_data_count_UNCONNECTED;
@@ -262,7 +264,7 @@ module fifo_sync_512
   (* C_HAS_SLAVE_CE = "0" *) 
   (* C_HAS_SRST = "1" *) 
   (* C_HAS_UNDERFLOW = "0" *) 
-  (* C_HAS_VALID = "0" *) 
+  (* C_HAS_VALID = "1" *) 
   (* C_HAS_WR_ACK = "0" *) 
   (* C_HAS_WR_DATA_COUNT = "0" *) 
   (* C_HAS_WR_RST = "0" *) 
@@ -597,7 +599,7 @@ module fifo_sync_512
         .sleep(1'b0),
         .srst(srst),
         .underflow(NLW_U0_underflow_UNCONNECTED),
-        .valid(NLW_U0_valid_UNCONNECTED),
+        .valid(valid),
         .wr_ack(NLW_U0_wr_ack_UNCONNECTED),
         .wr_clk(1'b0),
         .wr_data_count(NLW_U0_wr_data_count_UNCONNECTED[8:0]),
@@ -608,7 +610,8 @@ endmodule
 
 (* ORIG_REF_NAME = "builtin_extdepth" *) 
 module fifo_sync_512_builtin_extdepth
-   (empty,
+   (valid,
+    empty,
     full,
     prog_empty,
     rd_rst_busy,
@@ -619,6 +622,7 @@ module fifo_sync_512_builtin_extdepth
     srst,
     wr_en,
     din);
+  output valid;
   output empty;
   output full;
   output prog_empty;
@@ -641,6 +645,7 @@ module fifo_sync_512_builtin_extdepth
   wire rd_rst_busy;
   wire srst;
   (* async_reg = "true" *) (* msgon = "true" *) wire [1:0]srst_qr;
+  wire valid;
   wire wr_en;
   wire wr_rst_busy;
 
@@ -654,16 +659,17 @@ module fifo_sync_512_builtin_extdepth
         .rd_en(rd_en),
         .rd_rst_busy(rd_rst_busy),
         .srst(srst),
+        .valid(valid),
         .wr_en(wr_en),
         .wr_rst_busy(wr_rst_busy));
   LUT1 #(
     .INIT(2'h2)) 
-    \rst_val_sym.gextw_sym[1].inst_extdi_0 
+    i_0
        (.I0(1'b1),
         .O(srst_qr[1]));
   LUT1 #(
     .INIT(2'h2)) 
-    \rst_val_sym.gextw_sym[1].inst_extdi_1 
+    i_1
        (.I0(1'b1),
         .O(srst_qr[0]));
 endmodule
@@ -1870,6 +1876,7 @@ module fifo_sync_512_builtin_prim_13
     rd_rst_busy,
     wr_rst_busy,
     dout,
+    valid,
     clk,
     rd_en,
     srst,
@@ -1881,6 +1888,7 @@ module fifo_sync_512_builtin_prim_13
   output rd_rst_busy;
   output wr_rst_busy;
   output [71:0]dout;
+  output valid;
   input clk;
   input rd_en;
   input srst;
@@ -2011,6 +2019,7 @@ module fifo_sync_512_builtin_prim_13
   wire rd_en;
   wire rd_rst_busy;
   wire srst;
+  wire valid;
   wire wr_en;
   wire wr_rst_busy;
 
@@ -2079,6 +2088,11 @@ module fifo_sync_512_builtin_prim_13
         .WREN(wr_en),
         .WRERR(p_8_out),
         .WRRSTBUSY(wr_rst_busy));
+  LUT1 #(
+    .INIT(2'h1)) 
+    valid_INST_0
+       (.I0(empty),
+        .O(valid));
 endmodule
 
 (* ORIG_REF_NAME = "builtin_prim" *) 
@@ -2716,6 +2730,7 @@ module fifo_sync_512_builtin_top
     rd_rst_busy,
     wr_rst_busy,
     dout,
+    valid,
     clk,
     rd_en,
     srst,
@@ -2727,6 +2742,7 @@ module fifo_sync_512_builtin_top
   output rd_rst_busy;
   output wr_rst_busy;
   output [511:0]dout;
+  output valid;
   input clk;
   input rd_en;
   input srst;
@@ -2742,6 +2758,7 @@ module fifo_sync_512_builtin_top
   wire rd_en;
   wire rd_rst_busy;
   wire srst;
+  wire valid;
   wire wr_en;
   wire wr_rst_busy;
 
@@ -2755,6 +2772,7 @@ module fifo_sync_512_builtin_top
         .rd_en(rd_en),
         .rd_rst_busy(rd_rst_busy),
         .srst(srst),
+        .valid(valid),
         .wr_en(wr_en),
         .wr_rst_busy(wr_rst_busy));
   fifo_sync_512_builtin_extdepth_0 \rst_val_sym.gextw_sym[2].inst_extd 
@@ -2816,6 +2834,7 @@ module fifo_sync_512_fifo_generator_top
     rd_rst_busy,
     wr_rst_busy,
     dout,
+    valid,
     clk,
     rd_en,
     srst,
@@ -2827,6 +2846,7 @@ module fifo_sync_512_fifo_generator_top
   output rd_rst_busy;
   output wr_rst_busy;
   output [511:0]dout;
+  output valid;
   input clk;
   input rd_en;
   input srst;
@@ -2842,6 +2862,7 @@ module fifo_sync_512_fifo_generator_top
   wire rd_en;
   wire rd_rst_busy;
   wire srst;
+  wire valid;
   wire wr_en;
   wire wr_rst_busy;
 
@@ -2855,6 +2876,7 @@ module fifo_sync_512_fifo_generator_top
         .rd_en(rd_en),
         .rd_rst_busy(rd_rst_busy),
         .srst(srst),
+        .valid(valid),
         .wr_en(wr_en),
         .wr_rst_busy(wr_rst_busy));
 endmodule
@@ -2889,7 +2911,7 @@ endmodule
 (* C_HAS_PROG_FLAGS_RACH = "0" *) (* C_HAS_PROG_FLAGS_RDCH = "0" *) (* C_HAS_PROG_FLAGS_WACH = "0" *) 
 (* C_HAS_PROG_FLAGS_WDCH = "0" *) (* C_HAS_PROG_FLAGS_WRCH = "0" *) (* C_HAS_RD_DATA_COUNT = "0" *) 
 (* C_HAS_RD_RST = "0" *) (* C_HAS_RST = "0" *) (* C_HAS_SLAVE_CE = "0" *) 
-(* C_HAS_SRST = "1" *) (* C_HAS_UNDERFLOW = "0" *) (* C_HAS_VALID = "0" *) 
+(* C_HAS_SRST = "1" *) (* C_HAS_UNDERFLOW = "0" *) (* C_HAS_VALID = "1" *) 
 (* C_HAS_WR_ACK = "0" *) (* C_HAS_WR_DATA_COUNT = "0" *) (* C_HAS_WR_RST = "0" *) 
 (* C_IMPLEMENTATION_TYPE = "6" *) (* C_IMPLEMENTATION_TYPE_AXIS = "1" *) (* C_IMPLEMENTATION_TYPE_RACH = "1" *) 
 (* C_IMPLEMENTATION_TYPE_RDCH = "1" *) (* C_IMPLEMENTATION_TYPE_WACH = "1" *) (* C_IMPLEMENTATION_TYPE_WDCH = "1" *) 
@@ -3402,6 +3424,7 @@ module fifo_sync_512_fifo_generator_v13_1_4
   wire rd_en;
   wire rd_rst_busy;
   wire srst;
+  wire valid;
   wire wr_en;
   wire wr_rst_busy;
 
@@ -3913,7 +3936,6 @@ module fifo_sync_512_fifo_generator_v13_1_4
   assign s_axis_tready = \<const0> ;
   assign sbiterr = \<const0> ;
   assign underflow = \<const0> ;
-  assign valid = \<const0> ;
   assign wr_ack = \<const0> ;
   assign wr_data_count[8] = \<const0> ;
   assign wr_data_count[7] = \<const0> ;
@@ -3938,6 +3960,7 @@ module fifo_sync_512_fifo_generator_v13_1_4
         .rd_en(rd_en),
         .rd_rst_busy(rd_rst_busy),
         .srst(srst),
+        .valid(valid),
         .wr_en(wr_en),
         .wr_rst_busy(wr_rst_busy));
 endmodule
@@ -3950,6 +3973,7 @@ module fifo_sync_512_fifo_generator_v13_1_4_builtin
     rd_rst_busy,
     wr_rst_busy,
     dout,
+    valid,
     clk,
     rd_en,
     srst,
@@ -3961,6 +3985,7 @@ module fifo_sync_512_fifo_generator_v13_1_4_builtin
   output rd_rst_busy;
   output wr_rst_busy;
   output [511:0]dout;
+  output valid;
   input clk;
   input rd_en;
   input srst;
@@ -3976,6 +4001,7 @@ module fifo_sync_512_fifo_generator_v13_1_4_builtin
   wire rd_en;
   wire rd_rst_busy;
   wire srst;
+  wire valid;
   wire wr_en;
   wire wr_rst_busy;
 
@@ -3989,6 +4015,7 @@ module fifo_sync_512_fifo_generator_v13_1_4_builtin
         .rd_en(rd_en),
         .rd_rst_busy(rd_rst_busy),
         .srst(srst),
+        .valid(valid),
         .wr_en(wr_en),
         .wr_rst_busy(wr_rst_busy));
 endmodule
@@ -4001,6 +4028,7 @@ module fifo_sync_512_fifo_generator_v13_1_4_synth
     rd_rst_busy,
     wr_rst_busy,
     dout,
+    valid,
     clk,
     rd_en,
     srst,
@@ -4012,6 +4040,7 @@ module fifo_sync_512_fifo_generator_v13_1_4_synth
   output rd_rst_busy;
   output wr_rst_busy;
   output [511:0]dout;
+  output valid;
   input clk;
   input rd_en;
   input srst;
@@ -4027,6 +4056,7 @@ module fifo_sync_512_fifo_generator_v13_1_4_synth
   wire rd_en;
   wire rd_rst_busy;
   wire srst;
+  wire valid;
   wire wr_en;
   wire wr_rst_busy;
 
@@ -4040,6 +4070,7 @@ module fifo_sync_512_fifo_generator_v13_1_4_synth
         .rd_en(rd_en),
         .rd_rst_busy(rd_rst_busy),
         .srst(srst),
+        .valid(valid),
         .wr_en(wr_en),
         .wr_rst_busy(wr_rst_busy));
 endmodule

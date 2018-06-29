@@ -63,6 +63,7 @@ fifo_sync_512 your_instance_name (
   .dout(dout),                // output wire [511 : 0] dout
   .full(full),                // output wire full
   .empty(empty),              // output wire empty
+  .valid(valid),              // output wire valid
   .prog_empty(prog_empty),    // output wire prog_empty
   .wr_rst_busy(wr_rst_busy),  // output wire wr_rst_busy
   .rd_rst_busy(rd_rst_busy)  // output wire rd_rst_busy
