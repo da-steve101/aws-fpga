@@ -62,6 +62,8 @@ ${SH_LIB_DIR}/../ip/axi_dwidth_converter_64_to_512/hdl/axis_register_slice_v1_1_
 ${SH_LIB_DIR}/../ip/axi_dwidth_converter_64_to_512/hdl/axis_infrastructure_v1_1_vl_rfs.v
 ${SH_LIB_DIR}/../ip/fifo_sync_512/hdl/fifo_generator_v13_1_rfs.v
 ${SH_LIB_DIR}/../ip/fifo_sync_512/sim/fifo_sync_512.v
+${SH_LIB_DIR}/../ip/fifo_1024bits/hdl/fifo_generator_v13_1_rfs.v
+${SH_LIB_DIR}/../ip/fifo_1024bits/sim/fifo_1024bits.v
 
 --define DISABLE_VJTAG_DEBUG
 ${CL_ROOT}/design/axil_slave.sv
