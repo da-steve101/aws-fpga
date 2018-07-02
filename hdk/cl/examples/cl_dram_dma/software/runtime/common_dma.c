@@ -185,6 +185,7 @@ int dma_memcmp ( char * cmp_buf, size_t buffer_size) {
    if (memcmp(cmp_buf, read_buffer, buffer_size) == 0) {
       printf("DRAM DMA read the same string as it wrote on channel %d (it worked correctly!)\n", channel);
    } else {
+     /*
       int i;
       printf("Bytes written to channel %d:\n", channel);
       for (i = 0; i < buffer_size; ++i) {
@@ -198,6 +199,7 @@ int dma_memcmp ( char * cmp_buf, size_t buffer_size) {
           printf("%c", read_buffer[i]);
       }
       printf("\n\n");
+     */
 #ifndef SV_TEST
       rc = 1; 
       fail_on(rc, out, "Data read from DMA did not match data written with DMA. Was there an fsync() between the read and write?");

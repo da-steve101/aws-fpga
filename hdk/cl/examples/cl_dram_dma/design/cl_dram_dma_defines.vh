@@ -35,6 +35,8 @@
 `define DDR_B_ABSENT
 `define DDR_D_ABSENT
 
+`define IMPLEMENT_CNN
+
 // Uncomment to disable Virtual JTAG
 `define DISABLE_VJTAG_DEBUG
 

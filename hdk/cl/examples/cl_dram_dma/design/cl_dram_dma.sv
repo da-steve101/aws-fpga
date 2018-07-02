@@ -404,6 +404,7 @@ axi_dwidth_converter_512_to_64 AXI_DWIDTH_TO_64
 (* dont_touch = "true" *) logic cnn_rst_n;
 lib_pipe #(.WIDTH(1), .STAGES(4)) CNN_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(cnn_rst_n));
 
+`ifndef IMPLEMENT_CNN
 parameter N = 10;
 // make a shift reg ...
 logic [(N*64)-1:0] bits_reg;
@@ -421,6 +422,27 @@ begin
     valid_reg <= { data_in_valid, valid_reg[N-1:1]};
   end
 end
+
+`else
+// Insert CNN here
+assign data_out_bits = { data_out_bits_3, data_out_bits_2, data_out_bits_1, data_out_bits_0 };
+AWSVggWrapper cifar10
+(
+ .clock( clk ),
+ .reset( !cnn_rst_n ),
+ .io_dataIn_ready( data_in_ready ),
+ .io_dataIn_valid( data_in_valid ),
+ .io_dataIn_bits_0( data_in_bits[15:0] ),
+ .io_dataIn_bits_1( data_in_bits[31:16] ),
+ .io_dataIn_bits_2( data_in_bits[47:32] ),
+ .io_dataOut_ready( data_out_ready ),
+ .io_dataOut_valid( data_out_valid ),
+ .io_dataOut_bits_0( data_out_bits_0 ),
+ .io_dataOut_bits_1( data_out_bits_1 ),
+ .io_dataOut_bits_2( data_out_bits_2 ),
+ .io_dataOut_bits_3( data_out_bits_3 )
+);
+`endif // IMPLEMENT_CNN
 
 (* dont_touch = "true" *) logic fifo_out_sync_rst_n;
 lib_pipe #(.WIDTH(1), .STAGES(4)) FIFO_OUT_SYNC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(fifo_out_sync_rst_n));
