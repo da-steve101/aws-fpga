@@ -82,7 +82,10 @@ read_ip [ list \
   $HDK_SHELL_DESIGN_DIR/ip/cl_debug_bridge/cl_debug_bridge.xci \
   $HDK_SHELL_DESIGN_DIR/ip/ila_1/ila_1.xci \
   $HDK_SHELL_DESIGN_DIR/ip/ila_vio_counter/ila_vio_counter.xci \
-  $HDK_SHELL_DESIGN_DIR/ip/vio_0/vio_0.xci
+  $HDK_SHELL_DESIGN_DIR/ip/vio_0/vio_0.xci \
+  ${HDK_SHELL_DESIGN_DIR}/ip/axi_dwidth_converter_512_to_64/axi_dwidth_converter_512_to_64.xci \
+  ${HDK_SHELL_DESIGN_DIR}/ip/axi_dwidth_converter_64_to_512/axi_dwidth_converter_64_to_512.xci \
+  ${HDK_SHELL_DESIGN_DIR}/ip/fifo_sync_512/fifo_sync_512.xci
 ]
 
 # Additional IP's that might be needed if using the DDR
