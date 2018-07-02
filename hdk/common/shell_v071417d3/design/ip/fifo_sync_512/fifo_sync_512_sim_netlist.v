@@ -1,10 +1,10 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2017.1_sdxop (lin64) Build 1933108 Fri Jul 14 11:54:19 MDT 2017
-// Date        : Fri Jun 29 04:13:05 2018
+// Date        : Mon Jul  2 04:46:20 2018
 // Host        : ip-172-31-16-238.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.4.1708 (Core)
 // Command     : write_verilog -force -mode funcsim
-//               /home/centos/cifar/cifar.srcs/sources_1/ip/fifo_sync_512/fifo_sync_512_sim_netlist.v
+//               /home/centos/cifar/cifar.srcs/sources_1/ip/fifo_sync_512_1/fifo_sync_512_sim_netlist.v
 // Design      : fifo_sync_512
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -292,14 +292,14 @@ module fifo_sync_512
   (* C_PRIM_FIFO_TYPE_WACH = "512x36" *) 
   (* C_PRIM_FIFO_TYPE_WDCH = "512x72" *) 
   (* C_PRIM_FIFO_TYPE_WRCH = "512x36" *) 
-  (* C_PROG_EMPTY_THRESH_ASSERT_VAL = "128" *) 
+  (* C_PROG_EMPTY_THRESH_ASSERT_VAL = "127" *) 
   (* C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS = "1022" *) 
   (* C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH = "1022" *) 
   (* C_PROG_EMPTY_THRESH_ASSERT_VAL_RDCH = "1022" *) 
   (* C_PROG_EMPTY_THRESH_ASSERT_VAL_WACH = "1022" *) 
   (* C_PROG_EMPTY_THRESH_ASSERT_VAL_WDCH = "1022" *) 
   (* C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH = "1022" *) 
-  (* C_PROG_EMPTY_THRESH_NEGATE_VAL = "129" *) 
+  (* C_PROG_EMPTY_THRESH_NEGATE_VAL = "128" *) 
   (* C_PROG_EMPTY_TYPE = "1" *) 
   (* C_PROG_EMPTY_TYPE_AXIS = "0" *) 
   (* C_PROG_EMPTY_TYPE_RACH = "0" *) 
@@ -1189,7 +1189,7 @@ module fifo_sync_512_builtin_prim
     .IS_RST_INVERTED(1'b0),
     .IS_WRCLK_INVERTED(1'b0),
     .IS_WREN_INVERTED(1'b0),
-    .PROG_EMPTY_THRESH(128),
+    .PROG_EMPTY_THRESH(127),
     .PROG_FULL_THRESH(511),
     .RDCOUNT_TYPE("EXTENDED_DATACOUNT"),
     .READ_WIDTH(72),
@@ -1398,7 +1398,7 @@ module fifo_sync_512_builtin_prim_10
     .IS_RST_INVERTED(1'b0),
     .IS_WRCLK_INVERTED(1'b0),
     .IS_WREN_INVERTED(1'b0),
-    .PROG_EMPTY_THRESH(128),
+    .PROG_EMPTY_THRESH(127),
     .PROG_FULL_THRESH(511),
     .RDCOUNT_TYPE("EXTENDED_DATACOUNT"),
     .READ_WIDTH(72),
@@ -1607,7 +1607,7 @@ module fifo_sync_512_builtin_prim_11
     .IS_RST_INVERTED(1'b0),
     .IS_WRCLK_INVERTED(1'b0),
     .IS_WREN_INVERTED(1'b0),
-    .PROG_EMPTY_THRESH(128),
+    .PROG_EMPTY_THRESH(127),
     .PROG_FULL_THRESH(511),
     .RDCOUNT_TYPE("EXTENDED_DATACOUNT"),
     .READ_WIDTH(72),
@@ -1816,7 +1816,7 @@ module fifo_sync_512_builtin_prim_12
     .IS_RST_INVERTED(1'b0),
     .IS_WRCLK_INVERTED(1'b0),
     .IS_WREN_INVERTED(1'b0),
-    .PROG_EMPTY_THRESH(128),
+    .PROG_EMPTY_THRESH(127),
     .PROG_FULL_THRESH(511),
     .RDCOUNT_TYPE("EXTENDED_DATACOUNT"),
     .READ_WIDTH(72),
@@ -2038,7 +2038,7 @@ module fifo_sync_512_builtin_prim_13
     .IS_RST_INVERTED(1'b0),
     .IS_WRCLK_INVERTED(1'b0),
     .IS_WREN_INVERTED(1'b0),
-    .PROG_EMPTY_THRESH(128),
+    .PROG_EMPTY_THRESH(127),
     .PROG_FULL_THRESH(511),
     .RDCOUNT_TYPE("EXTENDED_DATACOUNT"),
     .READ_WIDTH(72),
@@ -2252,7 +2252,7 @@ module fifo_sync_512_builtin_prim_7
     .IS_RST_INVERTED(1'b0),
     .IS_WRCLK_INVERTED(1'b0),
     .IS_WREN_INVERTED(1'b0),
-    .PROG_EMPTY_THRESH(128),
+    .PROG_EMPTY_THRESH(127),
     .PROG_FULL_THRESH(511),
     .RDCOUNT_TYPE("EXTENDED_DATACOUNT"),
     .READ_WIDTH(72),
@@ -2461,7 +2461,7 @@ module fifo_sync_512_builtin_prim_8
     .IS_RST_INVERTED(1'b0),
     .IS_WRCLK_INVERTED(1'b0),
     .IS_WREN_INVERTED(1'b0),
-    .PROG_EMPTY_THRESH(128),
+    .PROG_EMPTY_THRESH(127),
     .PROG_FULL_THRESH(511),
     .RDCOUNT_TYPE("EXTENDED_DATACOUNT"),
     .READ_WIDTH(72),
@@ -2670,7 +2670,7 @@ module fifo_sync_512_builtin_prim_9
     .IS_RST_INVERTED(1'b0),
     .IS_WRCLK_INVERTED(1'b0),
     .IS_WREN_INVERTED(1'b0),
-    .PROG_EMPTY_THRESH(128),
+    .PROG_EMPTY_THRESH(127),
     .PROG_FULL_THRESH(511),
     .RDCOUNT_TYPE("EXTENDED_DATACOUNT"),
     .READ_WIDTH(72),
@@ -2921,9 +2921,9 @@ endmodule
 (* C_PRELOAD_LATENCY = "0" *) (* C_PRELOAD_REGS = "1" *) (* C_PRIM_FIFO_TYPE = "512x72" *) 
 (* C_PRIM_FIFO_TYPE_AXIS = "1kx18" *) (* C_PRIM_FIFO_TYPE_RACH = "512x36" *) (* C_PRIM_FIFO_TYPE_RDCH = "512x72" *) 
 (* C_PRIM_FIFO_TYPE_WACH = "512x36" *) (* C_PRIM_FIFO_TYPE_WDCH = "512x72" *) (* C_PRIM_FIFO_TYPE_WRCH = "512x36" *) 
-(* C_PROG_EMPTY_THRESH_ASSERT_VAL = "128" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS = "1022" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH = "1022" *) 
+(* C_PROG_EMPTY_THRESH_ASSERT_VAL = "127" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS = "1022" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH = "1022" *) 
 (* C_PROG_EMPTY_THRESH_ASSERT_VAL_RDCH = "1022" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_WACH = "1022" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_WDCH = "1022" *) 
-(* C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH = "1022" *) (* C_PROG_EMPTY_THRESH_NEGATE_VAL = "129" *) (* C_PROG_EMPTY_TYPE = "1" *) 
+(* C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH = "1022" *) (* C_PROG_EMPTY_THRESH_NEGATE_VAL = "128" *) (* C_PROG_EMPTY_TYPE = "1" *) 
 (* C_PROG_EMPTY_TYPE_AXIS = "0" *) (* C_PROG_EMPTY_TYPE_RACH = "0" *) (* C_PROG_EMPTY_TYPE_RDCH = "0" *) 
 (* C_PROG_EMPTY_TYPE_WACH = "0" *) (* C_PROG_EMPTY_TYPE_WDCH = "0" *) (* C_PROG_EMPTY_TYPE_WRCH = "0" *) 
 (* C_PROG_FULL_THRESH_ASSERT_VAL = "511" *) (* C_PROG_FULL_THRESH_ASSERT_VAL_AXIS = "1023" *) (* C_PROG_FULL_THRESH_ASSERT_VAL_RACH = "1023" *) 

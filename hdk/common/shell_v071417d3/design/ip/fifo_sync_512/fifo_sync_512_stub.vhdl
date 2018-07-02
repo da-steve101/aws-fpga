@@ -1,10 +1,10 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.1_sdxop (lin64) Build 1933108 Fri Jul 14 11:54:19 MDT 2017
--- Date        : Fri Jun 29 04:13:05 2018
+-- Date        : Mon Jul  2 04:46:20 2018
 -- Host        : ip-172-31-16-238.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.4.1708 (Core)
 -- Command     : write_vhdl -force -mode synth_stub
---               /home/centos/cifar/cifar.srcs/sources_1/ip/fifo_sync_512/fifo_sync_512_stub.vhdl
+--               /home/centos/cifar/cifar.srcs/sources_1/ip/fifo_sync_512_1/fifo_sync_512_stub.vhdl
 -- Design      : fifo_sync_512
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xcvu9p-flgb2104-2-i

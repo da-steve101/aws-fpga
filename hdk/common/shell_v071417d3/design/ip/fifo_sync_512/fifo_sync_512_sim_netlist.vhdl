@@ -1,10 +1,10 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2017.1_sdxop (lin64) Build 1933108 Fri Jul 14 11:54:19 MDT 2017
--- Date        : Fri Jun 29 04:13:05 2018
+-- Date        : Mon Jul  2 04:46:20 2018
 -- Host        : ip-172-31-16-238.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.4.1708 (Core)
 -- Command     : write_vhdl -force -mode funcsim
---               /home/centos/cifar/cifar.srcs/sources_1/ip/fifo_sync_512/fifo_sync_512_sim_netlist.vhdl
+--               /home/centos/cifar/cifar.srcs/sources_1/ip/fifo_sync_512_1/fifo_sync_512_sim_netlist.vhdl
 -- Design      : fifo_sync_512
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -230,7 +230,7 @@ begin
       IS_RST_INVERTED => '0',
       IS_WRCLK_INVERTED => '0',
       IS_WREN_INVERTED => '0',
-      PROG_EMPTY_THRESH => 128,
+      PROG_EMPTY_THRESH => 127,
       PROG_FULL_THRESH => 511,
       RDCOUNT_TYPE => "EXTENDED_DATACOUNT",
       READ_WIDTH => 72,
@@ -606,7 +606,7 @@ begin
       IS_RST_INVERTED => '0',
       IS_WRCLK_INVERTED => '0',
       IS_WREN_INVERTED => '0',
-      PROG_EMPTY_THRESH => 128,
+      PROG_EMPTY_THRESH => 127,
       PROG_FULL_THRESH => 511,
       RDCOUNT_TYPE => "EXTENDED_DATACOUNT",
       READ_WIDTH => 72,
@@ -918,7 +918,7 @@ begin
       IS_RST_INVERTED => '0',
       IS_WRCLK_INVERTED => '0',
       IS_WREN_INVERTED => '0',
-      PROG_EMPTY_THRESH => 128,
+      PROG_EMPTY_THRESH => 127,
       PROG_FULL_THRESH => 511,
       RDCOUNT_TYPE => "EXTENDED_DATACOUNT",
       READ_WIDTH => 72,
@@ -1230,7 +1230,7 @@ begin
       IS_RST_INVERTED => '0',
       IS_WRCLK_INVERTED => '0',
       IS_WREN_INVERTED => '0',
-      PROG_EMPTY_THRESH => 128,
+      PROG_EMPTY_THRESH => 127,
       PROG_FULL_THRESH => 511,
       RDCOUNT_TYPE => "EXTENDED_DATACOUNT",
       READ_WIDTH => 72,
@@ -1545,7 +1545,7 @@ begin
       IS_RST_INVERTED => '0',
       IS_WRCLK_INVERTED => '0',
       IS_WREN_INVERTED => '0',
-      PROG_EMPTY_THRESH => 128,
+      PROG_EMPTY_THRESH => 127,
       PROG_FULL_THRESH => 511,
       RDCOUNT_TYPE => "EXTENDED_DATACOUNT",
       READ_WIDTH => 72,
@@ -1865,7 +1865,7 @@ begin
       IS_RST_INVERTED => '0',
       IS_WRCLK_INVERTED => '0',
       IS_WREN_INVERTED => '0',
-      PROG_EMPTY_THRESH => 128,
+      PROG_EMPTY_THRESH => 127,
       PROG_FULL_THRESH => 511,
       RDCOUNT_TYPE => "EXTENDED_DATACOUNT",
       READ_WIDTH => 72,
@@ -2177,7 +2177,7 @@ begin
       IS_RST_INVERTED => '0',
       IS_WRCLK_INVERTED => '0',
       IS_WREN_INVERTED => '0',
-      PROG_EMPTY_THRESH => 128,
+      PROG_EMPTY_THRESH => 127,
       PROG_FULL_THRESH => 511,
       RDCOUNT_TYPE => "EXTENDED_DATACOUNT",
       READ_WIDTH => 72,
@@ -2489,7 +2489,7 @@ begin
       IS_RST_INVERTED => '0',
       IS_WRCLK_INVERTED => '0',
       IS_WREN_INVERTED => '0',
-      PROG_EMPTY_THRESH => 128,
+      PROG_EMPTY_THRESH => 127,
       PROG_FULL_THRESH => 511,
       RDCOUNT_TYPE => "EXTENDED_DATACOUNT",
       READ_WIDTH => 72,
@@ -3763,7 +3763,7 @@ entity fifo_sync_512_fifo_generator_v13_1_4 is
   attribute C_PRIM_FIFO_TYPE_WRCH : string;
   attribute C_PRIM_FIFO_TYPE_WRCH of fifo_sync_512_fifo_generator_v13_1_4 : entity is "512x36";
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL : integer;
-  attribute C_PROG_EMPTY_THRESH_ASSERT_VAL of fifo_sync_512_fifo_generator_v13_1_4 : entity is 128;
+  attribute C_PROG_EMPTY_THRESH_ASSERT_VAL of fifo_sync_512_fifo_generator_v13_1_4 : entity is 127;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS : integer;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS of fifo_sync_512_fifo_generator_v13_1_4 : entity is 1022;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH : integer;
@@ -3777,7 +3777,7 @@ entity fifo_sync_512_fifo_generator_v13_1_4 is
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH : integer;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH of fifo_sync_512_fifo_generator_v13_1_4 : entity is 1022;
   attribute C_PROG_EMPTY_THRESH_NEGATE_VAL : integer;
-  attribute C_PROG_EMPTY_THRESH_NEGATE_VAL of fifo_sync_512_fifo_generator_v13_1_4 : entity is 129;
+  attribute C_PROG_EMPTY_THRESH_NEGATE_VAL of fifo_sync_512_fifo_generator_v13_1_4 : entity is 128;
   attribute C_PROG_EMPTY_TYPE : integer;
   attribute C_PROG_EMPTY_TYPE of fifo_sync_512_fifo_generator_v13_1_4 : entity is 1;
   attribute C_PROG_EMPTY_TYPE_AXIS : integer;
@@ -4866,7 +4866,7 @@ architecture STRUCTURE of fifo_sync_512 is
   attribute C_PRIM_FIFO_TYPE_WRCH : string;
   attribute C_PRIM_FIFO_TYPE_WRCH of U0 : label is "512x36";
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL : integer;
-  attribute C_PROG_EMPTY_THRESH_ASSERT_VAL of U0 : label is 128;
+  attribute C_PROG_EMPTY_THRESH_ASSERT_VAL of U0 : label is 127;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS : integer;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS of U0 : label is 1022;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH : integer;
@@ -4880,7 +4880,7 @@ architecture STRUCTURE of fifo_sync_512 is
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH : integer;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH of U0 : label is 1022;
   attribute C_PROG_EMPTY_THRESH_NEGATE_VAL : integer;
-  attribute C_PROG_EMPTY_THRESH_NEGATE_VAL of U0 : label is 129;
+  attribute C_PROG_EMPTY_THRESH_NEGATE_VAL of U0 : label is 128;
   attribute C_PROG_EMPTY_TYPE : integer;
   attribute C_PROG_EMPTY_TYPE of U0 : label is 1;
   attribute C_PROG_EMPTY_TYPE_AXIS : integer;
