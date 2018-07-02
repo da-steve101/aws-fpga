@@ -49,10 +49,19 @@ ${SH_LIB_DIR}/../ip/cl_axi_interconnect/hdl/cl_axi_interconnect.v
 ${SH_LIB_DIR}/../ip/axi_clock_converter_0/hdl/axi_clock_converter_v2_1_vl_rfs.v
 ${SH_LIB_DIR}/../ip/axi_clock_converter_0/sim/axi_clock_converter_0.v
 ${SH_LIB_DIR}/../ip/dest_register_slice/sim/dest_register_slice.v
-${SH_LIB_DIR}/../ip/src_register_slice/sim/src_register_slice.v
 ${SH_LIB_DIR}/../ip/axi_register_slice/hdl/axi_register_slice_v2_1_vl_rfs.v
 ${SH_LIB_DIR}/../ip/axi_register_slice/sim/axi_register_slice.v
 ${SH_LIB_DIR}/../ip/axi_register_slice_light/sim/axi_register_slice_light.v
+${SH_LIB_DIR}/../ip/axi_dwidth_converter_512_to_64/hdl/axis_dwidth_converter_v1_1_vl_rfs.v
+${SH_LIB_DIR}/../ip/axi_dwidth_converter_512_to_64/sim/axi_dwidth_converter_512_to_64.v
+${SH_LIB_DIR}/../ip/axi_dwidth_converter_512_to_64/hdl/axis_register_slice_v1_1_vl_rfs.v
+${SH_LIB_DIR}/../ip/axi_dwidth_converter_512_to_64/hdl/axis_infrastructure_v1_1_vl_rfs.v
+${SH_LIB_DIR}/../ip/axi_dwidth_converter_64_to_512/hdl/axis_dwidth_converter_v1_1_vl_rfs.v
+${SH_LIB_DIR}/../ip/axi_dwidth_converter_64_to_512/sim/axi_dwidth_converter_64_to_512.v
+${SH_LIB_DIR}/../ip/axi_dwidth_converter_64_to_512/hdl/axis_register_slice_v1_1_vl_rfs.v
+${SH_LIB_DIR}/../ip/axi_dwidth_converter_64_to_512/hdl/axis_infrastructure_v1_1_vl_rfs.v
+${SH_LIB_DIR}/../ip/fifo_sync_512/hdl/fifo_generator_v13_1_rfs.v
+${SH_LIB_DIR}/../ip/fifo_sync_512/sim/fifo_sync_512.v
 
 --define DISABLE_VJTAG_DEBUG
 ${CL_ROOT}/design/axil_slave.sv
