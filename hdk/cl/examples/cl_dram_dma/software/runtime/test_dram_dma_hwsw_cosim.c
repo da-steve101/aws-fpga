@@ -115,6 +115,8 @@ out:
 
 int dma_example_hwsw_cosim(int slot_id) {
     int fd, rc;
+    int image_size = 8192;
+    char * image;
 
     read_buffer = NULL;
     write_buffer = NULL;
@@ -122,6 +124,7 @@ int dma_example_hwsw_cosim(int slot_id) {
 
     write_buffer = (char *)malloc(buffer_size);
     read_buffer = (char *)malloc(buffer_size);
+    image = (char*) malloc( image_size );
     if (write_buffer == NULL || read_buffer == NULL) {
         rc = ENOMEM;
         goto out;
@@ -129,17 +132,17 @@ int dma_example_hwsw_cosim(int slot_id) {
 
 #ifndef SV_TEST
     fd = open_dma_queue(slot_id);
-#else
-    //    init_ddr();
 #endif
 
-    rand_string(write_buffer, buffer_size);
+    rand_string(image, image_size);
 
-    // for (channel=0; channel < 4; channel++) {
     int write_channel = 0;
     int read_channel = 0;
-    fpga_write_buffer_to_cl(slot_id, write_channel, fd, buffer_size, (0x10000000 + write_channel*MEM_16G));
-    // }
+    int i;
+    for ( i = 0; i < 8; i++ ) {
+      memcpy( write_buffer, &image[buffer_size*i], buffer_size );
+      fpga_write_buffer_to_cl(slot_id, write_channel, fd, buffer_size, (0x10000000 + write_channel*MEM_16G));
+    }
 
     /* fsync() will make sure the write made it to the target buffer 
      * before read is done
@@ -149,12 +152,13 @@ int dma_example_hwsw_cosim(int slot_id) {
     fail_on((rc = (rc < 0)? errno:0), out, "call to fsync failed.");
 #endif
 
-    // for (channel=0; channel < 4; channel++) {
-    fpga_read_cl_to_buffer(slot_id, read_channel, fd, buffer_size, (0x10000000 + read_channel*MEM_16G));
-    // }
+    for ( i = 0; i < 8; i++ ) {
+      fpga_read_cl_to_buffer(slot_id, read_channel, fd, buffer_size, (0x10000000 + read_channel*MEM_16G));
+      dma_memcmp( &image[buffer_size*i], buffer_size );
+    }
 
 out:
-
+    free(image);
 #ifndef SV_TEST
     if (write_buffer != NULL) {
         free(write_buffer);

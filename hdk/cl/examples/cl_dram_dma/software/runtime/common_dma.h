@@ -32,7 +32,7 @@
 #endif
 
 
-static const size_t buffer_size = 128;
+static const size_t buffer_size = 1024;
 int channel;
 int error_count;
 char *write_buffer, *read_buffer;
@@ -61,7 +61,7 @@ void fpga_read_cl_to_buffer(int slot_id, int channel, int fd, size_t buffer_size
 
 int dma_example_hwsw_cosim(int slot_id);
 
-int dma_memcmp (size_t buffer_size);
+int dma_memcmp ( char * cmp_buf, size_t buffer_size);
 
 int open_dma_queue(int slot_id);
 

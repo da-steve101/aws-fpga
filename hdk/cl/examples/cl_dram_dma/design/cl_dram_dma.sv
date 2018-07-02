@@ -77,7 +77,8 @@ always_ff @(negedge pipe_rst_n or posedge clk)
 (* dont_touch = "true" *) logic dma_pcis_slv_sync_rst_n;
 lib_pipe #(.WIDTH(1), .STAGES(4)) DMA_PCIS_SLV_SLC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(dma_pcis_slv_sync_rst_n));
 
-reg [511:0] mem_str[15:0];
+wire [511:0] mem_str;
+wire        mem_vld;
 reg 	    wrting;
 reg 	    rding;
 reg [3:0]   no_transfers_wrt;
@@ -91,11 +92,12 @@ reg 	  arrdy;
 reg 	  rlast;
 reg 	  wlast;
 reg [511:0] rdata;
+wire      full;
 
 assign sh_cl_dma_pcis_q.awready = awrdy;
 
 // recv burst
-assign sh_cl_dma_pcis_q.wready = wrting;
+assign sh_cl_dma_pcis_q.wready = wrting & !full;
 assign sh_cl_dma_pcis_q.bresp = 0;
 assign sh_cl_dma_pcis_q.bvalid = bid_vld;
 assign sh_cl_dma_pcis_q.bid[5:0] = wid;
@@ -119,6 +121,7 @@ begin
       awrdy <= 0;
       arrdy <= 0;
       rlast <= 0;
+      wlast <= 0;
       no_transfers_rd <= 0;
       no_transfers_wrt <= 0;
    end
@@ -143,7 +146,6 @@ begin
 	 if ( sh_cl_dma_pcis_q.wvalid )
 	 begin
 	    wid <= sh_cl_dma_pcis_q.awid[5:0];
-	    mem_str[no_transfers_wrt] <= sh_cl_dma_pcis_q.wdata;
 	    no_transfers_wrt <= no_transfers_wrt - 1;
 	    if ( sh_cl_dma_pcis_q.wlast & !wlast )
 	    begin
@@ -161,7 +163,11 @@ begin
       begin
 	 rlast <= 0;
 	 rd_vld <= 0;
-	 if ( !sh_cl_dma_pcis_q.arvalid || !arrdy )
+	 if ( !run_out )
+	 begin
+	    arrdy <= 0;
+	 end
+	 else if ( !sh_cl_dma_pcis_q.arvalid || !arrdy )
 	 begin
 	    arrdy <= 1;
 	 end
@@ -175,13 +181,16 @@ begin
       end
       else if ( sh_cl_dma_pcis_q.rready )
       begin
-	 rd_vld <= 1;
-	 rdata <= mem_str[no_transfers_rd];
-	 no_transfers_rd <= no_transfers_rd - 1;
-	 if ( no_transfers_rd == 0 )
+	 rdata <= mem_str;
+	 rd_vld <= mem_vld;
+	 if ( mem_vld )
 	 begin
-	    rlast <= 1;
-	    rding <= 0;
+	    no_transfers_rd <= no_transfers_rd - 1;
+	    if ( no_transfers_rd == 0 )
+	    begin
+	      rlast <= 1;
+  	      rding <= 0;
+  	    end
 	 end
       end
    end
@@ -278,5 +287,204 @@ assign sh_cl_dma_pcis_bus.rready = sh_cl_dma_pcis_rready;
        .m_axi_rvalid  (sh_cl_dma_pcis_q.rvalid),
        .m_axi_rready  (sh_cl_dma_pcis_q.rready)
    );
+
+   logic [511:0] fifo_in_bits;
+   logic 	fifo_in_valid;
+   logic 	fifo_in_ready;
+
+   logic [63:0] data_in_bits;
+   logic 	data_in_valid;
+   logic 	data_in_ready;
+
+   logic [63:0] data_out_bits;
+   logic [15:0] data_out_bits_0;
+   logic [15:0] data_out_bits_1;
+   logic [15:0] data_out_bits_2;
+   logic [15:0] data_out_bits_3;
+   logic 	data_out_valid;
+   logic 	data_out_ready;
+
+   logic [511:0] fifo_out_bits;
+   logic 	fifo_out_valid;
+   logic 	fifo_out_ready;
+   logic 	image_buffered_n;
+   logic 	output_buffered_n;
+   logic [7:0] 	img_cntr;
+   logic [7:0] 	img_cntr_out;
+   logic 	run;
+   logic 	run_out;
+   logic 	image_vld;
+
+(* dont_touch = "true" *) logic fifo_sync_rst_n;
+lib_pipe #(.WIDTH(1), .STAGES(4)) FIFO_SYNC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(fifo_sync_rst_n));
+
+// Put the 64 bits into a AXI Data FIFO (xilinx ip)
+fifo_sync_512 AXI_DATA_FIFO_IN
+(
+ .clk( clk ),
+ .srst( !fifo_sync_rst_n ),
+
+ .wr_en( sh_cl_dma_pcis_q.wvalid & wrting ),
+ .full( full ),
+ .din( sh_cl_dma_pcis_q.wdata ),
+
+ .valid( image_vld ),
+ .prog_empty( image_buffered_n ),
+ .rd_en( run & fifo_in_ready ),
+ .dout( fifo_in_bits )
+);
+
+always_ff @( negedge fifo_sync_rst_n or posedge clk )
+  begin
+     if ( !fifo_sync_rst_n )
+       begin
+	  img_cntr <= 0;
+	  img_cntr_out <= 0;
+	  run <= 0;
+	  run_out <= 0;
+       end
+     else
+       begin
+	  if ( img_cntr == 0 )
+	    begin
+	       if ( !image_buffered_n )
+		 begin
+		    run <= 1;
+		    img_cntr <= 8'h80;
+		 end
+	       else
+		 begin
+		    run <= 0;		    
+		 end
+	    end
+	  else if ( img_cntr > 0 & fifo_in_ready & image_vld )
+	    begin
+	       img_cntr <= img_cntr - 1;
+	    end
+	  if ( img_cntr_out == 0 )
+	    begin
+	       if ( !output_buffered_n )
+		 begin
+		    run_out <= 1;
+		    img_cntr_out <= 8'h80;
+		 end
+	       else
+		 begin
+		    run_out <= 0;
+		 end
+	    end
+	  else if ( img_cntr_out > 0 )
+	    begin
+	       if ( mem_vld & sh_cl_dma_pcis_q.rready & rding )
+		 begin
+		    img_cntr_out <= img_cntr_out - 1;
+		 end
+	    end
+	  else
+	    begin
+	       run_out <= 0;
+	    end	  
+       end
+  end
+
+axi_dwidth_converter_512_to_64 AXI_DWIDTH_TO_64
+(
+ .aclk( clk ),
+ .aresetn( fifo_sync_rst_n ),
+
+ .s_axis_tvalid( image_vld & run ),
+ .s_axis_tready( fifo_in_ready ),
+ .s_axis_tdata( fifo_in_bits ),
+
+ .m_axis_tvalid( data_in_valid ),
+ .m_axis_tready( data_in_ready ),
+ .m_axis_tdata( data_in_bits )
+);
+
+(* dont_touch = "true" *) logic cnn_rst_n;
+lib_pipe #(.WIDTH(1), .STAGES(4)) CNN_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(cnn_rst_n));
+
+parameter N = 10;
+// make a shift reg ...
+logic [(N*64)-1:0] bits_reg;
+logic [N-1:0] valid_reg = 0;
+
+assign data_out_bits = bits_reg[63:0];
+assign data_out_valid = valid_reg[0];
+assign data_in_ready = data_out_ready;
+
+always_ff @(posedge clk)
+begin
+  if ( data_out_ready )
+  begin
+    bits_reg <= { data_in_bits, bits_reg[(N*64)-1:64] };
+    valid_reg <= { data_in_valid, valid_reg[N-1:1]};
+  end
+end
+
+(* dont_touch = "true" *) logic fifo_out_sync_rst_n;
+lib_pipe #(.WIDTH(1), .STAGES(4)) FIFO_OUT_SYNC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(fifo_out_sync_rst_n));
+
+// Read the data from the AXI Data FIFO into a AXI Data Width Converter( Xilinx IP )
+// Convert from 64 bits to 512 bits
+// Send to the output using cl_sh_pcim_bus
+axi_dwidth_converter_64_to_512 AXI_DWIDTH_TO_512
+(
+ .aclk( clk ),
+ .aresetn( fifo_out_sync_rst_n ),
+
+ .s_axis_tvalid( data_out_valid ),
+ .s_axis_tready( data_out_ready ),
+ .s_axis_tdata( data_out_bits ),
+
+ .m_axis_tvalid( fifo_out_valid ),
+ .m_axis_tready( 1'b1 ),
+ .m_axis_tdata( fifo_out_bits )
+);
+
+logic [7:0] tmp_cntr;
+logic [7:0] tmp_in_cntr;
+logic [7:0] tmp_in_rdy_cntr;
+   
+always_ff @( posedge clk )
+begin
+   if ( !sync_rst_n )
+     begin
+	tmp_cntr <= 0;
+	tmp_in_cntr <= 0;
+	tmp_in_rdy_cntr <= 0;
+     end
+   else
+     begin
+	if ( fifo_out_valid )
+	  begin
+	     tmp_cntr <= tmp_cntr + 1;
+	     $display( "fifo_out[%d] %h\n", tmp_cntr, fifo_out_bits );
+	  end
+	if ( sh_cl_dma_pcis_q.wvalid )
+	  begin
+	     tmp_in_cntr <= tmp_in_cntr + 1;
+	     if ( sh_cl_dma_pcis_q.wready )
+	       begin
+		  $display( "fifo_in[%d] %h\n", tmp_in_rdy_cntr, sh_cl_dma_pcis_q.wdata );
+		  tmp_in_rdy_cntr <= tmp_in_rdy_cntr + 1;
+	       end
+	  end
+     end
+end
+
+fifo_sync_512 AXI_DATA_FIFO_OUT
+(
+ .clk( clk ),
+ .srst( !fifo_out_sync_rst_n ),
+
+ .wr_en( fifo_out_valid ),
+ .din( fifo_out_bits ), 
+
+ .valid( mem_vld ),
+ .prog_empty( output_buffered_n ),
+ .rd_en( sh_cl_dma_pcis_q.rready & rding ),
+ .dout( mem_str )
+);
 
 endmodule

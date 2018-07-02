@@ -32,8 +32,8 @@ void usage(const char* program_name) {
 void
 rand_string(char *str, size_t size)
 {
-    static const char charset[] =
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRTSUVWXYZ1234567890";
+  //static const char charset[] =
+  //"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRTSUVWXYZ1234567890";
     static bool seeded = false;
     int i;
 
@@ -43,11 +43,11 @@ rand_string(char *str, size_t size)
     }
 
     for(i = 0; i < size; ++i) {
-        unsigned int key = rand() % (sizeof charset - 1);
-        str[i] = charset[key];
+      //unsigned int key = i % (sizeof charset - 1);
+      str[i] = ( rand() % 256 );
     }
 
-    str[size-1] = '\0';
+    //str[size-1] = '\0';
 }
 
 #ifndef SV_TEST
@@ -169,7 +169,7 @@ void fpga_read_cl_to_buffer(int slot_id, int channel, int fd, size_t buffer_size
 #else
   fpga_driver_read_cl_to_buffer(slot_id, channel, fd, buffer_size, address);
 #endif
-  dma_memcmp(buffer_size);
+  // dma_memcmp(buffer_size);
 }
 
 void fpga_write_buffer_to_cl(int slot_id, int channel, int fd, size_t buffer_size, size_t address){
@@ -180,15 +180,15 @@ void fpga_write_buffer_to_cl(int slot_id, int channel, int fd, size_t buffer_siz
 #endif
 }
 
-int dma_memcmp (size_t buffer_size) {
+int dma_memcmp ( char * cmp_buf, size_t buffer_size) {
    int rc = 0;
-   if (memcmp(write_buffer, read_buffer, buffer_size) == 0) {
+   if (memcmp(cmp_buf, read_buffer, buffer_size) == 0) {
       printf("DRAM DMA read the same string as it wrote on channel %d (it worked correctly!)\n", channel);
    } else {
       int i;
       printf("Bytes written to channel %d:\n", channel);
       for (i = 0; i < buffer_size; ++i) {
-          printf("%c", write_buffer[i]);
+          printf("%c", cmp_buf[i]);
       }
 
       printf("\n\n");
@@ -229,7 +229,7 @@ int send_rdbuf_to_c(char* rd_buf)
    }
 
    //end of line character is not transferered correctly. So assign that here. 
-   read_buffer[buffer_size-1] = '\0';
+   // read_buffer[buffer_size-1] = '\0';
 
    return 0;
 

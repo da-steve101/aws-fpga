@@ -68,7 +68,9 @@ out:
  */
 
 int dma_example(int slot_id) {
-    int fd, rc;
+    int fd;
+    int image_size = 8192;
+    char * image;
 
     read_buffer = NULL;
     write_buffer = NULL;
@@ -76,31 +78,42 @@ int dma_example(int slot_id) {
 
     write_buffer = (char *)malloc(buffer_size);
     read_buffer = (char *)malloc(buffer_size);
+    image = (char*) malloc( image_size );
     if (write_buffer == NULL || read_buffer == NULL) {
-        rc = ENOMEM;
         goto out;
     }
 
     fd = open_dma_queue(slot_id);
 
-    rand_string(write_buffer, buffer_size);
+    rand_string(image, image_size);
 
-    for (channel=0; channel < 4; channel++) {
-        fpga_write_buffer_to_cl(slot_id, channel, fd, buffer_size, (0x10000000 + channel*MEM_16G));
+    int wrt_ch =0;
+    int rd_ch = 1;
+    int i = 0;
+    for ( i = 0; i < 8; i++ ) {
+      memcpy( write_buffer, &image[buffer_size*i], buffer_size );
+      fpga_write_buffer_to_cl(slot_id, wrt_ch, fd, buffer_size, (0x10000000 + wrt_ch*MEM_16G));
     }
 
-    /* fsync() will make sure the write made it to the target buffer 
-     * before read is done
-     */
+    for ( i = 0; i < 8; i++ ) {
+      fpga_read_cl_to_buffer(slot_id, rd_ch, fd, buffer_size, (0x10000000 + rd_ch*MEM_16G));
+      dma_memcmp( &image[buffer_size*i], buffer_size );
+    }
 
-    rc = fsync(fd);
-    fail_on((rc = (rc < 0)? errno:0), out, "call to fsync failed.");
+    rand_string(image, image_size);
 
-    for (channel=0; channel < 4; channel++) {
-       fpga_read_cl_to_buffer(slot_id, channel, fd, buffer_size, (0x10000000 + channel*MEM_16G));
+    for ( i = 0; i < 8; i++ ) {
+      memcpy( write_buffer, &image[buffer_size*i], buffer_size );
+      fpga_write_buffer_to_cl(slot_id, wrt_ch, fd, buffer_size, (0x10000000 + wrt_ch*MEM_16G));
+    }
+    
+    for ( i = 0; i < 8; i++ ) {
+      fpga_read_cl_to_buffer(slot_id, rd_ch, fd, buffer_size, (0x10000000 + rd_ch*MEM_16G));
+      dma_memcmp( &image[buffer_size*i], buffer_size );
     }
 
 out:
+    free( image );
     if (write_buffer != NULL) {
         free(write_buffer);
     }
@@ -111,7 +124,7 @@ out:
         close(fd);
     }
     /* if there is an error code, exit with status 1 */
-    return (rc != 0 ? 1 : 0);
+    return 0;
 }
 
 int interrupt_example(int slot_id, int interrupt_number){
