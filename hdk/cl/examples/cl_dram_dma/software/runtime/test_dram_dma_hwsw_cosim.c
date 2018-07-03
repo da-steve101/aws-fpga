@@ -28,7 +28,7 @@
 #endif
 
 #include "common_dma.h"
-#include "ariplane.h"
+#include "airplane.h"
 
 #ifndef SV_TEST
 /* use the stdout logger */
@@ -117,7 +117,7 @@ out:
 int dma_example_hwsw_cosim(int slot_id) {
     int fd, rc;
     int image_size = 8192;
-    char * image;
+    char * image_in, * image_out;
     int i;
 
     read_buffer = NULL;

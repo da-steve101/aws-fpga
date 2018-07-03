@@ -53,7 +53,19 @@ file copy -force $CL_DIR/design/cl_ila.sv                          $TARGET_DIR
 file copy -force $CL_DIR/design/cl_ocl_slv.sv                      $TARGET_DIR 
 file copy -force $CL_DIR/design/cl_sda_slv.sv                      $TARGET_DIR
 file copy -force $CL_DIR/design/cl_dram_dma_axi_mstr.sv            $TARGET_DIR
+file copy -force $CL_DIR/design/AWSVggWrapper.v                    $TARGET_DIR
+file copy -force $CL_DIR/design/Vgg7.v                             $TARGET_DIR
+file copy -force $CL_DIR/design/Queue_1024.v                       $TARGET_DIR
+file copy -force $CL_DIR/design/Queue_2048.v                       $TARGET_DIR
+file copy -force $CL_DIR/design/Queue_4096.v                       $TARGET_DIR
 file copy -force $UNUSED_TEMPLATES_DIR/unused_sh_bar1_template.inc $TARGET_DIR
+file copy -force $UNUSED_TEMPLATES_DIR/unused_flr_template.inc     $TARGET_DIR
+file copy -force $UNUSED_TEMPLATES_DIR/unused_apppf_irq_template.inc $TARGET_DIR
+file copy -force $UNUSED_TEMPLATES_DIR/unused_cl_sda_template.inc  $TARGET_DIR
+file copy -force $UNUSED_TEMPLATES_DIR/unused_pcim_template.inc    $TARGET_DIR
+file copy -force $UNUSED_TEMPLATES_DIR/unused_ddr_a_b_d_template.inc $TARGET_DIR
+file copy -force $UNUSED_TEMPLATES_DIR/unused_ddr_c_template.inc   $TARGET_DIR
+file copy -force $UNUSED_TEMPLATES_DIR/unused_sh_ocl_template.inc  $TARGET_DIR
 
 #---- End of section replaced by Developr ---
 
