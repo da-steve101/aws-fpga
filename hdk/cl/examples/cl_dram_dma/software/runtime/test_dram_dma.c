@@ -101,6 +101,9 @@ int dma_example(int slot_id) {
       fpga_write_buffer_to_cl(slot_id, wrt_ch, fd, buffer_size, (0x10000000 + wrt_ch*MEM_16G));
     }
 
+    int rc = fsync(fd);
+    fail_on((rc = (rc < 0)? errno:0), out, "call to fsync failed.");
+
     for ( i = 0; i < 8; i++ ) {
       fpga_read_cl_to_buffer(slot_id, rd_ch, fd, buffer_size, (0x10000000 + rd_ch*MEM_16G));
       dma_memcmp( (char*)(image_out + buffer_size*i), buffer_size );
