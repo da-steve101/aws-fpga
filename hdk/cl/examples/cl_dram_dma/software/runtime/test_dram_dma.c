@@ -109,7 +109,6 @@ int dma_example(int slot_id) {
 out:
     free(image_in);
     free(image_out);
-    free( image );
     if (write_buffer != NULL) {
         free(write_buffer);
     }
