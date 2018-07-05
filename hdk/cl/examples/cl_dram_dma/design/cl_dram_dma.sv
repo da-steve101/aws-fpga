@@ -75,7 +75,7 @@ always_ff @(negedge pipe_rst_n or posedge clk)
    end
 
 (* dont_touch = "true" *) logic dma_pcis_slv_sync_rst_n;
-lib_pipe #(.WIDTH(1), .STAGES(4)) DMA_PCIS_SLV_SLC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(dma_pcis_slv_sync_rst_n));
+lib_pipe #(.WIDTH(1), .STAGES(8)) DMA_PCIS_SLV_SLC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(dma_pcis_slv_sync_rst_n));
 
 wire [511:0] mem_str;
 wire        mem_vld;
@@ -93,6 +93,14 @@ reg 	  rlast;
 reg 	  wlast;
 reg [511:0] rdata;
 wire      full;
+
+logic   image_buffered_n;
+logic 	output_buffered_n;
+logic [7:0] img_cntr;
+logic [7:0] img_cntr_out;
+logic 	run;
+logic 	run_out;
+logic 	image_vld;
 
 assign sh_cl_dma_pcis_q.awready = awrdy;
 
@@ -307,13 +315,6 @@ assign sh_cl_dma_pcis_bus.rready = sh_cl_dma_pcis_rready;
    logic [511:0] fifo_out_bits;
    logic 	fifo_out_valid;
    logic 	fifo_out_ready;
-   logic 	image_buffered_n;
-   logic 	output_buffered_n;
-   logic [7:0] 	img_cntr;
-   logic [7:0] 	img_cntr_out;
-   logic 	run;
-   logic 	run_out;
-   logic 	image_vld;
 
 (* dont_touch = "true" *) logic fifo_sync_rst_n;
 lib_pipe #(.WIDTH(1), .STAGES(4)) FIFO_SYNC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(fifo_sync_rst_n));
@@ -442,6 +443,29 @@ AWSVggWrapper cifar10
  .io_dataOut_bits_2( data_out_bits_2 ),
  .io_dataOut_bits_3( data_out_bits_3 )
 );
+logic [9:0] pixel_cntr;
+logic [9:0] pixel_out_cntr;
+always_ff @( negedge cnn_rst_n or posedge clk )
+  begin
+     if ( !cnn_rst_n )
+       begin
+	  pixel_cntr <= 10'h0;
+	  pixel_out_cntr <= 10'h0;
+       end
+     else
+       begin
+	  if ( data_in_valid )
+	    begin
+	       pixel_cntr <= pixel_cntr + 1'h1;
+	       $display( "pixel_in[%d] = [%h,%h,%h]\n", pixel_cntr, data_in_bits[15:0], data_in_bits[31:16], data_in_bits[47:32] );
+	    end
+	  if ( data_out_valid )
+	    begin
+	       pixel_out_cntr <= pixel_out_cntr + 1'h1;
+	       $display( "pixel_out[%d] = [%h,%h,%h,%h]\n", pixel_out_cntr, data_out_bits_0, data_out_bits_1, data_out_bits_2, data_out_bits_3 );
+	    end
+       end
+  end
 `endif // IMPLEMENT_CNN
 
 (* dont_touch = "true" *) logic fifo_out_sync_rst_n;
@@ -481,14 +505,12 @@ begin
 	if ( fifo_out_valid )
 	  begin
 	     tmp_cntr <= tmp_cntr + 1;
-	     $display( "fifo_out[%d] %h\n", tmp_cntr, fifo_out_bits );
 	  end
 	if ( sh_cl_dma_pcis_q.wvalid )
 	  begin
 	     tmp_in_cntr <= tmp_in_cntr + 1;
 	     if ( sh_cl_dma_pcis_q.wready )
 	       begin
-		  $display( "fifo_in[%d] %h\n", tmp_in_rdy_cntr, sh_cl_dma_pcis_q.wdata );
 		  tmp_in_rdy_cntr <= tmp_in_rdy_cntr + 1;
 	       end
 	  end

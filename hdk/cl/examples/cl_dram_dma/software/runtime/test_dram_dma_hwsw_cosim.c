@@ -118,7 +118,7 @@ int dma_example_hwsw_cosim(int slot_id) {
     int fd, rc;
     int image_size = 8192;
     char * image_in, * image_out;
-    int i;
+    int i, idx;
 
     read_buffer = NULL;
     write_buffer = NULL;
@@ -138,15 +138,16 @@ int dma_example_hwsw_cosim(int slot_id) {
 #endif
 
     for ( i = 0; i < image_size; i++ ) {
-      image_in[i] = ( airplane4_image[ i/4 ] >> 2*( i % 4 ) ) % 256;
-      image_out[i] = ( airplane4_mp_3[ i/4 ] >> 2*( i % 4 ) ) % 256;
+      idx = ( image_size - i - 1 )/8;
+      image_in[i] = ( airplane4_image[ idx ] >> (8*( i % 8 )) ) % 256;
+      image_out[i] = ( airplane4_mp_3[ idx ] >> (8*( i % 8 )) ) % 256;
     }
 
     int write_channel = 0;
     int read_channel = 0;
 
     for ( i = 0; i < 8; i++ ) {
-      memcpy( write_buffer, &image_in[buffer_size*i], buffer_size );
+      memcpy( write_buffer, (char*)(image_in + buffer_size*i), buffer_size );
       fpga_write_buffer_to_cl(slot_id, write_channel, fd, buffer_size, (0x10000000 + write_channel*MEM_16G));
     }
 
@@ -160,7 +161,7 @@ int dma_example_hwsw_cosim(int slot_id) {
 
     for ( i = 0; i < 8; i++ ) {
       fpga_read_cl_to_buffer(slot_id, read_channel, fd, buffer_size, (0x10000000 + read_channel*MEM_16G));
-      dma_memcmp( &image_out[buffer_size*i], buffer_size );
+      dma_memcmp( (char*)(image_out + buffer_size*i), buffer_size );
     }
 
 out:

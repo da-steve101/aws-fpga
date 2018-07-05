@@ -204,6 +204,7 @@ int dma_memcmp ( char * cmp_buf, size_t buffer_size) {
       rc = 1; 
       fail_on(rc, out, "Data read from DMA did not match data written with DMA. Was there an fsync() between the read and write?");
 #else
+      printf("Match failed\n");
       error_count++;
 #endif
    }

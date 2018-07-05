@@ -218,7 +218,7 @@ end
 
 `ifdef DMA_TEST
    //DPI task to transfer HOST to CL data.
-   task sv_fpga_start_buffer_to_cl(input int slot_id = 0, int chan, input int buf_size, input string wr_buffer, input longint unsigned cl_addr);
+   task sv_fpga_start_buffer_to_cl(input int slot_id = 0, int chan, input int buf_size, input byte wr_buffer[`BUF_SIZE], input longint unsigned cl_addr);
       int timeout_count, status, error_count;
       logic [63:0] host_memory_buffer_address;
       
