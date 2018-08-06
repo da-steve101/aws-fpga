@@ -20,6 +20,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <poll.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <time.h>
 
 #include "common_dma.h"
 #include "airplane.h"
@@ -63,55 +66,202 @@ out:
     return rc;
 }
 
+struct image_info {
+  char * buffer;
+  sem_t * cnt;
+  sem_t * neg_cnt;
+  sem_t * syncd;
+  sem_t * neg_syncd;
+  int buffer_size;
+  int image_size;
+  int fd;
+  int slot_id;
+};
+
+// thread to copy images into mem
+// have a semaphore to get available slots
+void* copy_into_mem( void * args ) {
+  struct image_info * image_buffer = ( struct image_info * ) args;
+  int i, idx, addr;
+  addr = 0;
+  char * airplane = (char*)malloc( image_buffer->image_size );
+  for ( i = 0; i < image_buffer->image_size; i++ ) {
+    idx = ( image_buffer -> image_size - i - 1 )/8;
+    airplane[i] = ( airplane4_image[ idx ] >> (8*( i % 8 )) ) % 256;
+  }
+  while ( 1 ) {
+    // copy up to 3 into buffer
+    sem_wait( image_buffer->neg_cnt ); // blocking here ...
+    memcpy( image_buffer->buffer + addr, airplane, image_buffer->image_size );
+    addr = ( addr + image_buffer->image_size ) % image_buffer->buffer_size;
+    // ready to copy to fpga
+    sem_post( image_buffer->cnt );
+  }
+  free( airplane );
+  printf( "mem done\n" );
+  return NULL;
+}
+
+// thread to copy images to FPGA
+void * copy_to_fpga( void * args ) {
+  struct image_info * image_buffer = ( struct image_info * ) args;
+  int wrt_ch = 0;
+  int addr = 0;
+  int rc;
+  FILE * fp = fdopen( image_buffer->fd, "w" );
+  while( 1 ) {
+    // if there is enough space in fpga queue
+    sem_wait( image_buffer->neg_syncd );
+    // when image ready to copy
+    sem_wait( image_buffer->cnt );
+    fseek( fp, 0x10000000 + wrt_ch*MEM_16G, SEEK_SET );
+    rc = fwrite( (char*)(image_buffer->buffer + addr),
+		 1,
+		 image_buffer->image_size,
+		 fp );
+    if ( rc != image_buffer->image_size )
+      printf( "write error %d\n", rc );
+    sem_post( image_buffer->neg_cnt );
+    fsync( image_buffer->fd );
+    sem_post( image_buffer->syncd );
+    addr = ( addr + image_buffer->image_size ) % image_buffer->buffer_size;
+  }
+  printf( "to fpga done\n" );
+  return NULL;
+}
+
+// thread to copy result from FPGA to mem
+void * copy_from_fpga( void * args ) {
+  struct image_info * image_buffer = ( struct image_info * ) args;
+  int rd_ch = 1;
+  int addr = 0;
+  int rc, i;
+  // FILE * fp = fdopen( image_buffer->fd, "r" );
+  while( 1 ) {
+    // if an image is ready
+    sem_wait( image_buffer->syncd );
+    // if there is enough space to copy out
+    sem_wait( image_buffer->neg_cnt ); // blocking here ...
+    for ( i = 0; i < 8; i++ ) {
+      rc = pread( image_buffer->fd,
+	(char*)(image_buffer->buffer + i*buffer_size + addr),
+	buffer_size,
+	0x10000000 + rd_ch*MEM_16G);
+      /*
+      fseek( fp, 0x10000000 + rd_ch*MEM_16G, SEEK_SET );
+      rc = fread( (char*)(image_buffer->buffer + i*buffer_size + addr),
+		  1,
+		  buffer_size,
+		  fp );
+      */
+      if ( rc != buffer_size )
+	printf( "read error %d\n", rc );
+    }
+    sem_post( image_buffer->cnt );
+    sem_post( image_buffer->neg_syncd );
+    addr = ( addr + image_buffer->image_size ) % image_buffer->buffer_size;
+  }
+  printf( "from fpga done\n" );
+  return NULL;
+}
+
+int verify_result( struct image_info * image_buffer ) {
+  // measure throughput here ...
+  int i, idx;
+  int addr = 0;
+  clock_t start_time = clock();
+  int img_cnt = 0;
+  char * airplane_out = (char*)malloc( image_buffer->image_size );
+  for ( i = 0; i < image_buffer -> image_size; i++ ) {
+    idx = ( image_buffer -> image_size - i - 1 )/8;
+    airplane_out[i] = ( airplane4_mp_3[ idx ] >> (8*( i % 8 )) ) % 256;
+  }
+  while( 1 ) {
+    sem_wait( image_buffer->cnt ); // blocking here
+    if ( memcmp( image_buffer->buffer + addr, airplane_out, image_buffer->image_size ) ) {
+      printf( "mismatch %d\n", img_cnt );
+      return 1;
+    }
+    sem_post( image_buffer->neg_cnt );
+    img_cnt += 1;
+    addr = ( addr + image_buffer->image_size ) % image_buffer->buffer_size;
+    if ( img_cnt % 10000 == 0 ) {
+      clock_t diff = clock() - start_time;
+      double secs = ((double)diff)/CLOCKS_PER_SEC;
+      printf( "rate = %f images/sec\n", img_cnt/secs );
+    }
+  }
+  free( airplane_out );
+  printf( "verify done\n" );
+  return 0;
+}
+
 /* 
  * Write 4 identical buffers to the 4 different DRAM channels of the AFI
  * using fsync() between the writes and read to insure order
  */
-
 int dma_example(int slot_id) {
     int fd;
     int image_size = 8192;
-    char * image_in, * image_out;
-    int i, idx;
+    struct image_info image_in, image_out;
+    int sem_cnt = 4;
+    sem_t * syncd = ( sem_t * ) malloc( sizeof(sem_t) );
+    sem_t * neg_syncd = ( sem_t * ) malloc( sizeof(sem_t) );
+    image_in.cnt = ( sem_t * ) malloc( sizeof(sem_t) );
+    image_out.cnt = ( sem_t * ) malloc( sizeof(sem_t) );
+    image_in.neg_cnt = ( sem_t * ) malloc( sizeof(sem_t) );
+    image_out.neg_cnt = ( sem_t * ) malloc( sizeof(sem_t) );
+    image_in.syncd = syncd;
+    image_out.syncd = syncd;
+    image_in.neg_syncd = neg_syncd;
+    image_out.neg_syncd = neg_syncd;
+    image_in.buffer_size = image_size * sem_cnt;
+    image_out.buffer_size = image_size * sem_cnt;
+    image_in.image_size = image_size;
+    image_out.image_size = image_size;
+    sem_init( image_in.cnt, 0, 0 );
+    sem_init( image_out.cnt, 0, 0 );
+    sem_init( image_in.neg_cnt, 0, sem_cnt );
+    sem_init( image_out.neg_cnt, 0, sem_cnt );
+    sem_init( syncd, 0, 0 );
+    sem_init( neg_syncd, 0, sem_cnt );
+    image_in.slot_id = slot_id;
+    image_out.slot_id = slot_id;
+    image_in.buffer = (char*) malloc( image_in.buffer_size  );
+    image_out.buffer = (char*) malloc( image_out.buffer_size  );
 
     read_buffer = NULL;
     write_buffer = NULL;
     fd = -1;
 
-    write_buffer = (char *)malloc(buffer_size);
-    read_buffer = (char *)malloc(buffer_size);
-    image_in = (char*) malloc( image_size );
-    image_out = (char*) malloc( image_size );
-    if (write_buffer == NULL || read_buffer == NULL) {
-        goto out;
-    }
-
     fd = open_dma_queue(slot_id);
 
-    for ( i = 0; i < image_size; i++ ) {
-      idx = ( image_size - i - 1 )/8;
-      image_in[i] = ( airplane4_image[ idx ] >> (8*( i % 8 )) ) % 256;
-      image_out[i] = ( airplane4_mp_3[ idx ] >> (8*( i % 8 )) ) % 256;
-    }
+    image_in.fd = fd;
+    image_out.fd = fd;
 
-    int wrt_ch = 0;
-    int rd_ch = 1;
-    for ( i = 0; i < 8; i++ ) {
-      memcpy( write_buffer, (char*)(image_in + buffer_size*i), buffer_size );
-      fpga_write_buffer_to_cl(slot_id, wrt_ch, fd, buffer_size, (0x10000000 + wrt_ch*MEM_16G));
-    }
+    pthread_t * cpy_to_mem_thd = (pthread_t *)malloc(sizeof(pthread_t));
+    pthread_t * cpy_to_fpga_thd = (pthread_t *)malloc(sizeof(pthread_t));
+    pthread_t * cpy_from_fpga_thd = (pthread_t *)malloc(sizeof(pthread_t));
 
-    int rc = fsync(fd);
-    fail_on((rc = (rc < 0)? errno:0), out, "call to fsync failed.");
+    pthread_create(cpy_to_mem_thd, NULL, (void*)copy_into_mem, &image_in );
+    pthread_create(cpy_to_fpga_thd, NULL, (void*)copy_to_fpga, &image_in );
+    pthread_create(cpy_from_fpga_thd, NULL, (void*)copy_from_fpga, &image_out );
+    //copy_into_mem( &image_in );
+    // copy_to_fpga( &image_in );
+    // copy_from_fpga( &image_out );
+    verify_result( &image_out );
 
-    for ( i = 0; i < 8; i++ ) {
-      fpga_read_cl_to_buffer(slot_id, rd_ch, fd, buffer_size, (0x10000000 + rd_ch*MEM_16G));
-      dma_memcmp( (char*)(image_out + buffer_size*i), buffer_size );
-    }
-
-out:
-    free(image_in);
-    free(image_out);
+    free(image_in.buffer);
+    free(image_out.buffer);
+    free(image_in.cnt);
+    free(image_out.cnt);
+    free(image_in.neg_cnt);
+    free(image_out.neg_cnt);
+    free( cpy_to_mem_thd );
+    free( cpy_to_fpga_thd );
+    free( cpy_from_fpga_thd );
+    free( syncd );
+    free( neg_syncd );
     if (write_buffer != NULL) {
         free(write_buffer);
     }

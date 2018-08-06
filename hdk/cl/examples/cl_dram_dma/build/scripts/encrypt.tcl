@@ -58,6 +58,9 @@ file copy -force $CL_DIR/design/Vgg7.v                             $TARGET_DIR
 file copy -force $CL_DIR/design/Queue_1024.v                       $TARGET_DIR
 file copy -force $CL_DIR/design/Queue_2048.v                       $TARGET_DIR
 file copy -force $CL_DIR/design/Queue_4096.v                       $TARGET_DIR
+file copy -force $CL_DIR/design/DenseBlackBox0e5d10d8d8.v          $TARGET_DIR
+file copy -force $CL_DIR/design/DenseBlackBox5f433e8bf5.v          $TARGET_DIR
+file copy -force $CL_DIR/design/GenericAddSub16.vhd                $TARGET_DIR
 file copy -force $UNUSED_TEMPLATES_DIR/unused_sh_bar1_template.inc $TARGET_DIR
 file copy -force $UNUSED_TEMPLATES_DIR/unused_flr_template.inc     $TARGET_DIR
 file copy -force $UNUSED_TEMPLATES_DIR/unused_apppf_irq_template.inc $TARGET_DIR

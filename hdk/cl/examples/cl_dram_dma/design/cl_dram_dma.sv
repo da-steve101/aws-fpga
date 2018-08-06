@@ -77,12 +77,21 @@ always_ff @(negedge pipe_rst_n or posedge clk)
 (* dont_touch = "true" *) logic dma_pcis_slv_sync_rst_n;
 lib_pipe #(.WIDTH(1), .STAGES(8)) DMA_PCIS_SLV_SLC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(dma_pcis_slv_sync_rst_n));
 
+`define NO_QUEUE 4
+`define NO_QUEUE_LOG 2
+
 wire [511:0] mem_str;
 wire        mem_vld;
-reg 	    wrting;
-reg 	    rding;
+wire 	    wrting;
+reg [3:0]   no_transfers_wrt_buf[`NO_QUEUE-1:0];
+reg [3:0]   no_transfers_rd_buf[`NO_QUEUE-1:0];
 reg [3:0]   no_transfers_wrt;
 reg [3:0]   no_transfers_rd;
+// consumer and producers
+reg [`NO_QUEUE_LOG-1:0] tran_wrt_cntr_prod, tran_wrt_cntr_con;
+reg [`NO_QUEUE_LOG-1:0] tran_rd_cntr_prod, tran_rd_cntr_con;
+reg [5:0] wid_buf[`NO_QUEUE-1:0];
+reg [5:0] rid_buf[`NO_QUEUE-1:0];
 reg [5:0] wid;
 reg [5:0] rid;
 reg 	  bid_vld;
@@ -91,6 +100,7 @@ reg 	  awrdy;
 reg 	  arrdy;
 reg 	  rlast;
 reg 	  wlast;
+reg 	  wready;
 reg [511:0] rdata;
 wire      full;
 
@@ -105,7 +115,9 @@ logic 	image_vld;
 assign sh_cl_dma_pcis_q.awready = awrdy;
 
 // recv burst
-assign sh_cl_dma_pcis_q.wready = wrting & !full;
+assign wrting = ( tran_wrt_cntr_prod + 1 ) != ( tran_wrt_cntr_con - 1 );
+
+assign sh_cl_dma_pcis_q.wready = wready & !full;
 assign sh_cl_dma_pcis_q.bresp = 0;
 assign sh_cl_dma_pcis_q.bvalid = bid_vld;
 assign sh_cl_dma_pcis_q.bid[5:0] = wid;
@@ -122,72 +134,96 @@ always_ff @( negedge dma_pcis_slv_sync_rst_n or posedge clk )
 begin
    if (!dma_pcis_slv_sync_rst_n)
    begin
-      wrting <= 0;
-      rding <= 0;
+      wready <= 0;
       bid_vld <= 0;
       rd_vld <= 0;
       awrdy <= 0;
       arrdy <= 0;
       rlast <= 0;
-      wlast <= 0;
+      wlast <= 1;
       no_transfers_rd <= 0;
       no_transfers_wrt <= 0;
+      tran_wrt_cntr_prod <= 0;
+      tran_wrt_cntr_con <= 0;
+      tran_rd_cntr_prod <= 0;
+      tran_rd_cntr_con <= 0;
    end
    else
    begin
-      if ( !wrting )
+      // producer
+      if ( sh_cl_dma_pcis_q.awvalid )
       begin
-	 bid_vld <= 0;
-	 if ( !sh_cl_dma_pcis_q.awvalid || !awrdy )
+	 no_transfers_wrt_buf[tran_wrt_cntr_prod] <= sh_cl_dma_pcis_q.awlen;
+	 wid_buf[tran_wrt_cntr_prod] <= sh_cl_dma_pcis_q.awid[5:0];
+	 if ( awrdy )
 	 begin
-	    awrdy <= 1;
+	    tran_wrt_cntr_prod <= tran_wrt_cntr_prod + 1;
+	    if ( !wrting )
+	    begin
+	       awrdy <= 0;
+	    end
 	 end
 	 else
 	 begin
-	    wrting <= 1;
-	    no_transfers_wrt <= sh_cl_dma_pcis_q.awlen;
-	    awrdy <= 0;
+	    if ( wrting )
+	    begin
+	       awrdy <= 1;
+	    end
 	 end
       end
       else
       begin
-	 if ( sh_cl_dma_pcis_q.wvalid )
+	 awrdy <= 1;
+      end // else: !if( sh_cl_dma_pcis_q.awvalid )
+      // wrt consumer
+      if ( wlast )
+      begin
+	 bid_vld <= 0;
+	 wready <= 1;
+	 if ( tran_wrt_cntr_con != tran_wrt_cntr_prod )
 	 begin
-	    wid <= sh_cl_dma_pcis_q.awid[5:0];
-	    no_transfers_wrt <= no_transfers_wrt - 1;
-	    if ( sh_cl_dma_pcis_q.wlast & !wlast )
-	    begin
-	       wlast <= 1;
-	    end
-	 end
-	 if ( wlast )
-	 begin
-	    wrting <= 0;
-	    bid_vld <= 1;
+	    no_transfers_wrt <= no_transfers_wrt_buf[tran_wrt_cntr_con];
+	    wid <= wid_buf[tran_wrt_cntr_con];
+	    tran_wrt_cntr_con <= tran_wrt_cntr_con + 1;
 	    wlast <= 0;
 	 end
       end
-      if ( !rding )
+      else
       begin
-	 rlast <= 0;
-	 rd_vld <= 0;
-	 if ( !run_out )
+	 if ( sh_cl_dma_pcis_q.wvalid & wready & !full )
 	 begin
-	    arrdy <= 0;
+	    if ( sh_cl_dma_pcis_q.wlast & !wlast )
+	    begin
+	       wlast <= 1;
+	       wready <= 0;
+	       bid_vld <= 1;
+	    end
+	    no_transfers_wrt <= no_transfers_wrt - 1;
 	 end
-	 else if ( !sh_cl_dma_pcis_q.arvalid || !arrdy )
+      end
+      // build the producer
+      if ( sh_cl_dma_pcis_q.arvalid )
+      begin
+	 no_transfers_rd_buf[tran_rd_cntr_prod] <= sh_cl_dma_pcis_q.arlen;
+	 rid_buf[tran_rd_cntr_prod] <= sh_cl_dma_pcis_q.arid[5:0]; // make a queue for rids ... for now cbf cause all 1?
+	 if ( arrdy )
 	 begin
-	    arrdy <= 1;
+	    tran_rd_cntr_prod <= tran_rd_cntr_prod + 1;
+	    if ( tran_rd_cntr_prod + 1 == tran_rd_cntr_con - 1 )
+	    begin
+	       arrdy <= 0;
+	    end
 	 end
 	 else
 	 begin
-	    rding <= 1;
-	    no_transfers_rd <= sh_cl_dma_pcis_q.arlen;
-	    rid <= sh_cl_dma_pcis_q.arid[5:0];
-	    arrdy <= 0;
+	    if ( tran_rd_cntr_prod + 1 != tran_rd_cntr_con - 1 )
+	    begin
+	       arrdy <= 1;
+	    end
 	 end
-      end
-      else if ( sh_cl_dma_pcis_q.rready )
+      end // if ( sh_cl_dma_pcis_q.arvalid )
+      // build the consumer
+      if ( sh_cl_dma_pcis_q.rready & run_out )
       begin
 	 rdata <= mem_str;
 	 rd_vld <= mem_vld;
@@ -196,9 +232,28 @@ begin
 	    no_transfers_rd <= no_transfers_rd - 1;
 	    if ( no_transfers_rd == 0 )
 	    begin
-	      rlast <= 1;
-  	      rding <= 0;
-  	    end
+	       rlast <= 1;
+	       if ( tran_rd_cntr_con != tran_rd_cntr_prod )
+	       begin
+		  tran_rd_cntr_con <= tran_rd_cntr_con + 1;
+		  no_transfers_rd <= no_transfers_rd_buf[tran_rd_cntr_con];
+		  rid <= rid_buf[tran_rd_cntr_con];
+	       end
+	    end
+	    else
+	    begin
+	       rlast <= 0;
+	    end
+	 end // if ( mem_vld )
+      end
+      else
+      begin
+	 rlast <= 0;
+	 if ( tran_rd_cntr_con != tran_rd_cntr_prod )
+	 begin
+	    no_transfers_rd <= no_transfers_rd_buf[tran_rd_cntr_con];
+	    rid <= rid_buf[tran_rd_cntr_con];
+	    tran_rd_cntr_con <= tran_rd_cntr_con + 1;
 	 end
       end
    end
@@ -325,7 +380,7 @@ fifo_sync_512 AXI_DATA_FIFO_IN
  .clk( clk ),
  .srst( !fifo_sync_rst_n ),
 
- .wr_en( sh_cl_dma_pcis_q.wvalid & wrting ),
+ .wr_en( sh_cl_dma_pcis_q.wvalid & wready & !full ),
  .full( full ),
  .din( sh_cl_dma_pcis_q.wdata ),
 
@@ -355,7 +410,7 @@ always_ff @( negedge fifo_sync_rst_n or posedge clk )
 		 end
 	       else
 		 begin
-		    run <= 0;		    
+		    run <= 0;
 		 end
 	    end
 	  else if ( img_cntr > 0 & fifo_in_ready & image_vld )
@@ -367,7 +422,7 @@ always_ff @( negedge fifo_sync_rst_n or posedge clk )
 	       if ( !output_buffered_n )
 		 begin
 		    run_out <= 1;
-		    img_cntr_out <= 8'h80;
+		    img_cntr_out <= 8'h10;
 		 end
 	       else
 		 begin
@@ -376,7 +431,7 @@ always_ff @( negedge fifo_sync_rst_n or posedge clk )
 	    end
 	  else if ( img_cntr_out > 0 )
 	    begin
-	       if ( mem_vld & sh_cl_dma_pcis_q.rready & rding )
+	       if ( mem_vld & sh_cl_dma_pcis_q.rready )
 		 begin
 		    img_cntr_out <= img_cntr_out - 1;
 		 end
@@ -384,7 +439,7 @@ always_ff @( negedge fifo_sync_rst_n or posedge clk )
 	  else
 	    begin
 	       run_out <= 0;
-	    end	  
+	    end
        end
   end
 
@@ -491,7 +546,7 @@ axi_dwidth_converter_64_to_512 AXI_DWIDTH_TO_512
 logic [7:0] tmp_cntr;
 logic [7:0] tmp_in_cntr;
 logic [7:0] tmp_in_rdy_cntr;
-   
+
 always_ff @( posedge clk )
 begin
    if ( !sync_rst_n )
@@ -523,11 +578,11 @@ fifo_sync_512 AXI_DATA_FIFO_OUT
  .srst( !fifo_out_sync_rst_n ),
 
  .wr_en( fifo_out_valid ),
- .din( fifo_out_bits ), 
+ .din( fifo_out_bits ),
 
  .valid( mem_vld ),
- .prog_empty( output_buffered_n ),
- .rd_en( sh_cl_dma_pcis_q.rready & rding ),
+ .empty( output_buffered_n ),
+ .rd_en( sh_cl_dma_pcis_q.rready & run_out ),
  .dout( mem_str )
 );
 
