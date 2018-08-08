@@ -237,7 +237,7 @@ int dma_example(int slot_id) {
     image_out.slot_id = slot_id;
     image_in.buffer = (char*) malloc( image_in.buffer_size  );
     image_out.buffer = (char*) malloc( image_out.buffer_size  );
-    int write_fd, read_fd, rc;
+    int write_fd, read_fd;
 
     read_buffer = NULL;
     write_buffer = NULL;

@@ -111,7 +111,7 @@ int open_dma_queue(int slot_id, int *write_fd, int *read_fd)
     printf("write_device_file_name=%s\n", write_device_file_name);
 
     /* setup to open the C2H (Core to Host) channel that we'll use for DMA reads */
-    rc = sprintf(read_device_file_name, "/dev/xdma%i_c2h_0", slot_id);
+    rc = sprintf(read_device_file_name, "/dev/xdma%i_c2h_1", slot_id);
     fail_on((rc = (rc < 0)? 1:0), out, "Unable to format read device file name.");
     printf("read_device_file_name=%s\n", read_device_file_name);
 
