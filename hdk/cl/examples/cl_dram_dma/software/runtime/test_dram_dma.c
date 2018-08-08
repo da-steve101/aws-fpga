@@ -28,6 +28,7 @@
 #include "airplane.h"
 
 #define	MEM_16G		(1ULL << 34)
+#define USER_INTERRUPTS_MAX  (16)
 
 #ifndef SV_TEST
 /* use the stdout logger */
@@ -48,6 +49,8 @@ int main(int argc, char **argv) {
         usage(argv[0]);
         return 1;
     }
+
+    error_count = 0;
 
     /* setup logging to print to stdout */
     rc = log_init("test_dram_dma");
@@ -203,12 +206,10 @@ int verify_result( struct image_info * image_buffer ) {
   return 0;
 }
 
-/* 
+/*
  * Write 4 identical buffers to the 4 different DRAM channels of the AFI
- * using fsync() between the writes and read to insure order
  */
 int dma_example(int slot_id) {
-    int fd;
     int image_size = 8192;
     struct image_info image_in, image_out;
     int sem_cnt = 4;
@@ -236,15 +237,17 @@ int dma_example(int slot_id) {
     image_out.slot_id = slot_id;
     image_in.buffer = (char*) malloc( image_in.buffer_size  );
     image_out.buffer = (char*) malloc( image_out.buffer_size  );
+    int write_fd, read_fd, rc;
 
     read_buffer = NULL;
     write_buffer = NULL;
-    fd = -1;
+    write_fd = -1;
+    read_fd = -1;
 
-    fd = open_dma_queue(slot_id);
+    rc = open_dma_queue(slot_id, &write_fd, &read_fd);
 
-    image_in.fd = fd;
-    image_out.fd = fd;
+    image_in.fd = write_fd;
+    image_out.fd = read_fd;
 
     pthread_t * cpy_to_mem_thd = (pthread_t *)malloc(sizeof(pthread_t));
     pthread_t * cpy_to_fpga_thd = (pthread_t *)malloc(sizeof(pthread_t));
@@ -275,8 +278,11 @@ int dma_example(int slot_id) {
     if (read_buffer != NULL) {
         free(read_buffer);
     }
-    if (fd >= 0) {
-        close(fd);
+    if (write_fd >= 0) {
+        close(write_fd);
+    }
+    if (read_fd >= 0) {
+        close(read_fd);
     }
     /* if there is an error code, exit with status 1 */
     return 0;

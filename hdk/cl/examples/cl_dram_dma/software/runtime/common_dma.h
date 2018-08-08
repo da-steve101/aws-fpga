@@ -63,6 +63,6 @@ int dma_example_hwsw_cosim(int slot_id);
 
 int dma_memcmp ( char * cmp_buf, size_t buffer_size);
 
-int open_dma_queue(int slot_id);
+int open_dma_queue(int slot_id, int *write_fd, int *read_fd);
 
 #endif

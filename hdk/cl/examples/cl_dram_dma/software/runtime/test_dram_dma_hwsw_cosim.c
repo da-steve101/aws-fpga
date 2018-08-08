@@ -111,30 +111,31 @@ out:
 
 /* 
  * Write 4 identical buffers to the 4 different DRAM channels of the AFI
- * using fsync() between the writes and read to insure order
  */
 
 int dma_example_hwsw_cosim(int slot_id) {
-    int fd, rc;
     int image_size = 8192;
     char * image_in, * image_out;
     int i, idx;
+    int write_fd, read_fd, rc;
 
     read_buffer = NULL;
     write_buffer = NULL;
-    fd = -1;
+    write_fd = -1;
+    read_fd = -1;
 
     write_buffer = (char *)malloc(buffer_size);
     read_buffer = (char *)malloc(buffer_size);
     image_in = (char*) malloc( image_size );
     image_out = (char*) malloc( image_size );
     if (write_buffer == NULL || read_buffer == NULL) {
-        rc = ENOMEM;
+        rc = -ENOMEM;
         goto out;
     }
 
 #ifndef SV_TEST
-    fd = open_dma_queue(slot_id);
+    rc = open_dma_queue(slot_id, &write_fd, &read_fd);
+    fail_on(rc, out, "open_dma_queue failed");
 #endif
 
     for ( i = 0; i < image_size; i++ ) {
@@ -148,7 +149,7 @@ int dma_example_hwsw_cosim(int slot_id) {
 
     for ( i = 0; i < 8; i++ ) {
       memcpy( write_buffer, (char*)(image_in + buffer_size*i), buffer_size );
-      fpga_write_buffer_to_cl(slot_id, write_channel, fd, buffer_size, (0x10000000 + write_channel*MEM_16G));
+      fpga_write_buffer_to_cl(slot_id, write_channel, write_fd, buffer_size, (0x10000000 + write_channel*MEM_16G));
     }
 
     /* fsync() will make sure the write made it to the target buffer 
@@ -160,7 +161,7 @@ int dma_example_hwsw_cosim(int slot_id) {
 #endif
 
     for ( i = 0; i < 8; i++ ) {
-      fpga_read_cl_to_buffer(slot_id, read_channel, fd, buffer_size, (0x10000000 + read_channel*MEM_16G));
+      fpga_read_cl_to_buffer(slot_id, read_channel, read_fd, buffer_size, (0x10000000 + read_channel*MEM_16G));
       dma_memcmp( (char*)(image_out + buffer_size*i), buffer_size );
     }
 
@@ -174,8 +175,11 @@ out:
     if (read_buffer != NULL) {
         free(read_buffer);
     }
-    if (fd >= 0) {
-        close(fd);
+    if (write_fd >= 0) {
+        close(write_fd);
+    }
+    if (read_fd >= 0) {
+        close(read_fd);
     }
     /* if there is an error code, exit with status 1 */
     return (rc != 0 ? 1 : 0);

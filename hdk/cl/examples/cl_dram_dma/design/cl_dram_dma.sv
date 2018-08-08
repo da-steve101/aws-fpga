@@ -57,6 +57,15 @@ assign cl_sh_id1[31:0] = `CL_SH_ID1;
 // End Internal signals
 //----------------------------
 
+// Unused 'full' signals
+assign cl_sh_dma_rd_full  = 1'b0;
+assign cl_sh_dma_wr_full  = 1'b0;
+
+// Unused *burst signals
+assign cl_sh_ddr_arburst[1:0] = 2'h0;
+assign cl_sh_ddr_awburst[1:0] = 2'h0;
+
+
 assign clk = clk_main_a0;
 
 //reset synchronizer
