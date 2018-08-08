@@ -94,6 +94,7 @@ reg [5:0] wid_buf[`NO_QUEUE-1:0];
 reg [5:0] rid_buf[`NO_QUEUE-1:0];
 reg [5:0] wid;
 reg [5:0] rid;
+reg 	  cnt_vld;
 reg 	  bid_vld;
 reg 	  rd_vld;
 reg 	  awrdy;
@@ -147,6 +148,7 @@ begin
       tran_wrt_cntr_con <= 0;
       tran_rd_cntr_prod <= 0;
       tran_rd_cntr_con <= 0;
+      cnt_vld <= 0;
    end
    else
    begin
@@ -205,7 +207,7 @@ begin
       if ( sh_cl_dma_pcis_q.arvalid )
       begin
 	 no_transfers_rd_buf[tran_rd_cntr_prod] <= sh_cl_dma_pcis_q.arlen;
-	 rid_buf[tran_rd_cntr_prod] <= sh_cl_dma_pcis_q.arid[5:0]; // make a queue for rids ... for now cbf cause all 1?
+	 rid_buf[tran_rd_cntr_prod] <= sh_cl_dma_pcis_q.arid[5:0];
 	 if ( arrdy )
 	 begin
 	    tran_rd_cntr_prod <= tran_rd_cntr_prod + 1;
@@ -223,7 +225,7 @@ begin
 	 end
       end // if ( sh_cl_dma_pcis_q.arvalid )
       // build the consumer
-      if ( sh_cl_dma_pcis_q.rready & run_out )
+      if ( sh_cl_dma_pcis_q.rready & run_out & cnt_vld )
       begin
 	 rdata <= mem_str;
 	 rd_vld <= mem_vld;
@@ -238,6 +240,11 @@ begin
 		  tran_rd_cntr_con <= tran_rd_cntr_con + 1;
 		  no_transfers_rd <= no_transfers_rd_buf[tran_rd_cntr_con];
 		  rid <= rid_buf[tran_rd_cntr_con];
+		  cnt_vld <= 1;
+	       end
+	       else
+	       begin
+		  cnt_vld <= 0;
 	       end
 	    end
 	    else
@@ -248,12 +255,21 @@ begin
       end
       else
       begin
+ 	 if ( cnt_vld == 0 )
+	 begin
+	    rd_vld <= 0;
+	 end
 	 rlast <= 0;
 	 if ( tran_rd_cntr_con != tran_rd_cntr_prod )
 	 begin
 	    no_transfers_rd <= no_transfers_rd_buf[tran_rd_cntr_con];
 	    rid <= rid_buf[tran_rd_cntr_con];
 	    tran_rd_cntr_con <= tran_rd_cntr_con + 1;
+	    cnt_vld <= 1;
+	 end
+	 else
+         begin
+	    cnt_vld <= 0;
 	 end
       end
    end
@@ -422,23 +438,19 @@ always_ff @( negedge fifo_sync_rst_n or posedge clk )
 	       if ( !output_buffered_n )
 		 begin
 		    run_out <= 1;
-		    img_cntr_out <= 8'h10;
+		    img_cntr_out <= 8'h80;
 		 end
 	       else
 		 begin
 		    run_out <= 0;
 		 end
 	    end
-	  else if ( img_cntr_out > 0 )
+	  else
 	    begin
-	       if ( mem_vld & sh_cl_dma_pcis_q.rready )
+	       if ( mem_vld & sh_cl_dma_pcis_q.rready & cnt_vld )
 		 begin
 		    img_cntr_out <= img_cntr_out - 1;
 		 end
-	    end
-	  else
-	    begin
-	       run_out <= 0;
 	    end
        end
   end
@@ -582,7 +594,7 @@ fifo_sync_512 AXI_DATA_FIFO_OUT
 
  .valid( mem_vld ),
  .empty( output_buffered_n ),
- .rd_en( sh_cl_dma_pcis_q.rready & run_out ),
+ .rd_en( sh_cl_dma_pcis_q.rready & run_out & cnt_vld ),
  .dout( mem_str )
 );
 

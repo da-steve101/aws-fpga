@@ -107,13 +107,19 @@ void * copy_to_fpga( void * args ) {
   struct image_info * image_buffer = ( struct image_info * ) args;
   int wrt_ch = 0;
   int addr = 0;
-  int rc;
-  FILE * fp = fdopen( image_buffer->fd, "w" );
+  int rc, i;
+  // FILE * fp = fdopen( image_buffer->fd, "w" );
   while( 1 ) {
     // if there is enough space in fpga queue
     sem_wait( image_buffer->neg_syncd );
     // when image ready to copy
     sem_wait( image_buffer->cnt );
+    for ( i = 0; i < 8; i++ ) {
+      rc = pwrite( image_buffer->fd, (char*)(image_buffer->buffer + i*buffer_size + addr), buffer_size, 0x10000000 + wrt_ch*MEM_16G );
+      if ( rc != buffer_size )
+        printf( "write error %d\n", rc );
+    }
+    /*
     fseek( fp, 0x10000000 + wrt_ch*MEM_16G, SEEK_SET );
     rc = fwrite( (char*)(image_buffer->buffer + addr),
 		 1,
@@ -121,6 +127,7 @@ void * copy_to_fpga( void * args ) {
 		 fp );
     if ( rc != image_buffer->image_size )
       printf( "write error %d\n", rc );
+    */
     sem_post( image_buffer->neg_cnt );
     fsync( image_buffer->fd );
     sem_post( image_buffer->syncd );
