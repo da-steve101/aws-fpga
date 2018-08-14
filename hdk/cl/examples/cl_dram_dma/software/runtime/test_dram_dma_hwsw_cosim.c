@@ -40,10 +40,10 @@ const struct logger *logger = &logger_stdout;
 //For cadence and questa simulators the main has to return some value
    #ifdef INT_MAIN
    int test_main(uint32_t *exit_code) {
-   #else 
+   #else
    void test_main(uint32_t *exit_code) {
-   #endif 
-#else 
+   #endif
+#else
     int main(int argc, char **argv) {
 #endif
     //The statements within SCOPE ifdef below are needed for HW/SW co-simulation with VCS
@@ -103,13 +103,13 @@ out:
    #ifdef INT_MAIN
    *exit_code = 0;
    return 0;
-   #else 
+   #else
    *exit_code = 0;
    #endif
 #endif
 }
 
-/* 
+/*
  * Write 4 identical buffers to the 4 different DRAM channels of the AFI
  */
 
@@ -124,8 +124,8 @@ int dma_example_hwsw_cosim(int slot_id) {
     write_fd = -1;
     read_fd = -1;
 
-    write_buffer = (char *)malloc(buffer_size);
-    read_buffer = (char *)malloc(buffer_size);
+    write_buffer = (char *)malloc(buffer_size + 8);
+    read_buffer = (char *)malloc(buffer_size + 8);
     image_in = (char*) malloc( image_size );
     image_out = (char*) malloc( image_size );
     if (write_buffer == NULL || read_buffer == NULL) {
@@ -144,15 +144,15 @@ int dma_example_hwsw_cosim(int slot_id) {
       image_out[i] = ( airplane4_mp_3[ idx ] >> (8*( i % 8 )) ) % 256;
     }
 
-    int write_channel = 0;
-    int read_channel = 0;
+    int wr_ch = 0;
+    int rd_ch = 0;
 
-    for ( i = 0; i < 8; i++ ) {
-      memcpy( write_buffer, (char*)(image_in + buffer_size*i), buffer_size );
-      fpga_write_buffer_to_cl(slot_id, write_channel, write_fd, buffer_size, (0x10000000 + write_channel*MEM_16G));
-    }
+    memcpy( write_buffer, (char*)(image_in), buffer_size );
+    fpga_write_buffer_to_cl(slot_id, wr_ch, write_fd, buffer_size, (0x10000000 + wr_ch*MEM_16G));
+    memcpy( write_buffer, (char*)(image_out ), buffer_size );
+    fpga_write_buffer_to_cl(slot_id, wr_ch, write_fd, buffer_size, (0x10000000 + wr_ch*MEM_16G));
 
-    /* fsync() will make sure the write made it to the target buffer 
+    /* fsync() will make sure the write made it to the target buffer
      * before read is done
      */
 #ifndef SV_TEST
@@ -160,10 +160,8 @@ int dma_example_hwsw_cosim(int slot_id) {
     fail_on((rc = (rc < 0)? errno:0), out, "call to fsync failed.");
 #endif
 
-    for ( i = 0; i < 8; i++ ) {
-      fpga_read_cl_to_buffer(slot_id, read_channel, read_fd, buffer_size, (0x10000000 + read_channel*MEM_16G));
-      dma_memcmp( (char*)(image_out + buffer_size*i), buffer_size );
-    }
+    fpga_read_cl_to_buffer(slot_id, rd_ch, read_fd, buffer_size, (0x10000000 + rd_ch*MEM_16G));
+    dma_memcmp( (char*)(image_in), buffer_size );
 
 out:
     free(image_in);

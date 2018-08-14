@@ -92,10 +92,10 @@ lib_pipe #(.WIDTH(1), .STAGES(8)) DMA_PCIS_SLV_SLC_RST_N (.clk(clk), .rst_n(1'b1
 wire [511:0] mem_str;
 wire        mem_vld;
 wire 	    wrting;
-reg [3:0]   no_transfers_wrt_buf[`NO_QUEUE-1:0];
-reg [3:0]   no_transfers_rd_buf[`NO_QUEUE-1:0];
-reg [3:0]   no_transfers_wrt;
-reg [3:0]   no_transfers_rd;
+reg [7:0]   no_transfers_wrt_buf[`NO_QUEUE-1:0];
+reg [7:0]   no_transfers_rd_buf[`NO_QUEUE-1:0];
+reg [7:0]   no_transfers_wrt;
+reg [7:0]   no_transfers_rd;
 // consumer and producers
 reg [`NO_QUEUE_LOG-1:0] tran_wrt_cntr_prod, tran_wrt_cntr_con;
 reg [`NO_QUEUE_LOG-1:0] tran_rd_cntr_prod, tran_rd_cntr_con;
@@ -269,7 +269,7 @@ begin
 	    rd_vld <= 0;
 	 end
 	 rlast <= 0;
-	 if ( tran_rd_cntr_con != tran_rd_cntr_prod )
+	 if ( tran_rd_cntr_con != tran_rd_cntr_prod & !cnt_vld )
 	 begin
 	    no_transfers_rd <= no_transfers_rd_buf[tran_rd_cntr_con];
 	    rid <= rid_buf[tran_rd_cntr_con];

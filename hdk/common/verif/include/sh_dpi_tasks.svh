@@ -16,7 +16,7 @@
 `ifndef SV_SH_DPI_TASKS
 `define SV_SH_DPI_TASKS
 
-`define BUF_SIZE 1024
+`define BUF_SIZE 8192
 
 import tb_type_defines_pkg::*;
 
