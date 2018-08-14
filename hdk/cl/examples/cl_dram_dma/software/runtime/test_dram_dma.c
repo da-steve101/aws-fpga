@@ -119,27 +119,15 @@ void * copy_to_fpga( void * args ) {
   struct image_info * image_buffer = ( struct image_info * ) args;
   int wrt_ch = 0;
   int addr = 0;
-  int rc, i;
-  // FILE * fp = fdopen( image_buffer->fd, "w" );
+  int rc;
   while( 1 ) {
     // if there is enough space in fpga queue
     sem_wait( image_buffer->neg_syncd );
     // when image ready to copy
     sem_wait( image_buffer->cnt );
-    for ( i = 0; i < 8; i++ ) {
-      rc = pwrite( image_buffer->fd, (char*)(image_buffer->buffer + i*buffer_size + addr), buffer_size, 0x10000000 + wrt_ch*MEM_16G );
-      if ( rc != buffer_size )
-        printf( "write error %d\n", rc );
-    }
-    /*
-    fseek( fp, 0x10000000 + wrt_ch*MEM_16G, SEEK_SET );
-    rc = fwrite( (char*)(image_buffer->buffer + addr),
-		 1,
-		 image_buffer->image_size,
-		 fp );
+    rc = pwrite( image_buffer->fd, (char*)(image_buffer->buffer + addr), image_buffer->image_size, 0x10000000 + wrt_ch*MEM_16G );
     if ( rc != image_buffer->image_size )
       printf( "write error %d\n", rc );
-    */
     sem_post( image_buffer->neg_cnt );
     fsync( image_buffer->fd );
     sem_post( image_buffer->syncd );
@@ -154,28 +142,18 @@ void * copy_from_fpga( void * args ) {
   struct image_info * image_buffer = ( struct image_info * ) args;
   int rd_ch = 1;
   int addr = 0;
-  int rc, i;
-  // FILE * fp = fdopen( image_buffer->fd, "r" );
+  int rc;
   while( 1 ) {
     // if an image is ready
     sem_wait( image_buffer->syncd );
     // if there is enough space to copy out
     sem_wait( image_buffer->neg_cnt ); // blocking here ...
-    for ( i = 0; i < 8; i++ ) {
-      rc = pread( image_buffer->fd,
-	(char*)(image_buffer->buffer + i*buffer_size + addr),
-	buffer_size,
-	0x10000000 + rd_ch*MEM_16G);
-      /*
-      fseek( fp, 0x10000000 + rd_ch*MEM_16G, SEEK_SET );
-      rc = fread( (char*)(image_buffer->buffer + i*buffer_size + addr),
-		  1,
-		  buffer_size,
-		  fp );
-      */
-      if ( rc != buffer_size )
-	printf( "read error %d\n", rc );
-    }
+    rc = pread( image_buffer->fd,
+		(char*)(image_buffer->buffer + addr),
+		image_buffer->image_size,
+		0x10000000 + rd_ch*MEM_16G);
+    if ( rc != image_buffer->image_size )
+      printf( "read error %d\n", rc );
     sem_post( image_buffer->cnt );
     sem_post( image_buffer->neg_syncd );
     addr = ( addr + image_buffer->image_size ) % image_buffer->buffer_size;
