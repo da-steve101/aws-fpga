@@ -29,6 +29,15 @@
 
 #include "common_dma.h"
 #include "airplane.h"
+#include "automobile.h"
+#include "bird.h"
+#include "cat.h"
+#include "deer.h"
+#include "dog.h"
+#include "frog.h"
+#include "horse.h"
+#include "ship.h"
+#include "truck.h"
 
 #ifndef SV_TEST
 /* use the stdout logger */
