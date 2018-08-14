@@ -244,7 +244,7 @@ int dma_example(int slot_id) {
     write_fd = -1;
     read_fd = -1;
 
-    rc = open_dma_queue(slot_id, &write_fd, &read_fd);
+    open_dma_queue(slot_id, &write_fd, &read_fd);
 
     image_in.fd = write_fd;
     image_out.fd = read_fd;

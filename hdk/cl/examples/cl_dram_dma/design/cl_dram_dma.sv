@@ -278,7 +278,10 @@ begin
 	 end
 	 else
          begin
-	    cnt_vld <= 0;
+	    if ( no_transfers_rd == 0 )
+	    begin
+	       cnt_vld <= 0;
+	    end
 	 end
       end
    end
@@ -602,7 +605,7 @@ fifo_sync_512 AXI_DATA_FIFO_OUT
  .din( fifo_out_bits ),
 
  .valid( mem_vld ),
- .empty( output_buffered_n ),
+ .prog_empty( output_buffered_n ),
  .rd_en( sh_cl_dma_pcis_q.rready & run_out & cnt_vld ),
  .dout( mem_str )
 );
