@@ -1,10 +1,10 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
-// Tool Version: Vivado v.2017.1_sdxop (lin64) Build 1933108 Fri Jul 14 11:54:19 MDT 2017
-// Date        : Thu Feb 22 05:13:28 2018
-// Host        : ip-10-74-50-86.ad.corelogic.asia running 64-bit CentOS Linux release 7.4.1708 (Core)
+// Tool Version: Vivado v.2017.4.op (lin64) Build 2193837 Tue Apr 10 18:06:59 MDT 2018
+// Date        : Wed Aug 22 05:40:45 2018
+// Host        : ip-172-31-26-36.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.5.1804 (Core)
 // Command     : write_verilog -force -mode funcsim
-//               /home/centos/ip_generation/ip_generation.srcs/sources_1/ip/axi_dwidth_converter_64_to_512/axi_dwidth_converter_64_to_512_sim_netlist.v
+//               /home/centos/test_proj/test_proj.srcs/sources_1/ip/axi_dwidth_converter_64_to_512/axi_dwidth_converter_64_to_512_sim_netlist.v
 // Design      : axi_dwidth_converter_64_to_512
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -12,7 +12,7 @@
 // --------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
 
-(* CHECK_LICENSE_TYPE = "axi_dwidth_converter_64_to_512,axis_dwidth_converter_v1_1_10_axis_dwidth_converter,{}" *) (* DowngradeIPIdentifiedWarnings = "yes" *) (* X_CORE_INFO = "axis_dwidth_converter_v1_1_10_axis_dwidth_converter,Vivado 2017.1_sdxop" *) 
+(* CHECK_LICENSE_TYPE = "axi_dwidth_converter_64_to_512,axis_dwidth_converter_v1_1_14_axis_dwidth_converter,{}" *) (* DowngradeIPIdentifiedWarnings = "yes" *) (* X_CORE_INFO = "axis_dwidth_converter_v1_1_14_axis_dwidth_converter,Vivado 2017.4.op" *) 
 (* NotValidForBitStream *)
 module axi_dwidth_converter_64_to_512
    (aclk,
@@ -23,14 +23,14 @@ module axi_dwidth_converter_64_to_512
     m_axis_tvalid,
     m_axis_tready,
     m_axis_tdata);
-  (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLKIF CLK" *) input aclk;
-  (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RSTIF RST" *) input aresetn;
+  (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLKIF CLK" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLKIF, FREQ_HZ 10000000, PHASE 0.000" *) input aclk;
+  (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RSTIF RST" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME RSTIF, POLARITY ACTIVE_LOW" *) input aresetn;
   (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TVALID" *) input s_axis_tvalid;
   (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TREADY" *) output s_axis_tready;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TDATA" *) input [63:0]s_axis_tdata;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TDATA" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME S_AXIS, TDATA_NUM_BYTES 8, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 0, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef" *) input [63:0]s_axis_tdata;
   (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TVALID" *) output m_axis_tvalid;
   (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TREADY" *) input m_axis_tready;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TDATA" *) output [511:0]m_axis_tdata;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TDATA" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME M_AXIS, TDATA_NUM_BYTES 64, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 0, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef" *) output [511:0]m_axis_tdata;
 
   wire aclk;
   wire aresetn;
@@ -85,7 +85,7 @@ module axi_dwidth_converter_64_to_512
   (* P_M_RATIO = "1" *) 
   (* P_SS_TKEEP_REQUIRED = "0" *) 
   (* P_S_RATIO = "8" *) 
-  axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axis_dwidth_converter inst
+  axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_14_axis_dwidth_converter inst
        (.aclk(aclk),
         .aclken(1'b1),
         .aresetn(aresetn),
@@ -118,11 +118,11 @@ endmodule
 (* G_MASK_SS_TDEST = "64" *) (* G_MASK_SS_TID = "32" *) (* G_MASK_SS_TKEEP = "8" *) 
 (* G_MASK_SS_TLAST = "16" *) (* G_MASK_SS_TREADY = "1" *) (* G_MASK_SS_TSTRB = "4" *) 
 (* G_MASK_SS_TUSER = "128" *) (* G_TASK_SEVERITY_ERR = "2" *) (* G_TASK_SEVERITY_INFO = "0" *) 
-(* G_TASK_SEVERITY_WARNING = "1" *) (* ORIG_REF_NAME = "axis_dwidth_converter_v1_1_10_axis_dwidth_converter" *) (* P_AXIS_SIGNAL_SET = "32'b00000000000000000000000000000011" *) 
+(* G_TASK_SEVERITY_WARNING = "1" *) (* ORIG_REF_NAME = "axis_dwidth_converter_v1_1_14_axis_dwidth_converter" *) (* P_AXIS_SIGNAL_SET = "32'b00000000000000000000000000000011" *) 
 (* P_D1_REG_CONFIG = "0" *) (* P_D1_TUSER_WIDTH = "8" *) (* P_D2_TDATA_WIDTH = "512" *) 
 (* P_D2_TUSER_WIDTH = "64" *) (* P_D3_REG_CONFIG = "0" *) (* P_D3_TUSER_WIDTH = "64" *) 
 (* P_M_RATIO = "1" *) (* P_SS_TKEEP_REQUIRED = "0" *) (* P_S_RATIO = "8" *) 
-module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axis_dwidth_converter
+module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_14_axis_dwidth_converter
    (aclk,
     aresetn,
     aclken,
@@ -327,29 +327,32 @@ module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axis_dwidth_
         .D(p_0_in),
         .Q(areset_r),
         .R(1'b0));
-  axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsizer \gen_upsizer_conversion.axisc_upsizer_0 
-       (.Q({m_axis_tvalid,s_axis_tready}),
-        .SR(areset_r),
+  axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_14_axisc_upsizer \gen_upsizer_conversion.axisc_upsizer_0 
+       (.SR(areset_r),
         .aclk(aclk),
         .aclken(aclken),
         .m_axis_tdata(m_axis_tdata),
         .m_axis_tready(m_axis_tready),
+        .m_axis_tvalid(m_axis_tvalid),
         .s_axis_tdata(s_axis_tdata),
+        .s_axis_tready(s_axis_tready),
         .s_axis_tvalid(s_axis_tvalid));
 endmodule
 
-(* ORIG_REF_NAME = "axis_dwidth_converter_v1_1_10_axisc_upsizer" *) 
-module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsizer
-   (Q,
-    m_axis_tdata,
+(* ORIG_REF_NAME = "axis_dwidth_converter_v1_1_14_axisc_upsizer" *) 
+module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_14_axisc_upsizer
+   (m_axis_tdata,
+    m_axis_tvalid,
+    s_axis_tready,
     aclk,
     SR,
     aclken,
     s_axis_tdata,
     m_axis_tready,
     s_axis_tvalid);
-  output [1:0]Q;
   output [511:0]m_axis_tdata;
+  output m_axis_tvalid;
+  output s_axis_tready;
   input aclk;
   input [0:0]SR;
   input aclken;
@@ -360,16 +363,15 @@ module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsize
   wire \FSM_onehot_state[0]_i_1_n_0 ;
   wire \FSM_onehot_state[0]_i_2_n_0 ;
   wire \FSM_onehot_state[2]_i_1_n_0 ;
-  wire \FSM_onehot_state[2]_i_3_n_0 ;
   wire \FSM_onehot_state[3]_i_1_n_0 ;
   wire \FSM_onehot_state[3]_i_2_n_0 ;
+  wire \FSM_onehot_state[3]_i_3_n_0 ;
   wire \FSM_onehot_state[4]_i_1_n_0 ;
   wire \FSM_onehot_state[4]_i_2_n_0 ;
   (* RTL_KEEP = "yes" *) wire \FSM_onehot_state_reg_n_0_[0] ;
   (* RTL_KEEP = "yes" *) wire \FSM_onehot_state_reg_n_0_[1] ;
   (* RTL_KEEP = "yes" *) wire \FSM_onehot_state_reg_n_0_[2] ;
   (* RTL_KEEP = "yes" *) wire \FSM_onehot_state_reg_n_0_[4] ;
-  wire [1:0]Q;
   wire [0:0]SR;
   wire acc_data;
   wire \acc_data[511]_i_1_n_0 ;
@@ -383,6 +385,7 @@ module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsize
   wire \gen_data_accumulator[6].acc_data[447]_i_1_n_0 ;
   wire [511:0]m_axis_tdata;
   wire m_axis_tready;
+  wire m_axis_tvalid;
   (* RTL_KEEP = "yes" *) wire p_0_in3_in;
   wire [6:6]p_1_in;
   wire p_1_in2_in;
@@ -397,40 +400,41 @@ module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsize
   wire \r0_reg_sel_reg_n_0_[5] ;
   wire \r0_reg_sel_reg_n_0_[6] ;
   wire [63:0]s_axis_tdata;
+  wire s_axis_tready;
   wire s_axis_tvalid;
   wire [2:0]state;
   wire state1;
-  wire \state[1]_i_2_n_0 ;
+  wire \state_reg_n_0_[0] ;
+  wire \state_reg_n_0_[1] ;
   wire \state_reg_n_0_[2] ;
 
-  LUT5 #(
-    .INIT(32'hFFFFFF32)) 
-    \FSM_onehot_state[0]_i_1 
-       (.I0(\FSM_onehot_state_reg_n_0_[0] ),
-        .I1(s_axis_tvalid),
-        .I2(p_0_in3_in),
-        .I3(\FSM_onehot_state_reg_n_0_[1] ),
-        .I4(\FSM_onehot_state[0]_i_2_n_0 ),
-        .O(\FSM_onehot_state[0]_i_1_n_0 ));
   LUT6 #(
-    .INIT(64'h0001000103010001)) 
-    \FSM_onehot_state[0]_i_2 
-       (.I0(\FSM_onehot_state_reg_n_0_[4] ),
-        .I1(\FSM_onehot_state_reg_n_0_[0] ),
-        .I2(p_0_in3_in),
-        .I3(\FSM_onehot_state_reg_n_0_[2] ),
+    .INIT(64'hAAABAAABAEAFAAAB)) 
+    \FSM_onehot_state[0]_i_1 
+       (.I0(\FSM_onehot_state[0]_i_2_n_0 ),
+        .I1(\FSM_onehot_state_reg_n_0_[2] ),
+        .I2(\FSM_onehot_state[4]_i_2_n_0 ),
+        .I3(\FSM_onehot_state_reg_n_0_[4] ),
         .I4(m_axis_tready),
         .I5(s_axis_tvalid),
+        .O(\FSM_onehot_state[0]_i_1_n_0 ));
+  LUT4 #(
+    .INIT(16'hAFAE)) 
+    \FSM_onehot_state[0]_i_2 
+       (.I0(\FSM_onehot_state_reg_n_0_[1] ),
+        .I1(p_0_in3_in),
+        .I2(s_axis_tvalid),
+        .I3(\FSM_onehot_state_reg_n_0_[0] ),
         .O(\FSM_onehot_state[0]_i_2_n_0 ));
   LUT6 #(
-    .INIT(64'h0808080B08080808)) 
+    .INIT(64'h00000000FF020002)) 
     \FSM_onehot_state[2]_i_1 
-       (.I0(state1),
-        .I1(\FSM_onehot_state[2]_i_3_n_0 ),
-        .I2(\FSM_onehot_state_reg_n_0_[1] ),
-        .I3(m_axis_tready),
-        .I4(s_axis_tvalid),
-        .I5(\FSM_onehot_state_reg_n_0_[2] ),
+       (.I0(\FSM_onehot_state_reg_n_0_[2] ),
+        .I1(m_axis_tready),
+        .I2(s_axis_tvalid),
+        .I3(\FSM_onehot_state[4]_i_2_n_0 ),
+        .I4(state1),
+        .I5(\FSM_onehot_state_reg_n_0_[1] ),
         .O(\FSM_onehot_state[2]_i_1_n_0 ));
   LUT4 #(
     .INIT(16'hF800)) 
@@ -440,48 +444,49 @@ module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsize
         .I2(p_1_in2_in),
         .I3(s_axis_tvalid),
         .O(state1));
-  LUT2 #(
-    .INIT(4'hE)) 
-    \FSM_onehot_state[2]_i_3 
-       (.I0(\FSM_onehot_state_reg_n_0_[0] ),
-        .I1(p_0_in3_in),
-        .O(\FSM_onehot_state[2]_i_3_n_0 ));
   LUT6 #(
-    .INIT(64'hFAEAAAAABAAAAAAA)) 
+    .INIT(64'h0000000000F0AAEA)) 
     \FSM_onehot_state[3]_i_1 
        (.I0(\FSM_onehot_state[3]_i_2_n_0 ),
-        .I1(\FSM_onehot_state_reg_n_0_[2] ),
-        .I2(m_axis_tready),
-        .I3(\FSM_onehot_state_reg_n_0_[4] ),
-        .I4(\FSM_onehot_state[4]_i_2_n_0 ),
-        .I5(s_axis_tvalid),
+        .I1(p_0_in3_in),
+        .I2(s_axis_tvalid),
+        .I3(\FSM_onehot_state[3]_i_3_n_0 ),
+        .I4(\FSM_onehot_state_reg_n_0_[0] ),
+        .I5(\FSM_onehot_state_reg_n_0_[1] ),
         .O(\FSM_onehot_state[3]_i_1_n_0 ));
-  LUT6 #(
-    .INIT(64'h0000000000404440)) 
-    \FSM_onehot_state[3]_i_2 
-       (.I0(\FSM_onehot_state_reg_n_0_[1] ),
-        .I1(s_axis_tvalid),
-        .I2(\FSM_onehot_state_reg_n_0_[0] ),
-        .I3(p_0_in3_in),
-        .I4(\r0_reg_sel_reg_n_0_[6] ),
-        .I5(p_1_in2_in),
-        .O(\FSM_onehot_state[3]_i_2_n_0 ));
   LUT5 #(
-    .INIT(32'h08080C00)) 
-    \FSM_onehot_state[4]_i_1 
+    .INIT(32'h008800C0)) 
+    \FSM_onehot_state[3]_i_2 
        (.I0(s_axis_tvalid),
-        .I1(\FSM_onehot_state[4]_i_2_n_0 ),
-        .I2(m_axis_tready),
-        .I3(\FSM_onehot_state_reg_n_0_[4] ),
+        .I1(m_axis_tready),
+        .I2(\FSM_onehot_state_reg_n_0_[4] ),
+        .I3(p_0_in3_in),
         .I4(\FSM_onehot_state_reg_n_0_[2] ),
-        .O(\FSM_onehot_state[4]_i_1_n_0 ));
+        .O(\FSM_onehot_state[3]_i_2_n_0 ));
   LUT3 #(
-    .INIT(8'h01)) 
+    .INIT(8'hEA)) 
+    \FSM_onehot_state[3]_i_3 
+       (.I0(p_1_in2_in),
+        .I1(p_0_in3_in),
+        .I2(\r0_reg_sel_reg_n_0_[6] ),
+        .O(\FSM_onehot_state[3]_i_3_n_0 ));
+  LUT6 #(
+    .INIT(64'h0010001100100000)) 
+    \FSM_onehot_state[4]_i_1 
+       (.I0(\FSM_onehot_state_reg_n_0_[1] ),
+        .I1(\FSM_onehot_state[4]_i_2_n_0 ),
+        .I2(s_axis_tvalid),
+        .I3(m_axis_tready),
+        .I4(\FSM_onehot_state_reg_n_0_[2] ),
+        .I5(\FSM_onehot_state_reg_n_0_[4] ),
+        .O(\FSM_onehot_state[4]_i_1_n_0 ));
+  LUT2 #(
+    .INIT(4'hE)) 
     \FSM_onehot_state[4]_i_2 
-       (.I0(p_0_in3_in),
-        .I1(\FSM_onehot_state_reg_n_0_[0] ),
-        .I2(\FSM_onehot_state_reg_n_0_[1] ),
+       (.I0(\FSM_onehot_state_reg_n_0_[0] ),
+        .I1(p_0_in3_in),
         .O(\FSM_onehot_state[4]_i_2_n_0 ));
+  (* FSM_ENCODED_STATES = "SM_RESET:00010,SM_IDLE:00001,SM_ACTIVE:01000,SM_END:00100,SM_END_TO_ACTIVE:10000" *) 
   (* KEEP = "yes" *) 
   FDRE #(
     .INIT(1'b0)) 
@@ -491,6 +496,7 @@ module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsize
         .D(\FSM_onehot_state[0]_i_1_n_0 ),
         .Q(\FSM_onehot_state_reg_n_0_[0] ),
         .R(SR));
+  (* FSM_ENCODED_STATES = "SM_RESET:00010,SM_IDLE:00001,SM_ACTIVE:01000,SM_END:00100,SM_END_TO_ACTIVE:10000" *) 
   (* KEEP = "yes" *) 
   FDSE #(
     .INIT(1'b1)) 
@@ -500,6 +506,7 @@ module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsize
         .D(1'b0),
         .Q(\FSM_onehot_state_reg_n_0_[1] ),
         .S(SR));
+  (* FSM_ENCODED_STATES = "SM_RESET:00010,SM_IDLE:00001,SM_ACTIVE:01000,SM_END:00100,SM_END_TO_ACTIVE:10000" *) 
   (* KEEP = "yes" *) 
   FDRE #(
     .INIT(1'b0)) 
@@ -509,6 +516,7 @@ module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsize
         .D(\FSM_onehot_state[2]_i_1_n_0 ),
         .Q(\FSM_onehot_state_reg_n_0_[2] ),
         .R(SR));
+  (* FSM_ENCODED_STATES = "SM_RESET:00010,SM_IDLE:00001,SM_ACTIVE:01000,SM_END:00100,SM_END_TO_ACTIVE:10000" *) 
   (* KEEP = "yes" *) 
   FDRE #(
     .INIT(1'b0)) 
@@ -518,6 +526,7 @@ module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsize
         .D(\FSM_onehot_state[3]_i_1_n_0 ),
         .Q(p_0_in3_in),
         .R(SR));
+  (* FSM_ENCODED_STATES = "SM_RESET:00010,SM_IDLE:00001,SM_ACTIVE:01000,SM_END:00100,SM_END_TO_ACTIVE:10000" *) 
   (* KEEP = "yes" *) 
   FDRE #(
     .INIT(1'b0)) 
@@ -3656,10 +3665,19 @@ module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsize
         .Q(m_axis_tdata[447]),
         .R(1'b0));
   LUT2 #(
-    .INIT(4'h8)) 
+    .INIT(4'h2)) 
+    m_axis_tvalid_INST_0
+       (.I0(\state_reg_n_0_[1] ),
+        .I1(\FSM_onehot_state_reg_n_0_[1] ),
+        .O(m_axis_tvalid));
+  LUT5 #(
+    .INIT(32'h22222220)) 
     \r0_data[63]_i_1 
        (.I0(aclken),
-        .I1(Q[0]),
+        .I1(\FSM_onehot_state_reg_n_0_[1] ),
+        .I2(p_0_in3_in),
+        .I3(\FSM_onehot_state_reg_n_0_[0] ),
+        .I4(\FSM_onehot_state_reg_n_0_[2] ),
         .O(r0_data_0));
   FDRE \r0_data_reg[0] 
        (.C(aclk),
@@ -4045,13 +4063,14 @@ module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsize
         .D(s_axis_tdata[9]),
         .Q(r0_data[9]),
         .R(1'b0));
-  LUT4 #(
-    .INIT(16'hFF80)) 
+  LUT5 #(
+    .INIT(32'hFFFF2000)) 
     \r0_reg_sel[7]_i_1 
        (.I0(aclken),
-        .I1(Q[1]),
-        .I2(m_axis_tready),
-        .I3(SR),
+        .I1(\FSM_onehot_state_reg_n_0_[1] ),
+        .I2(\state_reg_n_0_[1] ),
+        .I3(m_axis_tready),
+        .I4(SR),
         .O(p_1_in));
   LUT2 #(
     .INIT(4'h8)) 
@@ -4107,55 +4126,62 @@ module axi_dwidth_converter_64_to_512_axis_dwidth_converter_v1_1_10_axisc_upsize
         .D(\r0_reg_sel_reg_n_0_[6] ),
         .Q(p_1_in2_in),
         .R(p_1_in));
+  LUT4 #(
+    .INIT(16'h00FE)) 
+    s_axis_tready_INST_0
+       (.I0(\FSM_onehot_state_reg_n_0_[2] ),
+        .I1(\FSM_onehot_state_reg_n_0_[0] ),
+        .I2(p_0_in3_in),
+        .I3(\FSM_onehot_state_reg_n_0_[1] ),
+        .O(s_axis_tready));
   LUT5 #(
     .INIT(32'hFFFFF4FF)) 
     \state[0]_i_1 
        (.I0(s_axis_tvalid),
-        .I1(Q[0]),
+        .I1(\state_reg_n_0_[0] ),
         .I2(m_axis_tready),
-        .I3(Q[1]),
+        .I3(\state_reg_n_0_[1] ),
         .I4(\state_reg_n_0_[2] ),
         .O(state[0]));
   LUT6 #(
-    .INIT(64'h11F0110011001100)) 
+    .INIT(64'h000000FF80808080)) 
     \state[1]_i_1 
-       (.I0(m_axis_tready),
-        .I1(\state_reg_n_0_[2] ),
-        .I2(\state[1]_i_2_n_0 ),
-        .I3(Q[1]),
-        .I4(s_axis_tvalid),
-        .I5(Q[0]),
+       (.I0(\FSM_onehot_state[3]_i_3_n_0 ),
+        .I1(s_axis_tvalid),
+        .I2(\state_reg_n_0_[0] ),
+        .I3(m_axis_tready),
+        .I4(\state_reg_n_0_[2] ),
+        .I5(\state_reg_n_0_[1] ),
         .O(state[1]));
-  LUT3 #(
-    .INIT(8'hEA)) 
-    \state[1]_i_2 
-       (.I0(p_1_in2_in),
-        .I1(p_0_in3_in),
-        .I2(\r0_reg_sel_reg_n_0_[6] ),
-        .O(\state[1]_i_2_n_0 ));
   LUT6 #(
     .INIT(64'h440F000044004400)) 
     \state[2]_i_1 
        (.I0(\state_reg_n_0_[2] ),
         .I1(m_axis_tready),
-        .I2(\state[1]_i_2_n_0 ),
-        .I3(Q[1]),
+        .I2(\FSM_onehot_state[3]_i_3_n_0 ),
+        .I3(\state_reg_n_0_[1] ),
         .I4(s_axis_tvalid),
-        .I5(Q[0]),
+        .I5(\state_reg_n_0_[0] ),
         .O(state[2]));
-  FDRE \state_reg[0] 
+  FDRE #(
+    .INIT(1'b0)) 
+    \state_reg[0] 
        (.C(aclk),
         .CE(aclken),
         .D(state[0]),
-        .Q(Q[0]),
+        .Q(\state_reg_n_0_[0] ),
         .R(SR));
-  FDRE \state_reg[1] 
+  FDRE #(
+    .INIT(1'b0)) 
+    \state_reg[1] 
        (.C(aclk),
         .CE(aclken),
         .D(state[1]),
-        .Q(Q[1]),
+        .Q(\state_reg_n_0_[1] ),
         .R(SR));
-  FDRE \state_reg[2] 
+  FDRE #(
+    .INIT(1'b0)) 
+    \state_reg[2] 
        (.C(aclk),
         .CE(aclken),
         .D(state[2]),

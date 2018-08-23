@@ -1,18 +1,18 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
-// Tool Version: Vivado v.2017.1_sdxop (lin64) Build 1933108 Fri Jul 14 11:54:19 MDT 2017
-// Date        : Thu Feb 22 05:12:29 2018
-// Host        : ip-10-74-50-86.ad.corelogic.asia running 64-bit CentOS Linux release 7.4.1708 (Core)
-// Command     : write_verilog -force -mode funcsim
-//               /home/centos/ip_generation/ip_generation.srcs/sources_1/ip/axi_dwidth_converter_512_to_64/axi_dwidth_converter_512_to_64_sim_netlist.v
-// Design      : axi_dwidth_converter_512_to_64
+// Tool Version: Vivado v.2017.4.op (lin64) Build 2193837 Tue Apr 10 18:06:59 MDT 2018
+// Date        : Wed Aug 22 04:44:26 2018
+// Host        : ip-172-31-26-36.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.5.1804 (Core)
+// Command     : write_verilog -force -mode funcsim -rename_top axi_dwidth_converter_512_to_64 -prefix
+//               axi_dwidth_converter_512_to_64_ axis_dwidth_converter_512_to_64_sim_netlist.v
+// Design      : axis_dwidth_converter_512_to_64
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
 // Device      : xcvu9p-flgb2104-2-i
 // --------------------------------------------------------------------------------
 `timescale 1 ps / 1 ps
 
-(* CHECK_LICENSE_TYPE = "axi_dwidth_converter_512_to_64,axis_dwidth_converter_v1_1_10_axis_dwidth_converter,{}" *) (* DowngradeIPIdentifiedWarnings = "yes" *) (* X_CORE_INFO = "axis_dwidth_converter_v1_1_10_axis_dwidth_converter,Vivado 2017.1_sdxop" *) 
+(* CHECK_LICENSE_TYPE = "axis_dwidth_converter_512_to_64,axis_dwidth_converter_v1_1_14_axis_dwidth_converter,{}" *) (* DowngradeIPIdentifiedWarnings = "yes" *) (* X_CORE_INFO = "axis_dwidth_converter_v1_1_14_axis_dwidth_converter,Vivado 2017.4.op" *) 
 (* NotValidForBitStream *)
 module axi_dwidth_converter_512_to_64
    (aclk,
@@ -23,14 +23,14 @@ module axi_dwidth_converter_512_to_64
     m_axis_tvalid,
     m_axis_tready,
     m_axis_tdata);
-  (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLKIF CLK" *) input aclk;
-  (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RSTIF RST" *) input aresetn;
+  (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLKIF CLK" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLKIF, FREQ_HZ 10000000, PHASE 0.000" *) input aclk;
+  (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RSTIF RST" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME RSTIF, POLARITY ACTIVE_LOW" *) input aresetn;
   (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TVALID" *) input s_axis_tvalid;
   (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TREADY" *) output s_axis_tready;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TDATA" *) input [511:0]s_axis_tdata;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TDATA" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME S_AXIS, TDATA_NUM_BYTES 64, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 0, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef" *) input [511:0]s_axis_tdata;
   (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TVALID" *) output m_axis_tvalid;
   (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TREADY" *) input m_axis_tready;
-  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TDATA" *) output [63:0]m_axis_tdata;
+  (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TDATA" *) (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME M_AXIS, TDATA_NUM_BYTES 8, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 0, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef" *) output [63:0]m_axis_tdata;
 
   wire aclk;
   wire aresetn;
@@ -85,7 +85,7 @@ module axi_dwidth_converter_512_to_64
   (* P_M_RATIO = "8" *) 
   (* P_SS_TKEEP_REQUIRED = "0" *) 
   (* P_S_RATIO = "1" *) 
-  axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter inst
+  axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter inst
        (.aclk(aclk),
         .aclken(1'b1),
         .aresetn(aresetn),
@@ -118,11 +118,11 @@ endmodule
 (* G_MASK_SS_TDEST = "64" *) (* G_MASK_SS_TID = "32" *) (* G_MASK_SS_TKEEP = "8" *) 
 (* G_MASK_SS_TLAST = "16" *) (* G_MASK_SS_TREADY = "1" *) (* G_MASK_SS_TSTRB = "4" *) 
 (* G_MASK_SS_TUSER = "128" *) (* G_TASK_SEVERITY_ERR = "2" *) (* G_TASK_SEVERITY_INFO = "0" *) 
-(* G_TASK_SEVERITY_WARNING = "1" *) (* ORIG_REF_NAME = "axis_dwidth_converter_v1_1_10_axis_dwidth_converter" *) (* P_AXIS_SIGNAL_SET = "32'b00000000000000000000000000000011" *) 
-(* P_D1_REG_CONFIG = "0" *) (* P_D1_TUSER_WIDTH = "64" *) (* P_D2_TDATA_WIDTH = "512" *) 
-(* P_D2_TUSER_WIDTH = "64" *) (* P_D3_REG_CONFIG = "0" *) (* P_D3_TUSER_WIDTH = "8" *) 
-(* P_M_RATIO = "8" *) (* P_SS_TKEEP_REQUIRED = "0" *) (* P_S_RATIO = "1" *) 
-module axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter
+(* G_TASK_SEVERITY_WARNING = "1" *) (* P_AXIS_SIGNAL_SET = "32'b00000000000000000000000000000011" *) (* P_D1_REG_CONFIG = "0" *) 
+(* P_D1_TUSER_WIDTH = "64" *) (* P_D2_TDATA_WIDTH = "512" *) (* P_D2_TUSER_WIDTH = "64" *) 
+(* P_D3_REG_CONFIG = "0" *) (* P_D3_TUSER_WIDTH = "8" *) (* P_M_RATIO = "8" *) 
+(* P_SS_TKEEP_REQUIRED = "0" *) (* P_S_RATIO = "1" *) 
+module axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter
    (aclk,
     aresetn,
     aclken,
@@ -215,7 +215,7 @@ module axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_
         .D(p_0_in),
         .Q(areset_r),
         .R(1'b0));
-  axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axisc_downsizer \gen_downsizer_conversion.axisc_downsizer_0 
+  axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axisc_downsizer \gen_downsizer_conversion.axisc_downsizer_0 
        (.Q({m_axis_tvalid,s_axis_tready}),
         .aclk(aclk),
         .aclken(aclken),
@@ -226,8 +226,7 @@ module axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_
         .s_axis_tvalid(s_axis_tvalid));
 endmodule
 
-(* ORIG_REF_NAME = "axis_dwidth_converter_v1_1_10_axisc_downsizer" *) 
-module axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axisc_downsizer
+module axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axisc_downsizer
    (Q,
     m_axis_tdata,
     m_axis_tready,
@@ -7391,19 +7390,25 @@ module axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axisc_downsi
         .I3(Q[0]),
         .I4(m_axis_tready),
         .O(state[2]));
-  FDRE \state_reg[0] 
+  FDRE #(
+    .INIT(1'b0)) 
+    \state_reg[0] 
        (.C(aclk),
         .CE(aclken),
         .D(state[0]),
         .Q(Q[0]),
         .R(areset_r));
-  FDRE \state_reg[1] 
+  FDRE #(
+    .INIT(1'b0)) 
+    \state_reg[1] 
        (.C(aclk),
         .CE(aclken),
         .D(state[1]),
         .Q(Q[1]),
         .R(areset_r));
-  FDRE \state_reg[2] 
+  FDRE #(
+    .INIT(1'b0)) 
+    \state_reg[2] 
        (.C(aclk),
         .CE(aclken),
         .D(state[2]),

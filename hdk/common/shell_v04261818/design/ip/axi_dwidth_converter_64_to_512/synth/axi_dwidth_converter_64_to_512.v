@@ -48,11 +48,11 @@
 
 
 // IP VLNV: xilinx.com:ip:axis_dwidth_converter:1.1
-// IP Revision: 10
+// IP Revision: 14
 
-(* X_CORE_INFO = "axis_dwidth_converter_v1_1_10_axis_dwidth_converter,Vivado 2017.1_sdxop" *)
-(* CHECK_LICENSE_TYPE = "axi_dwidth_converter_64_to_512,axis_dwidth_converter_v1_1_10_axis_dwidth_converter,{}" *)
-(* CORE_GENERATION_INFO = "axi_dwidth_converter_64_to_512,axis_dwidth_converter_v1_1_10_axis_dwidth_converter,{x_ipProduct=Vivado 2017.1_sdxop,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=axis_dwidth_converter,x_ipVersion=1.1,x_ipCoreRevision=10,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED,C_FAMILY=virtexuplus,C_S_AXIS_TDATA_WIDTH=64,C_M_AXIS_TDATA_WIDTH=512,C_AXIS_TID_WIDTH=1,C_AXIS_TDEST_WIDTH=1,C_S_AXIS_TUSER_WIDTH=1,C_M_AXIS_TUSER_WIDTH=1,C_AXIS_SIGNAL_SET=0b00000000000000000000000000000011}" *)
+(* X_CORE_INFO = "axis_dwidth_converter_v1_1_14_axis_dwidth_converter,Vivado 2017.4.op" *)
+(* CHECK_LICENSE_TYPE = "axi_dwidth_converter_64_to_512,axis_dwidth_converter_v1_1_14_axis_dwidth_converter,{}" *)
+(* CORE_GENERATION_INFO = "axi_dwidth_converter_64_to_512,axis_dwidth_converter_v1_1_14_axis_dwidth_converter,{x_ipProduct=Vivado 2017.4.op,x_ipVendor=xilinx.com,x_ipLibrary=ip,x_ipName=axis_dwidth_converter,x_ipVersion=1.1,x_ipCoreRevision=14,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED,C_FAMILY=virtexuplus,C_S_AXIS_TDATA_WIDTH=64,C_M_AXIS_TDATA_WIDTH=512,C_AXIS_TID_WIDTH=1,C_AXIS_TDEST_WIDTH=1,C_S_AXIS_TUSER_WIDTH=1,C_M_AXIS_TUSER_WIDTH=1,C_AXIS_SIGNAL_SET=0b00000000000000000000000000000011}" *)
 (* DowngradeIPIdentifiedWarnings = "yes" *)
 module axi_dwidth_converter_64_to_512 (
   aclk,
@@ -65,24 +65,28 @@ module axi_dwidth_converter_64_to_512 (
   m_axis_tdata
 );
 
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLKIF, FREQ_HZ 10000000, PHASE 0.000" *)
 (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLKIF CLK" *)
 input wire aclk;
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME RSTIF, POLARITY ACTIVE_LOW" *)
 (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 RSTIF RST" *)
 input wire aresetn;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TVALID" *)
 input wire s_axis_tvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TREADY" *)
 output wire s_axis_tready;
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME S_AXIS, TDATA_NUM_BYTES 8, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 0, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef" *)
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TDATA" *)
 input wire [63 : 0] s_axis_tdata;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TVALID" *)
 output wire m_axis_tvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TREADY" *)
 input wire m_axis_tready;
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME M_AXIS, TDATA_NUM_BYTES 64, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 0, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef" *)
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TDATA" *)
 output wire [511 : 0] m_axis_tdata;
 
-  axis_dwidth_converter_v1_1_10_axis_dwidth_converter #(
+  axis_dwidth_converter_v1_1_14_axis_dwidth_converter #(
     .C_FAMILY("virtexuplus"),
     .C_S_AXIS_TDATA_WIDTH(64),
     .C_M_AXIS_TDATA_WIDTH(512),

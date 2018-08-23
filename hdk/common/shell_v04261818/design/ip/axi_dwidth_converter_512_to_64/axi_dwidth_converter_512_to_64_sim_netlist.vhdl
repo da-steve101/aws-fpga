@@ -1,11 +1,11 @@
 -- Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
--- Tool Version: Vivado v.2017.1_sdxop (lin64) Build 1933108 Fri Jul 14 11:54:19 MDT 2017
--- Date        : Thu Feb 22 05:12:29 2018
--- Host        : ip-10-74-50-86.ad.corelogic.asia running 64-bit CentOS Linux release 7.4.1708 (Core)
--- Command     : write_vhdl -force -mode funcsim
---               /home/centos/ip_generation/ip_generation.srcs/sources_1/ip/axi_dwidth_converter_512_to_64/axi_dwidth_converter_512_to_64_sim_netlist.vhdl
--- Design      : axi_dwidth_converter_512_to_64
+-- Tool Version: Vivado v.2017.4.op (lin64) Build 2193837 Tue Apr 10 18:06:59 MDT 2018
+-- Date        : Wed Aug 22 04:44:26 2018
+-- Host        : ip-172-31-26-36.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.5.1804 (Core)
+-- Command     : write_vhdl -force -mode funcsim -rename_top axi_dwidth_converter_512_to_64 -prefix
+--               axi_dwidth_converter_512_to_64_ axis_dwidth_converter_512_to_64_sim_netlist.vhdl
+-- Design      : axis_dwidth_converter_512_to_64
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
 -- Device      : xcvu9p-flgb2104-2-i
@@ -14,7 +14,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axisc_downsizer is
+entity axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axisc_downsizer is
   port (
     Q : out STD_LOGIC_VECTOR ( 1 downto 0 );
     m_axis_tdata : out STD_LOGIC_VECTOR ( 63 downto 0 );
@@ -25,11 +25,9 @@ entity axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axisc_downsi
     s_axis_tdata : in STD_LOGIC_VECTOR ( 511 downto 0 );
     s_axis_tvalid : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axisc_downsizer : entity is "axis_dwidth_converter_v1_1_10_axisc_downsizer";
-end axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axisc_downsizer;
+end axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axisc_downsizer;
 
-architecture STRUCTURE of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axisc_downsizer is
+architecture STRUCTURE of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axisc_downsizer is
   signal \^q\ : STD_LOGIC_VECTOR ( 1 downto 0 );
   signal \m_axis_tdata[0]_INST_0_i_1_n_0\ : STD_LOGIC;
   signal \m_axis_tdata[0]_INST_0_i_2_n_0\ : STD_LOGIC;
@@ -9399,7 +9397,10 @@ begin
       O => state(2)
     );
 \state_reg[0]\: unisim.vcomponents.FDRE
-     port map (
+    generic map(
+      INIT => '0'
+    )
+        port map (
       C => aclk,
       CE => aclken,
       D => state(0),
@@ -9407,7 +9408,10 @@ begin
       R => areset_r
     );
 \state_reg[1]\: unisim.vcomponents.FDRE
-     port map (
+    generic map(
+      INIT => '0'
+    )
+        port map (
       C => aclk,
       CE => aclken,
       D => state(1),
@@ -9415,7 +9419,10 @@ begin
       R => areset_r
     );
 \state_reg[2]\: unisim.vcomponents.FDRE
-     port map (
+    generic map(
+      INIT => '0'
+    )
+        port map (
       C => aclk,
       CE => aclken,
       D => state(2),
@@ -9427,7 +9434,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
-entity axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter is
+entity axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter is
   port (
     aclk : in STD_LOGIC;
     aresetn : in STD_LOGIC;
@@ -9452,86 +9459,84 @@ entity axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_
     m_axis_tuser : out STD_LOGIC_VECTOR ( 0 to 0 )
   );
   attribute C_AXIS_SIGNAL_SET : string;
-  attribute C_AXIS_SIGNAL_SET of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is "32'b00000000000000000000000000000011";
+  attribute C_AXIS_SIGNAL_SET of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is "32'b00000000000000000000000000000011";
   attribute C_AXIS_TDEST_WIDTH : integer;
-  attribute C_AXIS_TDEST_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 1;
+  attribute C_AXIS_TDEST_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 1;
   attribute C_AXIS_TID_WIDTH : integer;
-  attribute C_AXIS_TID_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 1;
+  attribute C_AXIS_TID_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 1;
   attribute C_FAMILY : string;
-  attribute C_FAMILY of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is "virtexuplus";
+  attribute C_FAMILY of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is "virtexuplus";
   attribute C_M_AXIS_TDATA_WIDTH : integer;
-  attribute C_M_AXIS_TDATA_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 64;
+  attribute C_M_AXIS_TDATA_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 64;
   attribute C_M_AXIS_TUSER_WIDTH : integer;
-  attribute C_M_AXIS_TUSER_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 1;
+  attribute C_M_AXIS_TUSER_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 1;
   attribute C_S_AXIS_TDATA_WIDTH : integer;
-  attribute C_S_AXIS_TDATA_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 512;
+  attribute C_S_AXIS_TDATA_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 512;
   attribute C_S_AXIS_TUSER_WIDTH : integer;
-  attribute C_S_AXIS_TUSER_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 1;
+  attribute C_S_AXIS_TUSER_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 1;
   attribute DowngradeIPIdentifiedWarnings : string;
-  attribute DowngradeIPIdentifiedWarnings of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is "yes";
+  attribute DowngradeIPIdentifiedWarnings of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is "yes";
   attribute G_INDX_SS_TDATA : integer;
-  attribute G_INDX_SS_TDATA of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 1;
+  attribute G_INDX_SS_TDATA of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 1;
   attribute G_INDX_SS_TDEST : integer;
-  attribute G_INDX_SS_TDEST of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 6;
+  attribute G_INDX_SS_TDEST of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 6;
   attribute G_INDX_SS_TID : integer;
-  attribute G_INDX_SS_TID of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 5;
+  attribute G_INDX_SS_TID of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 5;
   attribute G_INDX_SS_TKEEP : integer;
-  attribute G_INDX_SS_TKEEP of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 3;
+  attribute G_INDX_SS_TKEEP of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 3;
   attribute G_INDX_SS_TLAST : integer;
-  attribute G_INDX_SS_TLAST of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 4;
+  attribute G_INDX_SS_TLAST of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 4;
   attribute G_INDX_SS_TREADY : integer;
-  attribute G_INDX_SS_TREADY of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 0;
+  attribute G_INDX_SS_TREADY of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 0;
   attribute G_INDX_SS_TSTRB : integer;
-  attribute G_INDX_SS_TSTRB of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 2;
+  attribute G_INDX_SS_TSTRB of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 2;
   attribute G_INDX_SS_TUSER : integer;
-  attribute G_INDX_SS_TUSER of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 7;
+  attribute G_INDX_SS_TUSER of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 7;
   attribute G_MASK_SS_TDATA : integer;
-  attribute G_MASK_SS_TDATA of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 2;
+  attribute G_MASK_SS_TDATA of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 2;
   attribute G_MASK_SS_TDEST : integer;
-  attribute G_MASK_SS_TDEST of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 64;
+  attribute G_MASK_SS_TDEST of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 64;
   attribute G_MASK_SS_TID : integer;
-  attribute G_MASK_SS_TID of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 32;
+  attribute G_MASK_SS_TID of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 32;
   attribute G_MASK_SS_TKEEP : integer;
-  attribute G_MASK_SS_TKEEP of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 8;
+  attribute G_MASK_SS_TKEEP of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 8;
   attribute G_MASK_SS_TLAST : integer;
-  attribute G_MASK_SS_TLAST of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 16;
+  attribute G_MASK_SS_TLAST of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 16;
   attribute G_MASK_SS_TREADY : integer;
-  attribute G_MASK_SS_TREADY of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 1;
+  attribute G_MASK_SS_TREADY of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 1;
   attribute G_MASK_SS_TSTRB : integer;
-  attribute G_MASK_SS_TSTRB of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 4;
+  attribute G_MASK_SS_TSTRB of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 4;
   attribute G_MASK_SS_TUSER : integer;
-  attribute G_MASK_SS_TUSER of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 128;
+  attribute G_MASK_SS_TUSER of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 128;
   attribute G_TASK_SEVERITY_ERR : integer;
-  attribute G_TASK_SEVERITY_ERR of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 2;
+  attribute G_TASK_SEVERITY_ERR of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 2;
   attribute G_TASK_SEVERITY_INFO : integer;
-  attribute G_TASK_SEVERITY_INFO of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 0;
+  attribute G_TASK_SEVERITY_INFO of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 0;
   attribute G_TASK_SEVERITY_WARNING : integer;
-  attribute G_TASK_SEVERITY_WARNING of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 1;
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is "axis_dwidth_converter_v1_1_10_axis_dwidth_converter";
+  attribute G_TASK_SEVERITY_WARNING of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 1;
   attribute P_AXIS_SIGNAL_SET : string;
-  attribute P_AXIS_SIGNAL_SET of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is "32'b00000000000000000000000000000011";
+  attribute P_AXIS_SIGNAL_SET of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is "32'b00000000000000000000000000000011";
   attribute P_D1_REG_CONFIG : integer;
-  attribute P_D1_REG_CONFIG of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 0;
+  attribute P_D1_REG_CONFIG of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 0;
   attribute P_D1_TUSER_WIDTH : integer;
-  attribute P_D1_TUSER_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 64;
+  attribute P_D1_TUSER_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 64;
   attribute P_D2_TDATA_WIDTH : integer;
-  attribute P_D2_TDATA_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 512;
+  attribute P_D2_TDATA_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 512;
   attribute P_D2_TUSER_WIDTH : integer;
-  attribute P_D2_TUSER_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 64;
+  attribute P_D2_TUSER_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 64;
   attribute P_D3_REG_CONFIG : integer;
-  attribute P_D3_REG_CONFIG of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 0;
+  attribute P_D3_REG_CONFIG of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 0;
   attribute P_D3_TUSER_WIDTH : integer;
-  attribute P_D3_TUSER_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 8;
+  attribute P_D3_TUSER_WIDTH of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 8;
   attribute P_M_RATIO : integer;
-  attribute P_M_RATIO of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 8;
+  attribute P_M_RATIO of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 8;
   attribute P_SS_TKEEP_REQUIRED : integer;
-  attribute P_SS_TKEEP_REQUIRED of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 0;
+  attribute P_SS_TKEEP_REQUIRED of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 0;
   attribute P_S_RATIO : integer;
-  attribute P_S_RATIO of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter : entity is 1;
-end axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter;
+  attribute P_S_RATIO of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter : entity is 1;
+end axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter;
 
-architecture STRUCTURE of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter is
+architecture STRUCTURE of axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter is
   signal \<const0>\ : STD_LOGIC;
   signal \<const1>\ : STD_LOGIC;
   signal areset_r : STD_LOGIC;
@@ -9581,7 +9586,7 @@ areset_r_reg: unisim.vcomponents.FDRE
       Q => areset_r,
       R => '0'
     );
-\gen_downsizer_conversion.axisc_downsizer_0\: entity work.axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axisc_downsizer
+\gen_downsizer_conversion.axisc_downsizer_0\: entity work.axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axisc_downsizer
      port map (
       Q(1) => m_axis_tvalid,
       Q(0) => s_axis_tready,
@@ -9612,11 +9617,11 @@ entity axi_dwidth_converter_512_to_64 is
   attribute NotValidForBitStream : boolean;
   attribute NotValidForBitStream of axi_dwidth_converter_512_to_64 : entity is true;
   attribute CHECK_LICENSE_TYPE : string;
-  attribute CHECK_LICENSE_TYPE of axi_dwidth_converter_512_to_64 : entity is "axi_dwidth_converter_512_to_64,axis_dwidth_converter_v1_1_10_axis_dwidth_converter,{}";
+  attribute CHECK_LICENSE_TYPE of axi_dwidth_converter_512_to_64 : entity is "axis_dwidth_converter_512_to_64,axis_dwidth_converter_v1_1_14_axis_dwidth_converter,{}";
   attribute DowngradeIPIdentifiedWarnings : string;
   attribute DowngradeIPIdentifiedWarnings of axi_dwidth_converter_512_to_64 : entity is "yes";
   attribute X_CORE_INFO : string;
-  attribute X_CORE_INFO of axi_dwidth_converter_512_to_64 : entity is "axis_dwidth_converter_v1_1_10_axis_dwidth_converter,Vivado 2017.1_sdxop";
+  attribute X_CORE_INFO of axi_dwidth_converter_512_to_64 : entity is "axis_dwidth_converter_v1_1_14_axis_dwidth_converter,Vivado 2017.4.op";
 end axi_dwidth_converter_512_to_64;
 
 architecture STRUCTURE of axi_dwidth_converter_512_to_64 is
@@ -9701,8 +9706,22 @@ architecture STRUCTURE of axi_dwidth_converter_512_to_64 is
   attribute P_SS_TKEEP_REQUIRED of inst : label is 0;
   attribute P_S_RATIO : integer;
   attribute P_S_RATIO of inst : label is 1;
+  attribute X_INTERFACE_INFO : string;
+  attribute X_INTERFACE_INFO of aclk : signal is "xilinx.com:signal:clock:1.0 CLKIF CLK";
+  attribute X_INTERFACE_PARAMETER : string;
+  attribute X_INTERFACE_PARAMETER of aclk : signal is "XIL_INTERFACENAME CLKIF, FREQ_HZ 10000000, PHASE 0.000";
+  attribute X_INTERFACE_INFO of aresetn : signal is "xilinx.com:signal:reset:1.0 RSTIF RST";
+  attribute X_INTERFACE_PARAMETER of aresetn : signal is "XIL_INTERFACENAME RSTIF, POLARITY ACTIVE_LOW";
+  attribute X_INTERFACE_INFO of m_axis_tready : signal is "xilinx.com:interface:axis:1.0 M_AXIS TREADY";
+  attribute X_INTERFACE_INFO of m_axis_tvalid : signal is "xilinx.com:interface:axis:1.0 M_AXIS TVALID";
+  attribute X_INTERFACE_INFO of s_axis_tready : signal is "xilinx.com:interface:axis:1.0 S_AXIS TREADY";
+  attribute X_INTERFACE_INFO of s_axis_tvalid : signal is "xilinx.com:interface:axis:1.0 S_AXIS TVALID";
+  attribute X_INTERFACE_INFO of m_axis_tdata : signal is "xilinx.com:interface:axis:1.0 M_AXIS TDATA";
+  attribute X_INTERFACE_PARAMETER of m_axis_tdata : signal is "XIL_INTERFACENAME M_AXIS, TDATA_NUM_BYTES 8, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 0, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef";
+  attribute X_INTERFACE_INFO of s_axis_tdata : signal is "xilinx.com:interface:axis:1.0 S_AXIS TDATA";
+  attribute X_INTERFACE_PARAMETER of s_axis_tdata : signal is "XIL_INTERFACENAME S_AXIS, TDATA_NUM_BYTES 64, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 0, HAS_TLAST 0, FREQ_HZ 100000000, PHASE 0.000, LAYERED_METADATA undef";
 begin
-inst: entity work.axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_10_axis_dwidth_converter
+inst: entity work.axi_dwidth_converter_512_to_64_axis_dwidth_converter_v1_1_14_axis_dwidth_converter
      port map (
       aclk => aclk,
       aclken => '1',

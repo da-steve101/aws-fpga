@@ -1,3 +1,497 @@
+//  (c) Copyright 2011-2013 Xilinx, Inc. All rights reserved.
+//
+//  This file contains confidential and proprietary information
+//  of Xilinx, Inc. and is protected under U.S. and
+//  international copyright and other intellectual property
+//  laws.
+//
+//  DISCLAIMER
+//  This disclaimer is not a license and does not grant any
+//  rights to the materials distributed herewith. Except as
+//  otherwise provided in a valid license issued to you by
+//  Xilinx, and to the maximum extent permitted by applicable
+//  law: (1) THESE MATERIALS ARE MADE AVAILABLE "AS IS" AND
+//  WITH ALL FAULTS, AND XILINX HEREBY DISCLAIMS ALL WARRANTIES
+//  AND CONDITIONS, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING
+//  BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, NON-
+//  INFRINGEMENT, OR FITNESS FOR ANY PARTICULAR PURPOSE; and
+//  (2) Xilinx shall not be liable (whether in contract or tort,
+//  including negligence, or under any other theory of
+//  liability) for any loss or damage of any kind or nature
+//  related to, arising under or in connection with these
+//  materials, including for any direct, or any indirect,
+//  special, incidental, or consequential loss or damage
+//  (including loss of data, profits, goodwill, or any type of
+//  loss or damage suffered as a result of any action brought
+//  by a third party) even if such damage or loss was
+//  reasonably foreseeable or Xilinx had been advised of the
+//  possibility of the same.
+//
+//  CRITICAL APPLICATIONS
+//  Xilinx products are not designed or intended to be fail-
+//  safe, or for use in any application requiring fail-safe
+//  performance, such as life-support or safety devices or
+//  systems, Class III medical devices, nuclear facilities,
+//  applications related to the deployment of airbags, or any
+//  other applications that could lead to death, personal
+//  injury, or severe property or environmental damage
+//  (individually and collectively, "Critical
+//  Applications"). Customer assumes the sole risk and
+//  liability of any use of Xilinx products in Critical
+//  Applications, subject only to applicable laws and
+//  regulations governing limitations on product liability.
+//
+//  THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
+//  PART OF THIS FILE AT ALL TIMES. 
+//-----------------------------------------------------------------------------
+
+`timescale 1ps/1ps
+`default_nettype none
+
+module axis_register_slice_v1_1_15_tdm_sample (
+///////////////////////////////////////////////////////////////////////////////
+// Port Declarations
+///////////////////////////////////////////////////////////////////////////////
+  input  wire                    slow_clk,
+  input  wire                    fast_clk,
+  output wire                    sample_cycle
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Wires/Reg declarations
+////////////////////////////////////////////////////////////////////////////////
+reg                slow_clk_div2 = 1'b0;
+reg                posedge_finder_first;
+reg                posedge_finder_second;
+wire               first_edge;
+wire               second_edge;
+reg                sample_cycle_d;
+(* shreg_extract = "no" *) reg                sample_cycle_r;
+
+
+////////////////////////////////////////////////////////////////////////////////
+// BEGIN RTL
+////////////////////////////////////////////////////////////////////////////////
+    always @(posedge slow_clk) begin 
+      slow_clk_div2 <= ~slow_clk_div2;
+    end
+
+    // Find matching rising edges by clocking slow_clk_div2 onto faster clock
+    always @(posedge fast_clk) begin 
+      posedge_finder_first <= slow_clk_div2;
+    end
+    always @(posedge fast_clk) begin 
+      posedge_finder_second <= ~slow_clk_div2;
+    end
+
+    assign first_edge = slow_clk_div2 & ~posedge_finder_first;
+    assign second_edge = ~slow_clk_div2 & ~posedge_finder_second;
+
+    always @(*) begin 
+      sample_cycle_d = first_edge | second_edge;
+    end
+   
+    always @(posedge fast_clk) begin 
+      sample_cycle_r <= sample_cycle_d;
+    end
+    
+    assign sample_cycle = sample_cycle_r;
+
+endmodule // tdm_sample
+
+`default_nettype wire
+
+
+// -- (c) Copyright 2010 - 2017 Xilinx, Inc. All rights reserved.
+// --
+// -- This file contains confidential and proprietary information
+// -- of Xilinx, Inc. and is protected under U.S. and 
+// -- international copyright and other intellectual property
+// -- laws.
+// --
+// -- DISCLAIMER
+// -- This disclaimer is not a license and does not grant any
+// -- rights to the materials distributed herewith. Except as
+// -- otherwise provided in a valid license issued to you by
+// -- Xilinx, and to the maximum extent permitted by applicable
+// -- law: (1) THESE MATERIALS ARE MADE AVAILABLE "AS IS" AND
+// -- WITH ALL FAULTS, AND XILINX HEREBY DISCLAIMS ALL WARRANTIES
+// -- AND CONDITIONS, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING
+// -- BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, NON-
+// -- INFRINGEMENT, OR FITNESS FOR ANY PARTICULAR PURPOSE; and
+// -- (2) Xilinx shall not be liable (whether in contract or tort,
+// -- including negligence, or under any other theory of
+// -- liability) for any loss or damage of any kind or nature
+// -- related to, arising under or in connection with these
+// -- materials, including for any direct, or any indirect,
+// -- special, incidental, or consequential loss or damage
+// -- (including loss of data, profits, goodwill, or any type of
+// -- loss or damage suffered as a result of any action brought
+// -- by a third party) even if such damage or loss was
+// -- reasonably foreseeable or Xilinx had been advised of the
+// -- possibility of the same.
+// --
+// -- CRITICAL APPLICATIONS
+// -- Xilinx products are not designed or intended to be fail-
+// -- safe, or for use in any application requiring fail-safe
+// -- performance, such as life-support or safety devices or
+// -- systems, Class III medical devices, nuclear facilities,
+// -- applications related to the deployment of airbags, or any
+// -- other applications that could lead to death, personal
+// -- injury, or severe property or environmental damage
+// -- (individually and collectively, "Critical
+// -- Applications"). Customer assumes the sole risk and
+// -- liability of any use of Xilinx products in Critical
+// -- Applications, subject only to applicable laws and
+// -- regulations governing limitations on product liability.
+// --
+// -- THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
+// -- PART OF THIS FILE AT ALL TIMES.
+//-----------------------------------------------------------------------------
+//
+// Register Slice
+//   Generic single-channel AXI pipeline register on forward and/or reverse signal path
+//
+// Verilog-standard:  Verilog 2001
+//--------------------------------------------------------------------------
+//
+// Structure:
+//   axic_register_slice_slr
+//
+//--------------------------------------------------------------------------
+
+`timescale 1ps/1ps
+(* DowngradeIPIdentifiedWarnings="yes" *) 
+module axis_register_slice_v1_1_15_source_region_slr #
+  (
+   parameter C_FAMILY     = "virtex6",
+   parameter integer C_REG_CONFIG = 12,
+   parameter integer C_DATA_WIDTH = 32,
+   parameter integer C_SLR_WIDTH = 32
+   )
+  (
+   // System Signals
+   input wire ACLK,
+   input wire ACLK2X,
+   input wire ARESET,
+   input wire ACLKEN,
+
+   // Slave side
+   input  wire [C_DATA_WIDTH-1:0] S_PAYLOAD_DATA,
+   input  wire S_VALID,
+   output wire S_READY,
+
+   // Master side
+   output wire [C_SLR_WIDTH-1:0] laguna_m_payload,
+   output wire laguna_m_handshake,
+   input  wire m_ready
+   );
+
+  generate
+
+  (* dont_touch="true" *) reg areset_d = 1'b0;
+  always @(posedge ACLK) begin
+    areset_d <= ARESET;
+  end
+  
+  if (C_REG_CONFIG == 13) begin : gen_slr_tdm
+    localparam integer P_EVEN_WIDTH = C_DATA_WIDTH[0] ? (C_DATA_WIDTH+1) : C_DATA_WIDTH;
+    
+    (* shreg_extract = "no" *) reg [P_EVEN_WIDTH-1:0] payload_d1;
+    (* shreg_extract = "no" *) reg [C_SLR_WIDTH-1:0]  laguna_payload_tdm_d2;
+    (* shreg_extract = "no" *) reg laguna_handshake_d1 = 1'b0;
+    reg s_ready_d2 = 1'b0;
+    wire sample_cycle;
+    integer i;
+
+    assign laguna_m_payload = laguna_payload_tdm_d2;
+    assign laguna_m_handshake = laguna_handshake_d1;
+    assign S_READY = s_ready_d2;
+        
+    always @(posedge ACLK) begin
+      if (s_ready_d2) begin
+        payload_d1 <= S_PAYLOAD_DATA;  // ACLK cycle 1
+      end
+    end
+
+    always @(posedge ACLK2X) begin
+      for (i=0;i<C_SLR_WIDTH;i=i+1) begin  
+        if (s_ready_d2) begin
+          if (~sample_cycle) begin  // First (high) phase of ACLK cycle 2
+            laguna_payload_tdm_d2[i] <= payload_d1[2*i+1];  // Mux odd bits
+          end else begin  // Second (low) phase of ACLK cycle 2
+            laguna_payload_tdm_d2[i] <= payload_d1[2*i];  // Mux even bits
+          end
+        end
+      end
+    end
+
+    always @(posedge ACLK) begin
+      if (areset_d) begin
+        laguna_handshake_d1 <= 1'b0;
+        s_ready_d2 <= 1'b0;
+      end else begin
+        if (s_ready_d2) begin
+          laguna_handshake_d1 <= S_VALID & ACLKEN;
+        end
+        s_ready_d2 <= m_ready;  // Half-cycle setup from dest_region.s_ready_d1
+      end
+    end
+
+    axis_register_slice_v1_1_15_tdm_sample tdm_sample_inst (
+      .slow_clk     (ACLK),
+      .fast_clk     (ACLK2X),
+      .sample_cycle (sample_cycle)
+    );
+    
+  end else if (C_REG_CONFIG == 12) begin : gen_slr_common
+
+    (* shreg_extract = "no" *) reg [C_DATA_WIDTH-1:0] laguna_payload_d1;
+    (* shreg_extract = "no" *) reg laguna_handshake_d1 = 1'b0;
+    reg s_ready_d2 = 1'b0;
+  
+    assign laguna_m_payload = laguna_payload_d1;
+    assign laguna_m_handshake = laguna_handshake_d1;
+    assign S_READY = s_ready_d2;
+        
+    always @(posedge ACLK) begin
+      if (s_ready_d2) begin
+        laguna_payload_d1 <= S_PAYLOAD_DATA;  // ACLK cycle 1
+      end
+    end
+
+    always @(posedge ACLK) begin
+      if (areset_d) begin
+        laguna_handshake_d1 <= 1'b0;
+        s_ready_d2 <= 1'b0;
+      end else begin
+        if (s_ready_d2) begin
+          laguna_handshake_d1 <= S_VALID & ACLKEN;
+        end
+        s_ready_d2 <= m_ready; 
+      end
+    end
+    
+  end // gen_slr
+endgenerate
+endmodule  // source_region_slr
+
+`timescale 1ps/1ps
+(* DowngradeIPIdentifiedWarnings="yes" *)
+module axis_register_slice_v1_1_15_dest_region_slr #
+  (
+   parameter C_FAMILY     = "virtex6",
+   parameter integer C_REG_CONFIG = 12,
+   parameter integer C_DATA_WIDTH = 32,
+   parameter integer C_SLR_WIDTH = 32
+   )
+  (
+   // System Signals
+   input wire ACLK,
+   input wire ACLK2X,
+   input wire ARESET,
+   input wire ACLKEN,
+
+   // Slave side
+   input  wire [C_SLR_WIDTH-1:0] laguna_s_payload,
+   input  wire laguna_s_handshake,
+   output wire s_ready,
+
+   // Master side
+   output wire [C_DATA_WIDTH-1:0] M_PAYLOAD_DATA,
+   output wire M_VALID,
+   input  wire M_READY
+   );
+
+  generate
+
+  (* dont_touch="true" *) reg areset_d = 1'b0;
+  always @(posedge ACLK) begin
+    areset_d <= ARESET;
+  end
+  
+  if (C_REG_CONFIG == 13) begin : gen_slr_tdm
+    localparam integer P_EVEN_WIDTH = C_DATA_WIDTH[0] ? (C_DATA_WIDTH+1) : C_DATA_WIDTH;
+    
+    (* shreg_extract = "no" *) reg [C_SLR_WIDTH-1:0]  laguna_payload_tdm_d3;
+    (* shreg_extract = "no" *) reg [C_SLR_WIDTH-1:0]  payload_tdm_d4;
+    (* shreg_extract = "no" *) reg [C_DATA_WIDTH-1:0] fifo_out;
+    (* shreg_extract = "no" *) reg [C_DATA_WIDTH-1:0] fifo_out_n1;
+    (* shreg_extract = "no" *) reg laguna_handshake_d2 = 1'b0;
+    (* shreg_extract = "no" *) reg s_ready_d1 = 1'b0;
+    (* shreg_extract = "no" *) reg s_ready_d2 = 1'b0;
+    reg [P_EVEN_WIDTH-1:0] payload_demux;
+    reg m_valid_r = 1'b0;
+    wire push;
+    wire pop;
+    reg [1:0] fifo_cnt = 2'h0;
+    integer i;
+    
+    assign s_ready = s_ready_d1;
+    assign M_VALID = m_valid_r;
+    assign M_PAYLOAD_DATA = fifo_out;  // Registered outputs
+    assign pop = M_READY & ACLKEN & m_valid_r;
+    assign push = laguna_handshake_d2 & s_ready_d2;      
+
+    always @(posedge ACLK) begin
+      if (areset_d) begin
+        laguna_handshake_d2 <= 1'b0;
+      end else if (s_ready_d2) begin
+        laguna_handshake_d2 <= laguna_s_handshake;
+      end
+    end
+
+    always @(posedge ACLK2X) begin
+      if (s_ready_d2) begin
+        payload_tdm_d4 <= laguna_payload_tdm_d3;
+        laguna_payload_tdm_d3 <= laguna_s_payload;
+      end
+    end
+    
+    always @ * begin
+      for (i=0;i<C_SLR_WIDTH;i=i+1) begin
+        payload_demux[2*i+1] = payload_tdm_d4[i];       // Odd bits captured during second (low) phase of ACLK cycle 2
+        payload_demux[2*i] = laguna_payload_tdm_d3[i];  // Even bits captured during first (high) phase of ACLK cycle 3
+          // Complete payload_demux signal is stable during second (low) phase of ACLK cycle 3 (gets clobbered after each ACLK active edge)
+      end
+    end
+
+    always @(posedge ACLK) begin
+      if (areset_d) begin
+        fifo_cnt <= 2'h0;
+        m_valid_r <=  1'b0;
+        s_ready_d2 <= 1'b0;
+      end else begin
+        s_ready_d2 <= s_ready_d1;  // Half-cycle setup from s_ready_d1
+        if (push & ~pop) begin
+          fifo_cnt <= fifo_cnt + 2'h1;
+          m_valid_r <=  1'b1;
+        end else if (~push & pop) begin
+          fifo_cnt <= fifo_cnt - 2'h1;
+          m_valid_r <= fifo_cnt[1];  // fifo_cnt >= 2
+        end
+      end
+    end
+
+    always @(negedge ACLK) begin
+      if (areset_d) begin
+        s_ready_d1 <= 1'b0;
+      end else begin
+        s_ready_d1 <= (M_READY & ACLKEN) | ~m_valid_r;  // Half-cycle setup
+      end
+    end
+
+    always @(posedge ACLK) begin
+      case (fifo_cnt)
+        2'h0: begin  // EMPTY
+          fifo_out <= payload_demux;
+        end
+        
+        2'h1: begin
+          fifo_out_n1 <= payload_demux;
+          if (pop) begin
+            fifo_out <= payload_demux;
+          end
+        end
+        
+        default: begin  // fifo_cnt == 2
+          if (pop) begin
+            fifo_out <= fifo_out_n1;
+            fifo_out_n1 <= payload_demux;
+          end
+        end
+      endcase
+    end
+
+  end else if (C_REG_CONFIG == 12) begin : gen_slr_common
+
+    (* shreg_extract = "no" *) reg [C_DATA_WIDTH-1:0] laguna_payload_d2;
+    (* shreg_extract = "no" *) reg [C_DATA_WIDTH-1:0] fifo_out;
+    (* shreg_extract = "no" *) reg [C_DATA_WIDTH-1:0] fifo_out_n1;
+    (* shreg_extract = "no" *) reg [C_DATA_WIDTH-1:0] fifo_out_n2;
+    (* shreg_extract = "no" *) reg laguna_handshake_d2 = 1'b0;
+    (* shreg_extract = "no" *) reg s_ready_d1 = 1'b0;
+    (* shreg_extract = "no" *) reg s_ready_d2 = 1'b0;
+    reg m_valid_r = 1'b0;
+    wire push;
+    wire pop;
+    reg [1:0] fifo_cnt = 2'h0;
+    
+    assign s_ready = s_ready_d1;
+    assign M_VALID = m_valid_r;
+    assign M_PAYLOAD_DATA = fifo_out; 
+    assign pop = M_READY & ACLKEN & m_valid_r;
+    assign push = laguna_handshake_d2 & s_ready_d2;      
+
+    always @(posedge ACLK) begin
+      if (s_ready_d2) begin
+        laguna_payload_d2 <= laguna_s_payload;
+      end
+    end
+
+    always @(posedge ACLK) begin
+      if (areset_d) begin
+        laguna_handshake_d2 <= 1'b0;
+      end else if (s_ready_d2) begin
+        laguna_handshake_d2 <= laguna_s_handshake;
+      end
+    end
+
+    always @(posedge ACLK) begin
+      if (areset_d) begin
+        fifo_cnt <= 2'h0;
+        m_valid_r <=  1'b0;
+        s_ready_d1 <= 1'b0;
+        s_ready_d2 <= 1'b0;
+      end else begin
+        s_ready_d2 <= s_ready_d1; 
+        s_ready_d1 <= (M_READY & ACLKEN) | ~m_valid_r; 
+        if (push & ~pop) begin
+          fifo_cnt <= fifo_cnt + 2'h1;
+          m_valid_r <=  1'b1;
+        end else if (~push & pop) begin
+          fifo_cnt <= fifo_cnt - 2'h1;
+          m_valid_r <= fifo_cnt[1];  // fifo_cnt >= 2
+        end
+      end
+    end
+
+    always @(posedge ACLK) begin
+      case (fifo_cnt)
+        2'h0: begin  // EMPTY
+          fifo_out <= laguna_payload_d2;
+        end
+        
+        2'h1: begin
+          fifo_out_n1 <= laguna_payload_d2;
+          if (pop) begin
+            fifo_out <= laguna_payload_d2;
+          end
+        end
+        
+        2'h2: begin
+          fifo_out_n2 <= laguna_payload_d2;
+          if (pop) begin
+            fifo_out <= fifo_out_n1;
+            fifo_out_n1 <= laguna_payload_d2;
+          end
+        end
+        
+        default: begin  // fifo_cnt == 3
+          if (pop) begin
+            fifo_out <= fifo_out_n1;
+            fifo_out_n1 <= fifo_out_n2;
+            fifo_out_n2 <= laguna_payload_d2;
+          end
+        end
+      endcase
+    end
+
+  end // gen_slr
+endgenerate
+endmodule  // dest_region_slr
+
+
 //  (c) Copyright 2010-2011, 2013-2014 Xilinx, Inc. All rights reserved.
 //
 //  This file contains confidential and proprietary information
@@ -59,25 +553,29 @@
 `timescale 1ps/1ps
 
 (* DowngradeIPIdentifiedWarnings="yes" *)
-module axis_register_slice_v1_1_11_axisc_register_slice #
+module axis_register_slice_v1_1_15_axisc_register_slice #
   (
    parameter C_FAMILY     = "virtex6",
    parameter C_DATA_WIDTH = 32,
-   parameter C_REG_CONFIG = 32'h00000000
+   parameter C_REG_CONFIG = 32'h00000001
    // C_REG_CONFIG:
    //   0 => BYPASS    = The channel is just wired through the module.
-   //   1 => FWD_REV   = Both FWD and REV (fully-registered)
+   //   1 => DEFAULT   = Minimized fanout on input signals M_READY and S_TVALID
    //   2 => FWD       = The master VALID and payload signals are registrated. 
    //   3 => REV       = The slave ready signal is registrated
    //   4 => RESERVED (all outputs driven to 0).
    //   5 => RESERVED (all outputs driven to 0).
    //   6 => INPUTS    = Slave and Master side inputs are registrated.
    //   7 => LIGHT_WT  = 1-stage pipeline register with bubble cycle, both FWD and REV pipelining
+   //   8 => FWD_REV   = Both FWD and REV (fully-registered)
    //   10 => NO_READY = Assume no ready signal
+   //   12 => SLR Crossing (source->dest flops, full-width payload, single clock)
+   //   13 => TDM SLR Crossing (source->dest flops, half-width payload, dual clock)
    )
   (
    // System Signals
    input wire ACLK,
+   input wire ACLK2X,
    input wire ARESET,
    input wire ACLKEN,
 
@@ -105,6 +603,63 @@ module axis_register_slice_v1_1_11_axisc_register_slice #
       assign M_VALID        = S_VALID;
       assign S_READY        = M_READY;      
     end
+    
+  ////////////////////////////////////////////////////////////////////
+  //
+  // C_REG_CONFIG = 12 or 13
+  // TDM SLR Crossing
+  //
+  ////////////////////////////////////////////////////////////////////
+    else if ((C_REG_CONFIG == 32'h0000000C) || (C_REG_CONFIG == 32'h0000000D))
+    begin : gen_slr_crossing
+      localparam integer P_EVEN_WIDTH = C_DATA_WIDTH[0] ? (C_DATA_WIDTH+1) : C_DATA_WIDTH;
+      localparam integer P_TDM_WIDTH = P_EVEN_WIDTH/2;
+      localparam integer P_SLR_WIDTH = (C_REG_CONFIG == 13) ? P_TDM_WIDTH : C_DATA_WIDTH;
+      
+      wire [P_SLR_WIDTH-1:0] slr_payload;
+      wire slr_handshake;
+      wire slr_ready;
+          
+      axis_register_slice_v1_1_15_source_region_slr #(
+        .C_FAMILY     ( C_FAMILY         ) ,
+        .C_REG_CONFIG ( C_REG_CONFIG       ) ,
+        .C_DATA_WIDTH ( C_DATA_WIDTH ) ,
+        .C_SLR_WIDTH  ( P_SLR_WIDTH )
+      )
+      slr_source_0 (
+        .ACLK           ( ACLK            ) ,
+        .ACLK2X         ( ACLK2X            ) ,
+        .ARESET         ( ARESET        ) ,
+        .ACLKEN         ( ACLKEN          ) ,
+        .S_PAYLOAD_DATA ( S_PAYLOAD_DATA ) ,
+        .S_VALID        ( S_VALID   ) ,
+        .S_READY        ( S_READY   ) ,
+        .laguna_m_payload   ( slr_payload ) , 
+        .laguna_m_handshake ( slr_handshake   ) ,
+        .m_ready            ( slr_ready   )
+      );
+
+      axis_register_slice_v1_1_15_dest_region_slr #(
+        .C_FAMILY     ( C_FAMILY         ) ,
+        .C_REG_CONFIG ( C_REG_CONFIG       ) ,
+        .C_DATA_WIDTH ( C_DATA_WIDTH ) ,
+        .C_SLR_WIDTH  ( P_SLR_WIDTH )
+      )
+      slr_dest_0 (
+        .ACLK           ( ACLK            ) ,
+        .ACLK2X         ( ACLK2X            ) ,
+        .ARESET         ( ARESET        ) ,
+        .ACLKEN         ( ACLKEN          ) ,
+        .laguna_s_payload   ( slr_payload ) ,
+        .laguna_s_handshake ( slr_handshake   ) ,
+        .s_ready            ( slr_ready   ) ,
+        .M_PAYLOAD_DATA ( M_PAYLOAD_DATA ) , 
+        .M_VALID        ( M_VALID   ) ,
+        .M_READY        ( M_READY   )
+      );
+  
+  end // if (C_REG_CONFIG == 12 or 13 )
+        
   ////////////////////////////////////////////////////////////////////
   //
   // C_REG_CONFIG = 10
@@ -115,7 +670,7 @@ module axis_register_slice_v1_1_11_axisc_register_slice #
     begin : NO_READY
       
       reg [C_DATA_WIDTH-1:0] storage_data1;
-      reg                    m_valid_r; //local signal of output
+      reg                    m_valid_r = 1'b0; //local signal of output
 
       // assign local signal to its output signal
       assign S_READY = 1'b1;
@@ -136,7 +691,7 @@ module axis_register_slice_v1_1_11_axisc_register_slice #
     end // if (C_REG_CONFIG == 10 )
   ////////////////////////////////////////////////////////////////////
   //
-  // C_REG_CONFIG = 11
+  // C_REG_CONFIG = 1
   // Minimized fanout on input signals M_READY and S_TVALID
   //
   ////////////////////////////////////////////////////////////////////
@@ -223,31 +778,31 @@ module axis_register_slice_v1_1_11_axisc_register_slice #
     end // if (C_REG_CONFIG == 1 )
   ////////////////////////////////////////////////////////////////////
   //
-  // C_REG_CONFIG = 8 (used to be 1 or 8)
+  // C_REG_CONFIG = 8 
   // Both FWD and REV mode
   //
   ////////////////////////////////////////////////////////////////////
     else if ((C_REG_CONFIG == 32'h00000008))
     begin
-      reg [1:0] state;
       localparam [1:0] 
         ZERO = 2'b10,
         ONE  = 2'b11,
         TWO  = 2'b01;
+      (* fsm_encoding = "none" *) reg [1:0] state = ZERO;
       
       reg [C_DATA_WIDTH-1:0] storage_data1;
       reg [C_DATA_WIDTH-1:0] storage_data2;
       reg                    load_s1;
       wire                   load_s2;
       wire                   load_s1_from_s2;
-      reg                    s_ready_i; //local signal of output
+      reg                    s_ready_i = 1'b0; //local signal of output
       wire                   m_valid_i; //local signal of output
 
       // assign local signal to its output signal
       assign S_READY = s_ready_i;
       assign M_VALID = m_valid_i;
 
-      (* equivalent_register_removal = "no" *) reg [1:0] areset_d; // Reset delay register
+      (* equivalent_register_removal = "no" *) reg [1:0] areset_d = 2'b11; // Reset delay register
       always @(posedge ACLK) begin
         if (ACLKEN) begin
           areset_d <= {areset_d[0], ARESET};
@@ -341,7 +896,7 @@ module axis_register_slice_v1_1_11_axisc_register_slice #
     begin
       reg [C_DATA_WIDTH-1:0] storage_data;
       wire                   s_ready_i; //local signal of output
-      reg                    m_valid_i; //local signal of output
+      reg                    m_valid_i = 1'b0; //local signal of output
 
       // assign local signal to its output signal
       assign S_READY = s_ready_i;
@@ -389,7 +944,7 @@ module axis_register_slice_v1_1_11_axisc_register_slice #
     else if (C_REG_CONFIG == 32'h00000003)
     begin
       reg [C_DATA_WIDTH-1:0] storage_data;
-      reg                    s_ready_i; //local signal of output
+      reg                    s_ready_i = 1'b0; //local signal of output
       reg                    has_valid_storage_i;
       reg                    has_valid_storage;
 
@@ -478,19 +1033,19 @@ module axis_register_slice_v1_1_11_axisc_register_slice #
   ////////////////////////////////////////////////////////////////////
     else if (C_REG_CONFIG == 32'h00000006)
     begin
-      reg [1:0] state;
-      reg [1:0] next_state;
       localparam [1:0] 
         ZERO = 2'b00,
         ONE  = 2'b01,
         TWO  = 2'b11;
+      reg [1:0] state = ZERO;
+      reg [1:0] next_state;
 
       reg [C_DATA_WIDTH-1:0] storage_data1;
       reg [C_DATA_WIDTH-1:0] storage_data2;
-      reg                    s_valid_d;
-      reg                    s_ready_d;
-      reg                    m_ready_d;
-      reg                    m_valid_d;
+      reg                    s_valid_d = 1'b0;
+      reg                    s_ready_d = 1'b0;
+      reg                    m_ready_d = 1'b0;
+      reg                    m_valid_d = 1'b0;
       reg                    load_s2;
       reg                    sel_s2;
       wire                   new_access;
@@ -507,8 +1062,8 @@ module axis_register_slice_v1_1_11_axisc_register_slice #
       end
       
       // assign local signal to its output signal
-      assign S_READY = s_ready_i;
-      assign M_VALID = m_valid_i;
+      assign S_READY = (state == ZERO) ? 1'b0 : s_ready_i;
+      assign M_VALID = (state == ZERO) ? 1'b0 : m_valid_i;
       assign s_ready_i = s_ready_ii & ~areset_d;
 
       // Registrate input control signals
@@ -653,8 +1208,8 @@ module axis_register_slice_v1_1_11_axisc_register_slice #
     else if (C_REG_CONFIG == 32'h00000007)
     begin
       reg [C_DATA_WIDTH-1:0] storage_data1;
-      reg                    s_ready_i; //local signal of output
-      reg                    m_valid_i; //local signal of output
+      reg                    s_ready_i = 1'b0; //local signal of output
+      reg                    m_valid_i = 1'b0; //local signal of output
 
       // assign local signal to its output signal
       assign S_READY = s_ready_i;
@@ -767,17 +1322,17 @@ endmodule // axisc_register_slice
 `default_nettype none
 
 (* DowngradeIPIdentifiedWarnings="yes" *)
-module axis_register_slice_v1_1_11_axis_register_slice #
+module axis_register_slice_v1_1_15_axis_register_slice #
 (
 ///////////////////////////////////////////////////////////////////////////////
 // Parameter Definitions
 ///////////////////////////////////////////////////////////////////////////////
    parameter         C_FAMILY           = "virtex6",
-   parameter integer C_AXIS_TDATA_WIDTH = 32,
+   parameter integer C_AXIS_TDATA_WIDTH = 8,
    parameter integer C_AXIS_TID_WIDTH   = 1,
    parameter integer C_AXIS_TDEST_WIDTH = 1,
    parameter integer C_AXIS_TUSER_WIDTH = 1,
-   parameter [31:0]  C_AXIS_SIGNAL_SET  = 32'hFF,
+   parameter [31:0]  C_AXIS_SIGNAL_SET  = 32'h3,
    // C_AXIS_SIGNAL_SET: each bit if enabled specifies which axis optional signals are present
    //   [0] => TREADY present
    //   [1] => TDATA present
@@ -787,16 +1342,20 @@ module axis_register_slice_v1_1_11_axis_register_slice #
    //   [5] => TID present
    //   [6] => TDEST present
    //   [7] => TUSER present
-   parameter integer C_REG_CONFIG       = 0
+   parameter integer C_REG_CONFIG       = 1
    // C_REG_CONFIG:
    //   0 => BYPASS    = The channel is just wired through the module.
-   //   1 => FWD_REV   = Both FWD and REV (fully-registered)
+   //   1 => DEFAULT   = Minimized fanout on input signals M_READY and S_TVALID
    //   2 => FWD       = The master VALID and payload signals are registrated. 
    //   3 => REV       = The slave ready signal is registrated
    //   4 => RESERVED (all outputs driven to 0).
    //   5 => RESERVED (all outputs driven to 0).
    //   6 => INPUTS    = Slave and Master side inputs are registrated.
    //   7 => LIGHT_WT  = 1-stage pipeline register with bubble cycle, both FWD and REV pipelining
+   //   8 => FWD_REV   = Both FWD and REV (fully-registered)
+   //   10 => NO_READY = Assume no ready signal
+   //   12 => SLR Crossing (source->dest flops, full-width payload, single clock)
+   //   13 => TDM SLR Crossing (source->dest flops, half-width payload, dual clock)
    )
   (
 ///////////////////////////////////////////////////////////////////////////////
@@ -804,6 +1363,7 @@ module axis_register_slice_v1_1_11_axis_register_slice #
 ///////////////////////////////////////////////////////////////////////////////
    // System Signals
    input wire aclk,
+   input wire aclk2x,
    input wire aresetn,
    input wire aclken,
 
@@ -875,13 +1435,14 @@ end
     .TPAYLOAD ( s_axis_tpayload )
   );
 
-  axis_register_slice_v1_1_11_axisc_register_slice #(
+  axis_register_slice_v1_1_15_axisc_register_slice #(
     .C_FAMILY     ( C_FAMILY         ) ,
     .C_DATA_WIDTH ( P_TPAYLOAD_WIDTH ) ,
     .C_REG_CONFIG ( (C_AXIS_SIGNAL_SET[0] == 0) ? 32'hA : C_REG_CONFIG)
   )
   axisc_register_slice_0 (
     .ACLK           ( aclk            ) ,
+    .ACLK2X         ( aclk2x          ) ,
     .ARESET         ( areset_r        ) ,
     .ACLKEN         ( aclken          ) ,
     .S_VALID        ( s_axis_tvalid   ) ,
@@ -916,5 +1477,6 @@ end
 endmodule // axis_register_slice
 
 `default_nettype wire
+
 
 

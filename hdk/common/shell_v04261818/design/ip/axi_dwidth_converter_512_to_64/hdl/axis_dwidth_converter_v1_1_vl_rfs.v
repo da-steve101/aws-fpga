@@ -59,7 +59,7 @@
 `default_nettype none
 
 (* DowngradeIPIdentifiedWarnings="yes" *)
-module axis_dwidth_converter_v1_1_10_axisc_downsizer #
+module axis_dwidth_converter_v1_1_14_axisc_downsizer #
 (
 ///////////////////////////////////////////////////////////////////////////////
 // Parameter Definitions
@@ -136,7 +136,7 @@ localparam SM_END_TO_ACTIVE = 3'b110;
 ////////////////////////////////////////////////////////////////////////////////
 // Wires/Reg declarations
 ////////////////////////////////////////////////////////////////////////////////
-reg    [2:0]                    state;
+reg    [2:0]                    state = SM_RESET;
 
 wire [C_RATIO-1:0]              is_null;
 wire [C_RATIO-1:0]              r0_is_end;
@@ -182,8 +182,8 @@ reg                             next_xfer_is_end;
 // BEGIN RTL
 ////////////////////////////////////////////////////////////////////////////////
 // S Ready/M Valid outputs are encoded in the current state.
-assign S_AXIS_TREADY = state[0];
-assign M_AXIS_TVALID = state[1];
+assign S_AXIS_TREADY = (state == SM_RESET) ? 1'b0 : state[0];
+assign M_AXIS_TVALID = (state == SM_RESET) ? 1'b0 : state[1];
 
 // State machine controls M_AXIS_TVALID and S_AXIS_TREADY, and loading
 always @(posedge ACLK) begin
@@ -434,7 +434,7 @@ endmodule // axisc_downsizer
 `default_nettype none
 
 (* DowngradeIPIdentifiedWarnings="yes" *)
-module axis_dwidth_converter_v1_1_10_axisc_upsizer #
+module axis_dwidth_converter_v1_1_14_axisc_upsizer #
 (
 ///////////////////////////////////////////////////////////////////////////////
 // Parameter Definitions
@@ -521,7 +521,7 @@ localparam SM_END_TO_ACTIVE      = 3'b010; // R0/ACC reg are both active.
 ////////////////////////////////////////////////////////////////////////////////
 // Wires/Reg declarations
 ////////////////////////////////////////////////////////////////////////////////
-reg  [2:0]                      state;
+reg  [2:0]                      state = SM_RESET;
 
 reg  [C_M_AXIS_TDATA_WIDTH-1:0] acc_data;
 reg  [P_M_AXIS_TSTRB_WIDTH-1:0] acc_strb;
@@ -552,8 +552,8 @@ wire                            id_dest_mismatch;
 ////////////////////////////////////////////////////////////////////////////////
 
 // S Ready/M Valid outputs are encoded in the current state.
-assign S_AXIS_TREADY = state[0];
-assign M_AXIS_TVALID = state[1];
+assign S_AXIS_TREADY = (state == SM_RESET) ? 1'b0 : state[0];
+assign M_AXIS_TVALID = (state == SM_RESET) ? 1'b0 : state[1];
 
 // State machine controls M_AXIS_TVALID and S_AXIS_TREADY, and loading
 always @(posedge ACLK) begin
@@ -806,7 +806,7 @@ endmodule // axisc_upsizer
 `default_nettype none
 
 (* DowngradeIPIdentifiedWarnings="yes" *)
-module axis_dwidth_converter_v1_1_10_axis_dwidth_converter #
+module axis_dwidth_converter_v1_1_14_axis_dwidth_converter #
 (
 ///////////////////////////////////////////////////////////////////////////////
 // Parameter Definitions
@@ -993,7 +993,7 @@ assign tdata_in = C_AXIS_SIGNAL_SET[G_INDX_SS_TDATA] ? s_axis_tdata : {C_S_AXIS_
 assign tkeep_in = C_AXIS_SIGNAL_SET[G_INDX_SS_TKEEP] ? s_axis_tkeep : {(C_S_AXIS_TDATA_WIDTH/8){1'b1}};
 assign tuser_in = C_AXIS_SIGNAL_SET[G_INDX_SS_TUSER] ? s_axis_tuser : {P_D1_TUSER_WIDTH{1'b1}};
 
-axis_register_slice_v1_1_11_axis_register_slice #(
+axis_register_slice_v1_1_15_axis_register_slice #(
   .C_FAMILY           ( C_FAMILY               ) ,
   .C_AXIS_TDATA_WIDTH ( C_S_AXIS_TDATA_WIDTH   ) ,
   .C_AXIS_TID_WIDTH   ( C_AXIS_TID_WIDTH       ) ,
@@ -1030,7 +1030,7 @@ axis_register_slice_0
 
 generate
   if (P_S_RATIO > 1) begin : gen_upsizer_conversion
-    axis_dwidth_converter_v1_1_10_axisc_upsizer #(
+    axis_dwidth_converter_v1_1_14_axisc_upsizer #(
       .C_FAMILY             ( C_FAMILY             ) ,
       .C_S_AXIS_TDATA_WIDTH ( C_S_AXIS_TDATA_WIDTH ) ,
       .C_M_AXIS_TDATA_WIDTH ( P_D2_TDATA_WIDTH     ) ,
@@ -1077,7 +1077,7 @@ generate
     assign d2_user  = d1_user;
   end
   if (P_M_RATIO > 1) begin : gen_downsizer_conversion
-    axis_dwidth_converter_v1_1_10_axisc_downsizer #(
+    axis_dwidth_converter_v1_1_14_axisc_downsizer #(
       .C_FAMILY             ( C_FAMILY             ) ,
       .C_S_AXIS_TDATA_WIDTH ( P_D2_TDATA_WIDTH     ) ,
       .C_M_AXIS_TDATA_WIDTH ( C_M_AXIS_TDATA_WIDTH ) ,
@@ -1125,7 +1125,7 @@ generate
   end
 endgenerate
 
-axis_register_slice_v1_1_11_axis_register_slice #(
+axis_register_slice_v1_1_15_axis_register_slice #(
   .C_FAMILY           ( C_FAMILY             ) ,
   .C_AXIS_TDATA_WIDTH ( C_M_AXIS_TDATA_WIDTH ) ,
   .C_AXIS_TID_WIDTH   ( C_AXIS_TID_WIDTH     ) ,
