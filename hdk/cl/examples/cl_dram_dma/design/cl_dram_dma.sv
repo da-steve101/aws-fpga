@@ -264,10 +264,7 @@ begin
       end
       else
       begin
- 	 if ( cnt_vld == 0 )
-	 begin
-	    rd_vld <= 0;
-	 end
+	 rd_vld <= 0;
 	 rlast <= 0;
 	 if ( tran_rd_cntr_con != tran_rd_cntr_prod & !cnt_vld )
 	 begin
@@ -414,7 +411,7 @@ fifo_sync_512 AXI_DATA_FIFO_IN
 
  .valid( image_vld ),
  .prog_empty( image_buffered_n ),
- .rd_en( run & fifo_in_ready ),
+ .rd_en( run & fifo_in_ready & image_vld ),
  .dout( fifo_in_bits )
 );
 
@@ -450,7 +447,7 @@ always_ff @( negedge fifo_sync_rst_n or posedge clk )
 	       if ( !output_buffered_n )
 		 begin
 		    run_out <= 1;
-		    img_cntr_out <= 8'h80;
+		    img_cntr_out <= 8'h3f;
 		 end
 	       else
 		 begin
@@ -492,15 +489,12 @@ logic [N-1:0] valid_reg = 0;
 
 assign data_out_bits = bits_reg[63:0];
 assign data_out_valid = valid_reg[0];
-assign data_in_ready = data_out_ready;
+assign data_in_ready = 1'b1; // data_out_ready;
 
 always_ff @(posedge clk)
 begin
-  if ( data_out_ready )
-  begin
-    bits_reg <= { data_in_bits, bits_reg[(N*64)-1:64] };
-    valid_reg <= { data_in_valid, valid_reg[N-1:1]};
-  end
+  bits_reg <= { data_in_bits, bits_reg[(N*64)-1:64] };
+  valid_reg <= { data_in_valid, valid_reg[N-1:1]};
 end
 
 `else
@@ -606,7 +600,7 @@ fifo_sync_512 AXI_DATA_FIFO_OUT
 
  .valid( mem_vld ),
  .prog_empty( output_buffered_n ),
- .rd_en( sh_cl_dma_pcis_q.rready & run_out & cnt_vld ),
+ .rd_en( sh_cl_dma_pcis_q.rready & run_out & cnt_vld & mem_vld ),
  .dout( mem_str )
 );
 
