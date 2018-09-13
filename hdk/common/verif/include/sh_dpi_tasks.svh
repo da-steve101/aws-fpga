@@ -204,12 +204,12 @@ end
       poke_stat(.addr(8'h0c), .ddr_idx(2), .data(32'h0000_0000));
 
       //de-select the ATG hardware
-
+      /*
       poke_ocl(.addr(64'h130), .data(0));
       poke_ocl(.addr(64'h230), .data(0));
       poke_ocl(.addr(64'h330), .data(0));
       poke_ocl(.addr(64'h430), .data(0));
-
+       */
       // allow memory to initialize
       nsec_delay(27000);
    endtask // initialize_sh_model

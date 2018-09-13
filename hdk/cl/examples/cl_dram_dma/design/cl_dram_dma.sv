@@ -32,38 +32,20 @@ module cl_dram_dma #(parameter NUM_DDR=4)
 
 `include "unused_sh_bar1_template.inc"
 // "unused_ddr_a_b_d_template.inc"
-// `include "unused_sh_ocl_template.inc"
+`include "unused_sh_ocl_template.inc"
 `include "unused_cl_sda_template.inc"
 `include "unused_apppf_irq_template.inc"
 `include "unused_pcim_template.inc"
 // `include "unused_dma_pcis_template.inc"
 `include "unused_flr_template.inc"
 // `include "unused_ddr_c_template.inc"
-   
+
 // Define the addition pipeline stag
 // needed to close timing for the various
 // place where ATG (Automatic Test Generator)
 // is defined
    
    localparam NUM_CFG_STGS_CL_DDR_ATG = 8;
-   localparam NUM_CFG_STGS_SH_DDR_ATG = 4;
-   localparam NUM_CFG_STGS_PCIE_ATG = 4;
-
-// To reduce RTL simulation time, only 8KiB of
-// each external DRAM is scrubbed in simulations
-
-`ifdef SIM
-   localparam DDR_SCRB_MAX_ADDR = 64'h1FFF;
-`else   
-   localparam DDR_SCRB_MAX_ADDR = 64'h3FFFFFFFF; //16GB 
-`endif
-   localparam DDR_SCRB_BURST_LEN_MINUS1 = 15;
-
-`ifdef NO_CL_TST_SCRUBBER
-   localparam NO_SCRB_INST = 1;
-`else
-   localparam NO_SCRB_INST = 0;
-`endif   
 
 //---------------------------- 
 // Internal signals
@@ -71,7 +53,6 @@ module cl_dram_dma #(parameter NUM_DDR=4)
 axi_bus_t lcl_cl_sh_ddra();
 axi_bus_t lcl_cl_sh_ddrb();
 axi_bus_t lcl_cl_sh_ddrd();
-axi_bus_t axi_bus_tied();
 
 axi_bus_t sh_cl_dma_pcis_bus();
 axi_bus_t sh_cl_dma_pcis_q();
@@ -90,7 +71,6 @@ cfg_bus_t ddrb_tst_cfg_bus();
 cfg_bus_t ddrc_tst_cfg_bus();
 cfg_bus_t ddrd_tst_cfg_bus();
 cfg_bus_t axi_mstr_cfg_bus();
-cfg_bus_t axi_mstr_2_cfg_bus();
 cfg_bus_t int_tst_cfg_bus();
 
 scrb_bus_t ddra_scrb_bus();
@@ -103,12 +83,8 @@ logic clk;
 (* dont_touch = "true" *) logic pipe_rst_n;
 logic pre_sync_rst_n;
 (* dont_touch = "true" *) logic sync_rst_n;
-logic sh_cl_flr_assert_q;
 
 logic [2:0] lcl_sh_cl_ddr_is_ready;
-
-logic dbg_scrb_en;
-logic [2:0] dbg_scrb_mem_sel;
 
 //---------------------------- 
 // End Internal signals
@@ -140,51 +116,12 @@ always_ff @(negedge pipe_rst_n or posedge clk)
       sync_rst_n <= pre_sync_rst_n;
    end
 
-///////////////////////////////////////////////////////////////////////
-///////////////// Scrubber enable and status //////////////////////////
-///////////////////////////////////////////////////////////////////////
-
-// Bit 31: Debug enable (for cl_sh_id0 and cl_sh_id1)
-// Bit 30:28: Debug Scrb memory select
-   
-// Bit 3 : DDRC Scrub enable
-// Bit 2 : DDRD Scrub enable
-// Bit 1 : DDRB Scrub enable
-// Bit 0 : DDRA Scrub enable
-logic [31:0] sh_cl_ctl0_q;
-always_ff @(posedge clk or negedge sync_rst_n)
-  if (!sync_rst_n)
-    sh_cl_ctl0_q <= 32'd0;
-  else
-    sh_cl_ctl0_q <= sh_cl_ctl0;
-
-assign ddra_scrb_bus.enable = sh_cl_ctl0_q[0];
-assign ddrb_scrb_bus.enable = sh_cl_ctl0_q[1];
-assign ddrd_scrb_bus.enable = sh_cl_ctl0_q[2];
-assign ddrc_scrb_bus.enable = sh_cl_ctl0_q[3];
-
 // The functionality for these signals is TBD so they can can be tied-off.
 assign cl_sh_status0 = 32'h0;
 assign cl_sh_status1 = 32'h0;
 
 assign cl_sh_id0 = `CL_SH_ID0; 
 assign cl_sh_id1 = `CL_SH_ID1;
-
-logic sh_cl_ddr_is_ready_q;
-always_ff @(posedge clk or negedge sync_rst_n)
-  if (!sync_rst_n)
-  begin
-    sh_cl_ddr_is_ready_q <= 1'b0;
-  end
-  else
-  begin
-    sh_cl_ddr_is_ready_q <= sh_cl_ddr_is_ready;
-  end
-
-
-///////////////////////////////////////////////////////////////////////
-///////////////// Scrubber enable and status //////////////////////////
-///////////////////////////////////////////////////////////////////////
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -250,21 +187,9 @@ assign cl_sh_ddr_rready = cl_sh_ddr_bus.rready;
 
 (* dont_touch = "true" *) logic dma_pcis_slv_sync_rst_n;
 lib_pipe #(.WIDTH(1), .STAGES(4)) DMA_PCIS_SLV_SLC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(dma_pcis_slv_sync_rst_n));
-cl_dma_pcis_slv #(.SCRB_BURST_LEN_MINUS1(DDR_SCRB_BURST_LEN_MINUS1),
-                    .SCRB_MAX_ADDR(DDR_SCRB_MAX_ADDR),
-                    .NO_SCRB_INST(NO_SCRB_INST)) CL_DMA_PCIS_SLV (
+cl_dma_pcis_slv CL_DMA_PCIS_SLV (
     .aclk(clk),
     .aresetn(dma_pcis_slv_sync_rst_n),
-
-    .ddra_tst_cfg_bus(ddra_tst_cfg_bus),
-    .ddrb_tst_cfg_bus(ddrb_tst_cfg_bus),
-    .ddrc_tst_cfg_bus(ddrc_tst_cfg_bus),
-    .ddrd_tst_cfg_bus(ddrd_tst_cfg_bus),
-
-    .ddra_scrb_bus(ddra_scrb_bus),
-    .ddrb_scrb_bus(ddrb_scrb_bus),
-    .ddrc_scrb_bus(ddrc_scrb_bus),
-    .ddrd_scrb_bus(ddrd_scrb_bus),
 
     .sh_cl_dma_pcis_bus(sh_cl_dma_pcis_bus),
     .cl_axi_mstr_bus(cl_axi_mstr_bus),
@@ -282,22 +207,6 @@ cl_dma_pcis_slv #(.SCRB_BURST_LEN_MINUS1(DDR_SCRB_BURST_LEN_MINUS1),
 ///////////////// DMA PCIS SLAVE module ///////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////////////
-///////////////// Secondary AXI Master module /////////////////////////
-///////////////////////////////////////////////////////////////////////
-/*
-assign axi_mstr_2_cfg_bus.addr = 0;
-assign axi_mstr_2_cfg_bus.wdata = 0;
-assign axi_mstr_2_cfg_bus.wr = 0;
-assign axi_mstr_2_cfg_bus.rd = 0;
-
-cl_dram_dma_axi_mstr  CL_DRAM_DMA_AXI_MSTR (
-    .aclk(clk),
-    .aresetn(dma_pcis_slv_sync_rst_n),
-    .cl_axi_mstr_bus(cl_axi_mstr_bus),
-    .axi_mstr_cfg_bus(axi_mstr_2_cfg_bus)
-  );
-*/
 assign cl_axi_mstr_bus.araddr = 0;
 assign cl_axi_mstr_bus.arid = 0;
 assign cl_axi_mstr_bus.arlen = 0;
@@ -314,80 +223,6 @@ assign cl_axi_mstr_bus.wdata = 0;
 assign cl_axi_mstr_bus.wlast = 0;
 assign cl_axi_mstr_bus.wstrb = 0;
 assign cl_axi_mstr_bus.wvalid = 0;
-
-///////////////////////////////////////////////////////////////////////
-///////////////// Secondary AXI Master module /////////////////////////
-///////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////
-///////////////// OCL SLAVE module ////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-
-/*
-always_ff @(posedge clk and ocl_slv_sync_rst_n )
-assign ddra_tst_cfg_bus.addr = 32'h130;
-assign ddra_tst_cfg_bus.wdata = 0;
-assign ddra_tst_cfg_bus.wr = 0;
-assign ddra_tst_cfg_bus.rd = 0;
-
-assign ddrb_tst_cfg_bus.addr = 32'h230;
-assign ddrb_tst_cfg_bus.wdata = 0;
-assign ddrb_tst_cfg_bus.wr = 0;
-assign ddrb_tst_cfg_bus.rd = 0;
-
-assign ddrc_tst_cfg_bus.addr = 32'h330;
-assign ddrc_tst_cfg_bus.wdata = 0;
-assign ddrc_tst_cfg_bus.wr = 0;
-assign ddrc_tst_cfg_bus.rd = 0;
-
-assign ddrd_tst_cfg_bus.addr = 32'h430;
-assign ddrd_tst_cfg_bus.wdata = 0;
-assign ddrd_tst_cfg_bus.wr = 0;
-assign ddrd_tst_cfg_bus.rd = 0;
-*/
-
-assign sh_ocl_bus.awvalid = sh_ocl_awvalid;
-assign sh_ocl_bus.awaddr[31:0] = sh_ocl_awaddr;
-assign ocl_sh_awready = sh_ocl_bus.awready;
-assign sh_ocl_bus.wvalid = sh_ocl_wvalid;
-assign sh_ocl_bus.wdata[31:0] = sh_ocl_wdata;
-assign sh_ocl_bus.wstrb[3:0] = sh_ocl_wstrb;
-assign ocl_sh_wready = sh_ocl_bus.wready;
-assign ocl_sh_bvalid = sh_ocl_bus.bvalid;
-assign ocl_sh_bresp = sh_ocl_bus.bresp;
-assign sh_ocl_bus.bready = sh_ocl_bready;
-assign sh_ocl_bus.arvalid = sh_ocl_arvalid;
-assign sh_ocl_bus.araddr[31:0] = sh_ocl_araddr;
-assign ocl_sh_arready = sh_ocl_bus.arready;
-assign ocl_sh_rvalid = sh_ocl_bus.rvalid;
-assign ocl_sh_rresp = sh_ocl_bus.rresp;
-assign ocl_sh_rdata = sh_ocl_bus.rdata[31:0];
-assign sh_ocl_bus.rready = sh_ocl_rready;
-
-(* dont_touch = "true" *) logic ocl_slv_sync_rst_n;
-lib_pipe #(.WIDTH(1), .STAGES(4)) OCL_SLV_SLC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(ocl_slv_sync_rst_n));
-cl_ocl_slv CL_OCL_SLV (
-
-   .clk(clk),
-   .sync_rst_n(ocl_slv_sync_rst_n),
-
-   .sh_cl_flr_assert_q(sh_cl_flr_assert_q),
-
-   .sh_ocl_bus  (sh_ocl_bus),
-
-   .pcim_tst_cfg_bus(pcim_tst_cfg_bus),
-   .ddra_tst_cfg_bus(ddra_tst_cfg_bus),
-   .ddrb_tst_cfg_bus(ddrb_tst_cfg_bus),
-   .ddrc_tst_cfg_bus(ddrc_tst_cfg_bus),
-   .ddrd_tst_cfg_bus(ddrd_tst_cfg_bus),
-   .axi_mstr_cfg_bus(axi_mstr_cfg_bus),
-   .int_tst_cfg_bus(int_tst_cfg_bus)
-
-);
-
-///////////////////////////////////////////////////////////////////////
-///////////////// OCL SLAVE module ////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
 
 //----------------------------------------- 
 // DDR controller instantiation   
@@ -644,37 +479,5 @@ sh_ddr #(
 //----------------------------------------- 
 // DDR controller instantiation   
 //-----------------------------------------
-
-
-//----------------------------------------- 
-// Virtual JATG ILA Debug core example 
-//-----------------------------------------
-// tie off for ILA port when probing block not present
-   assign axi_bus_tied.awvalid = 1'b0 ;
-   assign axi_bus_tied.awaddr = 64'b0 ;
-   assign axi_bus_tied.awready = 1'b0 ;
-   assign axi_bus_tied.wvalid = 1'b0 ;
-   assign axi_bus_tied.wstrb = 64'b0 ;
-   assign axi_bus_tied.wlast = 1'b0 ;
-   assign axi_bus_tied.wready = 1'b0 ;
-   assign axi_bus_tied.wdata = 512'b0 ;
-   assign axi_bus_tied.arready = 1'b0 ;
-   assign axi_bus_tied.rdata = 512'b0 ;
-   assign axi_bus_tied.araddr = 64'b0 ;
-   assign axi_bus_tied.arvalid = 1'b0 ;
-   assign axi_bus_tied.awid = 16'b0 ;
-   assign axi_bus_tied.arid = 16'b0 ;
-   assign axi_bus_tied.awlen = 8'b0 ;
-   assign axi_bus_tied.rlast = 1'b0 ;
-   assign axi_bus_tied.rresp = 2'b0 ;
-   assign axi_bus_tied.rid = 16'b0 ;
-   assign axi_bus_tied.rvalid = 1'b0 ;
-   assign axi_bus_tied.arlen = 8'b0 ;
-   assign axi_bus_tied.bresp = 2'b0 ;
-   assign axi_bus_tied.rready = 1'b0 ;
-   assign axi_bus_tied.bvalid = 1'b0 ;
-   assign axi_bus_tied.bid = 16'b0 ;
-   assign axi_bus_tied.bready = 1'b0 ;
-
 
 endmodule   
