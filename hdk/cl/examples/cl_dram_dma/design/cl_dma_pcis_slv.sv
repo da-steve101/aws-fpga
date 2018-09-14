@@ -25,8 +25,13 @@ module cl_dma_pcis_slv
 
     axi_bus_t sh_cl_dma_pcis_q,
 
-    axi_bus_t.slave cl_sh_ddr_bus
-
+    axi_bus_t.slave cl_sh_ddr_bus,
+    output [511:0] fifo_in_bits,
+    output         fifo_in_vld,
+    input          fifo_in_rdy,
+    input  [511:0] fifo_out_bits,
+    input          fifo_out_vld,
+    output         fifo_out_rdy
 );
 
 //----------------------------
@@ -48,16 +53,6 @@ logic ddra_add_cnt, ddra_sub_cnt, ddrc_add_cnt, ddrc_sub_cnt;
 reg r_addr_vld;
 reg [23:0] r_addr;
 // lcl_cl_sh_ddra_q.arready
-
-// to FIFO
-logic [511:0] fifo_in_bits;
-logic         fifo_in_full; // Need a prog full? maybe delay before stops sending ...
-logic         fifo_in_vld;
-
-// from FIFO
-logic [511:0] fifo_out_bits;
-logic         fifo_out_vld;
-logic         fifo_out_rdy;
 
 // send write request
 reg w_addr_vld;
@@ -152,11 +147,6 @@ always_ff @( posedge aclk or negedge aresetn ) begin
       end
    end
 end
-
-// dont use fifo for now ...
-assign fifo_out_bits = fifo_in_bits;
-assign fifo_in_full = !fifo_out_rdy;
-assign fifo_out_vld = fifo_in_vld;
    
 // INTERNAL CONNECTIONS
 assign lcl_cl_sh_ddra_q.araddr = {40'b0, r_addr};
@@ -166,7 +156,7 @@ assign lcl_cl_sh_ddra_q.arsize = 6;
 assign lcl_cl_sh_ddra_q.arvalid = r_addr_vld;
 
 assign fifo_in_bits = lcl_cl_sh_ddra_q.rdata;
-assign lcl_cl_sh_ddra_q.rready = !fifo_in_full;
+assign lcl_cl_sh_ddra_q.rready = fifo_in_rdy;
 assign fifo_in_vld = lcl_cl_sh_ddra_q.rvalid;
 
 assign cl_sh_ddr_q.awaddr = {40'b0, w_addr};

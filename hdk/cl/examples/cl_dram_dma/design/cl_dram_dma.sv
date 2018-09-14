@@ -72,6 +72,13 @@ logic pre_sync_rst_n;
 
 logic [2:0] lcl_sh_cl_ddr_is_ready;
 
+logic [511:0] fifo_in_bits;
+logic         fifo_in_vld;
+logic         fifo_in_rdy;
+logic [511:0] fifo_out_bits;
+logic         fifo_out_vld;
+logic         fifo_out_rdy;
+
 //----------------------------
 // End Internal signals
 //----------------------------
@@ -182,9 +189,31 @@ cl_dma_pcis_slv CL_DMA_PCIS_SLV (
 
     .sh_cl_dma_pcis_q(sh_cl_dma_pcis_q),
 
-    .cl_sh_ddr_bus     (cl_sh_ddr_bus)
+    .cl_sh_ddr_bus     (cl_sh_ddr_bus),
+
+    .fifo_in_bits( fifo_in_bits ),
+    .fifo_in_vld( fifo_in_vld ),
+    .fifo_in_rdy( fifo_in_rdy ),
+    .fifo_out_bits( fifo_out_bits ),
+    .fifo_out_vld( fifo_out_vld ),
+    .fifo_out_rdy( fifo_out_rdy )
   );
 
+(* dont_touch = "true" *) logic dma_tnn_sync_rst_n;
+lib_pipe #(.WIDTH(1), .STAGES(4)) DMA_TNN_SLC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(dma_tnn_sync_rst_n));
+cl_dram_dma_tnn CL_DRAM_DMA_TNN (
+    .aclk(clk),
+    .aresetn(dma_tnn_sync_rst_n),
+
+    .fifo_in_bits( fifo_in_bits ),
+    .fifo_in_vld( fifo_in_vld ),
+    .fifo_in_rdy( fifo_in_rdy ),
+    .fifo_out_bits( fifo_out_bits ),
+    .fifo_out_vld( fifo_out_vld ),
+    .fifo_out_rdy( fifo_out_rdy )
+);
+   
+   
 ///////////////////////////////////////////////////////////////////////
 ///////////////// DMA PCIS SLAVE module ///////////////////////////////
 ///////////////////////////////////////////////////////////////////////
