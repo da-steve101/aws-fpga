@@ -31,14 +31,11 @@ module cl_dram_dma #(parameter NUM_DDR=4)
 // that the CL will use
 
 `include "unused_sh_bar1_template.inc"
-// "unused_ddr_a_b_d_template.inc"
 `include "unused_sh_ocl_template.inc"
 `include "unused_cl_sda_template.inc"
 `include "unused_apppf_irq_template.inc"
 `include "unused_pcim_template.inc"
-// `include "unused_dma_pcis_template.inc"
 `include "unused_flr_template.inc"
-// `include "unused_ddr_c_template.inc"
 
 // Define the addition pipeline stag
 // needed to close timing for the various
@@ -57,13 +54,7 @@ axi_bus_t lcl_cl_sh_ddrd();
 axi_bus_t sh_cl_dma_pcis_bus();
 axi_bus_t sh_cl_dma_pcis_q();
 
-axi_bus_t cl_axi_mstr_bus();
-
-axi_bus_t cl_sh_pcim_bus();
 axi_bus_t cl_sh_ddr_bus();
-
-axi_bus_t sda_cl_bus();
-axi_bus_t sh_ocl_bus();
 
 logic clk;
 (* dont_touch = "true" *) logic pipe_rst_n;
@@ -183,7 +174,6 @@ cl_dma_pcis_slv CL_DMA_PCIS_SLV (
     .aresetn(dma_pcis_slv_sync_rst_n),
 
     .sh_cl_dma_pcis_bus(sh_cl_dma_pcis_bus),
-    .cl_axi_mstr_bus(cl_axi_mstr_bus),
 
     .lcl_cl_sh_ddra(lcl_cl_sh_ddra),
 
@@ -212,28 +202,6 @@ cl_dram_dma_tnn CL_DRAM_DMA_TNN (
     .fifo_out_vld( fifo_out_vld ),
     .fifo_out_rdy( fifo_out_rdy )
 );
-   
-   
-///////////////////////////////////////////////////////////////////////
-///////////////// DMA PCIS SLAVE module ///////////////////////////////
-///////////////////////////////////////////////////////////////////////
-
-assign cl_axi_mstr_bus.araddr = 0;
-assign cl_axi_mstr_bus.arid = 0;
-assign cl_axi_mstr_bus.arlen = 0;
-assign cl_axi_mstr_bus.arsize = 0;
-assign cl_axi_mstr_bus.arvalid = 0;
-assign cl_axi_mstr_bus.awaddr = 0;
-assign cl_axi_mstr_bus.awid = 0;
-assign cl_axi_mstr_bus.awlen = 0;
-assign cl_axi_mstr_bus.awsize = 0;
-assign cl_axi_mstr_bus.awvalid = 0;
-assign cl_axi_mstr_bus.bready = 1;
-assign cl_axi_mstr_bus.rready = 1;
-assign cl_axi_mstr_bus.wdata = 0;
-assign cl_axi_mstr_bus.wlast = 0;
-assign cl_axi_mstr_bus.wstrb = 0;
-assign cl_axi_mstr_bus.wvalid = 0;
 
 //-----------------------------------------
 // DDR controller instantiation

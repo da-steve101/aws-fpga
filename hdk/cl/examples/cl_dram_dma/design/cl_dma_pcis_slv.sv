@@ -19,7 +19,6 @@ module cl_dma_pcis_slv
     input aresetn,
 
     axi_bus_t.master sh_cl_dma_pcis_bus,
-    axi_bus_t.master cl_axi_mstr_bus,
 
     axi_bus_t.slave lcl_cl_sh_ddra,
 
@@ -50,17 +49,15 @@ reg [12:0] output_cnt;
 logic ddra_add_cnt, ddra_sub_cnt, ddrc_add_cnt, ddrc_sub_cnt;
 
 // send read request
-reg r_addr_vld;
-reg [23:0] r_addr;
-// lcl_cl_sh_ddra_q.arready
+logic r_addr_vld;
+logic [63:0] r_addr;
 
 // send write request
-reg w_addr_vld;
-reg [23:0] w_addr;
+logic w_addr_vld;
+logic [63:0] w_addr;
 logic w_last;
 reg [5:0] w_cntr;
 reg [12:0] trans_cntr;
-// cl_sh_ddr_q.awready
 
 //----------------------------
 // End Internal signals
@@ -74,14 +71,22 @@ lib_pipe #(.WIDTH(1), .STAGES(4)) SLR0_PIPE_RST_N (.clk(aclk), .rst_n(1'b1), .in
 lib_pipe #(.WIDTH(1), .STAGES(4)) SLR1_PIPE_RST_N (.clk(aclk), .rst_n(1'b1), .in_bus(aresetn), .out_bus(slr1_sync_aresetn));
 lib_pipe #(.WIDTH(1), .STAGES(4)) SLR2_PIPE_RST_N (.clk(aclk), .rst_n(1'b1), .in_bus(aresetn), .out_bus(slr2_sync_aresetn));
 
+fifo_addr r_addr_fifo (
+  .clk( aclk ),
+  .srst( !aresetn ),
+  .din( lcl_cl_sh_ddra_q.awaddr ),
+  .wr_en( lcl_cl_sh_ddra_q.awvalid & lcl_cl_sh_ddra_q.awready ),
+  .rd_en( ddra_sub_cnt ),
+  .dout( r_addr ),
+  .valid( r_addr_vld )
+);
+
 // process input logic
-assign ddra_add_cnt = lcl_cl_sh_ddra_q.bvalid;
-assign ddra_sub_cnt = r_addr_vld & lcl_cl_sh_ddra_q.arready;
+assign ddra_add_cnt = lcl_cl_sh_ddra_q.bvalid & lcl_cl_sh_ddra_q.bready;
+assign ddra_sub_cnt = r_addr_vld & lcl_cl_sh_ddra_q.arready & input_cnt > 0;
 always_ff @( posedge aclk or negedge aresetn ) begin
    if ( !aresetn ) begin
       input_cnt <= 0;
-      r_addr_vld <= 0;
-      r_addr <= 0;
    end
    else begin
       if ( ddra_add_cnt & !ddra_sub_cnt ) begin
@@ -90,15 +95,18 @@ always_ff @( posedge aclk or negedge aresetn ) begin
       if ( ddra_sub_cnt & !ddra_add_cnt ) begin
 	 input_cnt <= input_cnt - 1;
       end
-      if ( !r_addr_vld & input_cnt >= 1 ) begin
-	 r_addr_vld <= 1;
-      end
-      if ( ddra_sub_cnt ) begin
-	 r_addr_vld <= 0;
-	 r_addr <= r_addr + 13'h1000;
-      end
    end
-end   
+end
+
+fifo_addr w_addr_fifo (
+  .clk( aclk ),
+  .srst( !aresetn ),
+  .din( r_addr ),
+  .wr_en( ddra_sub_cnt ),
+  .rd_en( cl_sh_ddr_q.awready & cl_sh_ddr_q.awvalid ),
+  .dout( w_addr ),
+  .valid( w_addr_vld )
+);
 
 // process output logic
 assign w_last = ( w_cntr == 6'h0 );
@@ -108,10 +116,8 @@ always_ff @( posedge aclk or negedge aresetn ) begin
    if ( !aresetn ) begin
       output_cnt <= 0;
       output_available <= 0;
-      w_addr <= 0;
-      w_addr_vld <= 0;
       w_cntr <= 6'h3f;
-      trans_cntr <= 3;
+      trans_cntr <= 0;
    end
    else begin
       if ( ddrc_add_cnt & !ddrc_sub_cnt ) begin
@@ -126,15 +132,10 @@ always_ff @( posedge aclk or negedge aresetn ) begin
       else if ( output_cnt >= 1 ) begin
          output_available <= 1;
       end
-      if ( w_addr_vld & cl_sh_ddr_q.awready ) begin
-         w_addr_vld <= 0;
-	 w_addr <= w_addr + 13'h1000;
-      end
-      if ( ddra_add_cnt ) begin
+      if ( ddra_sub_cnt ) begin
 	 trans_cntr <= trans_cntr + 1;
       end
-      else if ( trans_cntr > 0 & !w_addr_vld ) begin
-	 w_addr_vld <= 1;
+      else if ( trans_cntr > 0 & cl_sh_ddr_q.awready & cl_sh_ddr_q.awvalid ) begin
 	 trans_cntr <= trans_cntr - 1;
       end
       if ( fifo_out_vld & fifo_out_rdy ) begin
@@ -147,9 +148,9 @@ always_ff @( posedge aclk or negedge aresetn ) begin
       end
    end
 end
-   
+
 // INTERNAL CONNECTIONS
-assign lcl_cl_sh_ddra_q.araddr = {40'b0, r_addr};
+assign lcl_cl_sh_ddra_q.araddr = r_addr; //{40'b0, r_addr};
 assign lcl_cl_sh_ddra_q.arid = 0;
 assign lcl_cl_sh_ddra_q.arlen = 63;
 assign lcl_cl_sh_ddra_q.arsize = 6;
@@ -159,7 +160,7 @@ assign fifo_in_bits = lcl_cl_sh_ddra_q.rdata;
 assign lcl_cl_sh_ddra_q.rready = fifo_in_rdy;
 assign fifo_in_vld = lcl_cl_sh_ddra_q.rvalid;
 
-assign cl_sh_ddr_q.awaddr = {40'b0, w_addr};
+assign cl_sh_ddr_q.awaddr = w_addr; // {40'b0, w_addr};
 assign cl_sh_ddr_q.awid = 0;
 assign cl_sh_ddr_q.awlen = 63;
 assign cl_sh_ddr_q.awsize = 6;
