@@ -51,14 +51,23 @@ logic ddra_add_cnt, ddra_sub_cnt, ddrc_add_cnt, ddrc_sub_cnt;
 // send read request
 logic r_addr_vld;
 logic [63:0] r_addr;
+logic [71:0] r_addr_and_len;
+logic [7:0]  r_len;
+
+assign r_addr = r_addr_and_len[71:8];
+assign r_len = r_addr_and_len[7:0];
 
 // send write request
 logic w_addr_vld;
 logic [63:0] w_addr;
+logic [71:0] w_addr_and_len;
+logic [7:0]  w_len;
 logic w_last;
 reg [5:0] w_cntr;
 reg [12:0] trans_cntr;
 
+assign w_addr = w_addr_and_len[71:8];
+assign w_len = w_addr_and_len[7:0];
 //----------------------------
 // End Internal signals
 //----------------------------
@@ -67,17 +76,21 @@ reg [12:0] trans_cntr;
 (* dont_touch = "true" *) logic slr0_sync_aresetn;
 (* dont_touch = "true" *) logic slr1_sync_aresetn;
 (* dont_touch = "true" *) logic slr2_sync_aresetn;
+(* dont_touch = "true" *) logic rd_fifo_areset;
+(* dont_touch = "true" *) logic wr_fifo_areset;
 lib_pipe #(.WIDTH(1), .STAGES(4)) SLR0_PIPE_RST_N (.clk(aclk), .rst_n(1'b1), .in_bus(aresetn), .out_bus(slr0_sync_aresetn));
 lib_pipe #(.WIDTH(1), .STAGES(4)) SLR1_PIPE_RST_N (.clk(aclk), .rst_n(1'b1), .in_bus(aresetn), .out_bus(slr1_sync_aresetn));
 lib_pipe #(.WIDTH(1), .STAGES(4)) SLR2_PIPE_RST_N (.clk(aclk), .rst_n(1'b1), .in_bus(aresetn), .out_bus(slr2_sync_aresetn));
+lib_pipe #(.WIDTH(1), .STAGES(4)) RD_FIFO_RST_N (.clk(aclk), .rst_n(1'b1), .in_bus(!aresetn), .out_bus(rd_fifo_areset));
+lib_pipe #(.WIDTH(1), .STAGES(4)) WR_FIFO_RST_N (.clk(aclk), .rst_n(1'b1), .in_bus(!aresetn), .out_bus(wr_fifo_areset));
 
 fifo_addr r_addr_fifo (
   .clk( aclk ),
-  .srst( !aresetn ),
-  .din( lcl_cl_sh_ddra_q.awaddr ),
+  .srst( rd_fifo_areset ),
+  .din( { lcl_cl_sh_ddra_q.awaddr, lcl_cl_sh_ddra_q.awlen } ),
   .wr_en( lcl_cl_sh_ddra_q.awvalid & lcl_cl_sh_ddra_q.awready ),
   .rd_en( ddra_sub_cnt ),
-  .dout( r_addr ),
+  .dout( r_addr_and_len ),
   .valid( r_addr_vld )
 );
 
@@ -100,11 +113,11 @@ end
 
 fifo_addr w_addr_fifo (
   .clk( aclk ),
-  .srst( !aresetn ),
-  .din( r_addr ),
+  .srst( rd_fifo_areset ),
+  .din( r_addr_and_len ),
   .wr_en( ddra_sub_cnt ),
   .rd_en( cl_sh_ddr_q.awready & cl_sh_ddr_q.awvalid ),
-  .dout( w_addr ),
+  .dout( w_addr_and_len ),
   .valid( w_addr_vld )
 );
 
@@ -150,19 +163,19 @@ always_ff @( posedge aclk or negedge aresetn ) begin
 end
 
 // INTERNAL CONNECTIONS
-assign lcl_cl_sh_ddra_q.araddr = r_addr; //{40'b0, r_addr};
+assign lcl_cl_sh_ddra_q.araddr = r_addr;
 assign lcl_cl_sh_ddra_q.arid = 0;
-assign lcl_cl_sh_ddra_q.arlen = 63;
+assign lcl_cl_sh_ddra_q.arlen = r_len;
 assign lcl_cl_sh_ddra_q.arsize = 6;
-assign lcl_cl_sh_ddra_q.arvalid = r_addr_vld;
+assign lcl_cl_sh_ddra_q.arvalid = ddra_sub_cnt;
 
 assign fifo_in_bits = lcl_cl_sh_ddra_q.rdata;
 assign lcl_cl_sh_ddra_q.rready = fifo_in_rdy;
 assign fifo_in_vld = lcl_cl_sh_ddra_q.rvalid;
 
-assign cl_sh_ddr_q.awaddr = w_addr; // {40'b0, w_addr};
+assign cl_sh_ddr_q.awaddr = w_addr;
 assign cl_sh_ddr_q.awid = 0;
-assign cl_sh_ddr_q.awlen = 63;
+assign cl_sh_ddr_q.awlen = w_len;
 assign cl_sh_ddr_q.awsize = 6;
 assign cl_sh_ddr_q.awvalid = w_addr_vld;
 

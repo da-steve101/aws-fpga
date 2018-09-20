@@ -73,13 +73,17 @@ read_ip [ list \
 read_ip [ list \
   $HDK_SHELL_DESIGN_DIR/ip/src_register_slice/src_register_slice.xci \
   $HDK_SHELL_DESIGN_DIR/ip/dest_register_slice/dest_register_slice.xci \
+  $HDK_SHELL_DESIGN_DIR/ip/axi_clock_converter_0/axi_clock_converter_0.xci \
   $HDK_SHELL_DESIGN_DIR/ip/axi_register_slice/axi_register_slice.xci \
   $HDK_SHELL_DESIGN_DIR/ip/axi_register_slice_light/axi_register_slice_light.xci
 ]
 
 #Read IP for virtual jtag / ILA/VIO
 read_ip [ list \
-  ${HDK_SHELL_DESIGN_DIR}/ip/fifo_sync_512/fifo_sync_512.xci \
+  $HDK_SHELL_DESIGN_DIR/ip/cl_debug_bridge/cl_debug_bridge.xci \
+  $HDK_SHELL_DESIGN_DIR/ip/ila_1/ila_1.xci \
+  $HDK_SHELL_DESIGN_DIR/ip/ila_vio_counter/ila_vio_counter.xci \
+  $HDK_SHELL_DESIGN_DIR/ip/vio_0/vio_0.xci \
   ${HDK_SHELL_DESIGN_DIR}/ip/fifo_addr/fifo_addr.xci
 ]
 
