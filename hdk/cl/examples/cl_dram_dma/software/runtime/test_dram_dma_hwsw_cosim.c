@@ -136,8 +136,10 @@ int dma_example_hwsw_cosim(int slot_id) {
     rand_string(write_buffer, buffer_size);
 
     channel=0;
-    fpga_write_buffer_to_cl(slot_id, channel, write_fd, buffer_size, (0x00000000 + channel*MEM_16G));
-    fpga_read_cl_to_buffer(slot_id, channel, read_fd, buffer_size, (0x00000000 + channel*MEM_16G));
+    for ( int addr = 0; addr < 20*buffer_size; addr += buffer_size ) {
+      fpga_write_buffer_to_cl(slot_id, channel, write_fd, buffer_size, (0x00000000 + channel*MEM_16G + addr));
+      fpga_read_cl_to_buffer(slot_id, channel, read_fd, buffer_size, (0x00000000 + channel*MEM_16G + addr));
+    }
 
 out:
 
