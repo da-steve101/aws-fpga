@@ -1,10 +1,10 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2017.4.op (lin64) Build 2193837 Tue Apr 10 18:06:59 MDT 2018
-// Date        : Wed Sep 19 00:51:35 2018
-// Host        : ip-172-31-23-198.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.5.1804 (Core)
+// Date        : Thu Sep 20 04:04:41 2018
+// Host        : ip-172-31-23-168.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.5.1804 (Core)
 // Command     : write_verilog -force -mode funcsim
-//               /home/centos/ip_proj/ip_proj.srcs/sources_1/ip/fifo_addr/fifo_addr_sim_netlist.v
+//               /home/centos/project_1/project_1.srcs/sources_1/ip/fifo_addr/fifo_addr_sim_netlist.v
 // Design      : fifo_addr
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -28,10 +28,10 @@ module fifo_addr
     rd_rst_busy);
   (* x_interface_info = "xilinx.com:signal:clock:1.0 core_clk CLK" *) (* x_interface_parameter = "XIL_INTERFACENAME core_clk, FREQ_HZ 100000000, PHASE 0.000" *) input clk;
   input srst;
-  (* x_interface_info = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_DATA" *) input [17:0]din;
+  (* x_interface_info = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_DATA" *) input [71:0]din;
   (* x_interface_info = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE WR_EN" *) input wr_en;
   (* x_interface_info = "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_EN" *) input rd_en;
-  (* x_interface_info = "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_DATA" *) output [17:0]dout;
+  (* x_interface_info = "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_DATA" *) output [71:0]dout;
   (* x_interface_info = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE FULL" *) output full;
   (* x_interface_info = "xilinx.com:interface:fifo_read:1.0 FIFO_READ EMPTY" *) output empty;
   output valid;
@@ -39,8 +39,8 @@ module fifo_addr
   output rd_rst_busy;
 
   wire clk;
-  wire [17:0]din;
-  wire [17:0]dout;
+  wire [71:0]din;
+  wire [71:0]dout;
   wire empty;
   wire full;
   wire rd_en;
@@ -199,7 +199,7 @@ module fifo_addr
   (* C_COUNT_TYPE = "0" *) 
   (* C_DATA_COUNT_WIDTH = "9" *) 
   (* C_DEFAULT_VALUE = "BlankString" *) 
-  (* C_DIN_WIDTH = "18" *) 
+  (* C_DIN_WIDTH = "72" *) 
   (* C_DIN_WIDTH_AXIS = "1" *) 
   (* C_DIN_WIDTH_RACH = "32" *) 
   (* C_DIN_WIDTH_RDCH = "64" *) 
@@ -207,7 +207,7 @@ module fifo_addr
   (* C_DIN_WIDTH_WDCH = "64" *) 
   (* C_DIN_WIDTH_WRCH = "2" *) 
   (* C_DOUT_RST_VAL = "0" *) 
-  (* C_DOUT_WIDTH = "18" *) 
+  (* C_DOUT_WIDTH = "72" *) 
   (* C_ENABLE_RLOCS = "0" *) 
   (* C_ENABLE_RST_SYNC = "1" *) 
   (* C_EN_SAFETY_CKT = "0" *) 
@@ -283,7 +283,7 @@ module fifo_addr
   (* C_POWER_SAVING_MODE = "0" *) 
   (* C_PRELOAD_LATENCY = "0" *) 
   (* C_PRELOAD_REGS = "1" *) 
-  (* C_PRIM_FIFO_TYPE = "512x36" *) 
+  (* C_PRIM_FIFO_TYPE = "512x72" *) 
   (* C_PRIM_FIFO_TYPE_AXIS = "1kx18" *) 
   (* C_PRIM_FIFO_TYPE_RACH = "512x36" *) 
   (* C_PRIM_FIFO_TYPE_RDCH = "512x72" *) 
@@ -623,17 +623,17 @@ module fifo_addr_builtin_extdepth
   output full;
   output rd_rst_busy;
   output wr_rst_busy;
-  output [17:0]dout;
+  output [71:0]dout;
   output valid;
   input clk;
   input rd_en;
   input srst;
   input wr_en;
-  input [17:0]din;
+  input [71:0]din;
 
   wire clk;
-  wire [17:0]din;
-  wire [17:0]dout;
+  wire [71:0]din;
+  wire [71:0]dout;
   wire empty;
   wire full;
   wire rd_en;
@@ -685,103 +685,133 @@ module fifo_addr_builtin_prim
   output full;
   output rd_rst_busy;
   output wr_rst_busy;
-  output [17:0]dout;
+  output [71:0]dout;
   output valid;
   input clk;
   input rd_en;
   input srst;
   input wr_en;
-  input [17:0]din;
+  input [71:0]din;
 
   wire clk;
-  wire [17:0]din;
-  wire [17:0]dout;
+  wire [71:0]din;
+  wire [71:0]dout;
   wire empty;
   wire full;
-  wire \gf18e2_inst.sngfifo18e2_n_0 ;
-  wire \gf18e2_inst.sngfifo18e2_n_1 ;
-  wire \gf18e2_inst.sngfifo18e2_n_10 ;
-  wire \gf18e2_inst.sngfifo18e2_n_100 ;
-  wire \gf18e2_inst.sngfifo18e2_n_101 ;
-  wire \gf18e2_inst.sngfifo18e2_n_102 ;
-  wire \gf18e2_inst.sngfifo18e2_n_103 ;
-  wire \gf18e2_inst.sngfifo18e2_n_104 ;
-  wire \gf18e2_inst.sngfifo18e2_n_105 ;
-  wire \gf18e2_inst.sngfifo18e2_n_106 ;
-  wire \gf18e2_inst.sngfifo18e2_n_107 ;
-  wire \gf18e2_inst.sngfifo18e2_n_11 ;
-  wire \gf18e2_inst.sngfifo18e2_n_12 ;
-  wire \gf18e2_inst.sngfifo18e2_n_13 ;
-  wire \gf18e2_inst.sngfifo18e2_n_14 ;
-  wire \gf18e2_inst.sngfifo18e2_n_15 ;
-  wire \gf18e2_inst.sngfifo18e2_n_16 ;
-  wire \gf18e2_inst.sngfifo18e2_n_17 ;
-  wire \gf18e2_inst.sngfifo18e2_n_18 ;
-  wire \gf18e2_inst.sngfifo18e2_n_19 ;
-  wire \gf18e2_inst.sngfifo18e2_n_20 ;
-  wire \gf18e2_inst.sngfifo18e2_n_21 ;
-  wire \gf18e2_inst.sngfifo18e2_n_22 ;
-  wire \gf18e2_inst.sngfifo18e2_n_23 ;
-  wire \gf18e2_inst.sngfifo18e2_n_24 ;
-  wire \gf18e2_inst.sngfifo18e2_n_25 ;
-  wire \gf18e2_inst.sngfifo18e2_n_26 ;
-  wire \gf18e2_inst.sngfifo18e2_n_27 ;
-  wire \gf18e2_inst.sngfifo18e2_n_28 ;
-  wire \gf18e2_inst.sngfifo18e2_n_29 ;
-  wire \gf18e2_inst.sngfifo18e2_n_30 ;
-  wire \gf18e2_inst.sngfifo18e2_n_31 ;
-  wire \gf18e2_inst.sngfifo18e2_n_32 ;
-  wire \gf18e2_inst.sngfifo18e2_n_33 ;
-  wire \gf18e2_inst.sngfifo18e2_n_34 ;
-  wire \gf18e2_inst.sngfifo18e2_n_35 ;
-  wire \gf18e2_inst.sngfifo18e2_n_36 ;
-  wire \gf18e2_inst.sngfifo18e2_n_37 ;
-  wire \gf18e2_inst.sngfifo18e2_n_38 ;
-  wire \gf18e2_inst.sngfifo18e2_n_39 ;
-  wire \gf18e2_inst.sngfifo18e2_n_4 ;
-  wire \gf18e2_inst.sngfifo18e2_n_40 ;
-  wire \gf18e2_inst.sngfifo18e2_n_41 ;
-  wire \gf18e2_inst.sngfifo18e2_n_42 ;
-  wire \gf18e2_inst.sngfifo18e2_n_43 ;
-  wire \gf18e2_inst.sngfifo18e2_n_44 ;
-  wire \gf18e2_inst.sngfifo18e2_n_45 ;
-  wire \gf18e2_inst.sngfifo18e2_n_46 ;
-  wire \gf18e2_inst.sngfifo18e2_n_47 ;
-  wire \gf18e2_inst.sngfifo18e2_n_48 ;
-  wire \gf18e2_inst.sngfifo18e2_n_49 ;
-  wire \gf18e2_inst.sngfifo18e2_n_5 ;
-  wire \gf18e2_inst.sngfifo18e2_n_50 ;
-  wire \gf18e2_inst.sngfifo18e2_n_51 ;
-  wire \gf18e2_inst.sngfifo18e2_n_52 ;
-  wire \gf18e2_inst.sngfifo18e2_n_53 ;
-  wire \gf18e2_inst.sngfifo18e2_n_54 ;
-  wire \gf18e2_inst.sngfifo18e2_n_55 ;
-  wire \gf18e2_inst.sngfifo18e2_n_56 ;
-  wire \gf18e2_inst.sngfifo18e2_n_57 ;
-  wire \gf18e2_inst.sngfifo18e2_n_58 ;
-  wire \gf18e2_inst.sngfifo18e2_n_59 ;
-  wire \gf18e2_inst.sngfifo18e2_n_60 ;
-  wire \gf18e2_inst.sngfifo18e2_n_61 ;
-  wire \gf18e2_inst.sngfifo18e2_n_62 ;
-  wire \gf18e2_inst.sngfifo18e2_n_63 ;
-  wire \gf18e2_inst.sngfifo18e2_n_64 ;
-  wire \gf18e2_inst.sngfifo18e2_n_65 ;
-  wire \gf18e2_inst.sngfifo18e2_n_66 ;
-  wire \gf18e2_inst.sngfifo18e2_n_67 ;
-  wire \gf18e2_inst.sngfifo18e2_n_68 ;
-  wire \gf18e2_inst.sngfifo18e2_n_69 ;
-  wire \gf18e2_inst.sngfifo18e2_n_70 ;
-  wire \gf18e2_inst.sngfifo18e2_n_71 ;
-  wire \gf18e2_inst.sngfifo18e2_n_72 ;
-  wire \gf18e2_inst.sngfifo18e2_n_73 ;
-  wire \gf18e2_inst.sngfifo18e2_n_74 ;
-  wire \gf18e2_inst.sngfifo18e2_n_75 ;
-  wire \gf18e2_inst.sngfifo18e2_n_76 ;
-  wire \gf18e2_inst.sngfifo18e2_n_77 ;
-  wire \gf18e2_inst.sngfifo18e2_n_78 ;
-  wire \gf18e2_inst.sngfifo18e2_n_79 ;
-  wire \gf18e2_inst.sngfifo18e2_n_80 ;
-  wire \gf18e2_inst.sngfifo18e2_n_81 ;
+  wire \gf36e2_inst.sngfifo36e2_n_0 ;
+  wire \gf36e2_inst.sngfifo36e2_n_1 ;
+  wire \gf36e2_inst.sngfifo36e2_n_100 ;
+  wire \gf36e2_inst.sngfifo36e2_n_101 ;
+  wire \gf36e2_inst.sngfifo36e2_n_102 ;
+  wire \gf36e2_inst.sngfifo36e2_n_103 ;
+  wire \gf36e2_inst.sngfifo36e2_n_12 ;
+  wire \gf36e2_inst.sngfifo36e2_n_13 ;
+  wire \gf36e2_inst.sngfifo36e2_n_14 ;
+  wire \gf36e2_inst.sngfifo36e2_n_15 ;
+  wire \gf36e2_inst.sngfifo36e2_n_16 ;
+  wire \gf36e2_inst.sngfifo36e2_n_168 ;
+  wire \gf36e2_inst.sngfifo36e2_n_169 ;
+  wire \gf36e2_inst.sngfifo36e2_n_17 ;
+  wire \gf36e2_inst.sngfifo36e2_n_170 ;
+  wire \gf36e2_inst.sngfifo36e2_n_171 ;
+  wire \gf36e2_inst.sngfifo36e2_n_172 ;
+  wire \gf36e2_inst.sngfifo36e2_n_173 ;
+  wire \gf36e2_inst.sngfifo36e2_n_174 ;
+  wire \gf36e2_inst.sngfifo36e2_n_175 ;
+  wire \gf36e2_inst.sngfifo36e2_n_18 ;
+  wire \gf36e2_inst.sngfifo36e2_n_184 ;
+  wire \gf36e2_inst.sngfifo36e2_n_185 ;
+  wire \gf36e2_inst.sngfifo36e2_n_186 ;
+  wire \gf36e2_inst.sngfifo36e2_n_187 ;
+  wire \gf36e2_inst.sngfifo36e2_n_188 ;
+  wire \gf36e2_inst.sngfifo36e2_n_189 ;
+  wire \gf36e2_inst.sngfifo36e2_n_19 ;
+  wire \gf36e2_inst.sngfifo36e2_n_190 ;
+  wire \gf36e2_inst.sngfifo36e2_n_191 ;
+  wire \gf36e2_inst.sngfifo36e2_n_20 ;
+  wire \gf36e2_inst.sngfifo36e2_n_21 ;
+  wire \gf36e2_inst.sngfifo36e2_n_22 ;
+  wire \gf36e2_inst.sngfifo36e2_n_23 ;
+  wire \gf36e2_inst.sngfifo36e2_n_24 ;
+  wire \gf36e2_inst.sngfifo36e2_n_25 ;
+  wire \gf36e2_inst.sngfifo36e2_n_26 ;
+  wire \gf36e2_inst.sngfifo36e2_n_27 ;
+  wire \gf36e2_inst.sngfifo36e2_n_28 ;
+  wire \gf36e2_inst.sngfifo36e2_n_29 ;
+  wire \gf36e2_inst.sngfifo36e2_n_30 ;
+  wire \gf36e2_inst.sngfifo36e2_n_31 ;
+  wire \gf36e2_inst.sngfifo36e2_n_32 ;
+  wire \gf36e2_inst.sngfifo36e2_n_33 ;
+  wire \gf36e2_inst.sngfifo36e2_n_34 ;
+  wire \gf36e2_inst.sngfifo36e2_n_35 ;
+  wire \gf36e2_inst.sngfifo36e2_n_36 ;
+  wire \gf36e2_inst.sngfifo36e2_n_37 ;
+  wire \gf36e2_inst.sngfifo36e2_n_38 ;
+  wire \gf36e2_inst.sngfifo36e2_n_39 ;
+  wire \gf36e2_inst.sngfifo36e2_n_40 ;
+  wire \gf36e2_inst.sngfifo36e2_n_41 ;
+  wire \gf36e2_inst.sngfifo36e2_n_42 ;
+  wire \gf36e2_inst.sngfifo36e2_n_43 ;
+  wire \gf36e2_inst.sngfifo36e2_n_44 ;
+  wire \gf36e2_inst.sngfifo36e2_n_45 ;
+  wire \gf36e2_inst.sngfifo36e2_n_46 ;
+  wire \gf36e2_inst.sngfifo36e2_n_47 ;
+  wire \gf36e2_inst.sngfifo36e2_n_48 ;
+  wire \gf36e2_inst.sngfifo36e2_n_49 ;
+  wire \gf36e2_inst.sngfifo36e2_n_5 ;
+  wire \gf36e2_inst.sngfifo36e2_n_50 ;
+  wire \gf36e2_inst.sngfifo36e2_n_51 ;
+  wire \gf36e2_inst.sngfifo36e2_n_52 ;
+  wire \gf36e2_inst.sngfifo36e2_n_53 ;
+  wire \gf36e2_inst.sngfifo36e2_n_54 ;
+  wire \gf36e2_inst.sngfifo36e2_n_55 ;
+  wire \gf36e2_inst.sngfifo36e2_n_56 ;
+  wire \gf36e2_inst.sngfifo36e2_n_57 ;
+  wire \gf36e2_inst.sngfifo36e2_n_58 ;
+  wire \gf36e2_inst.sngfifo36e2_n_59 ;
+  wire \gf36e2_inst.sngfifo36e2_n_6 ;
+  wire \gf36e2_inst.sngfifo36e2_n_60 ;
+  wire \gf36e2_inst.sngfifo36e2_n_61 ;
+  wire \gf36e2_inst.sngfifo36e2_n_62 ;
+  wire \gf36e2_inst.sngfifo36e2_n_63 ;
+  wire \gf36e2_inst.sngfifo36e2_n_64 ;
+  wire \gf36e2_inst.sngfifo36e2_n_65 ;
+  wire \gf36e2_inst.sngfifo36e2_n_66 ;
+  wire \gf36e2_inst.sngfifo36e2_n_67 ;
+  wire \gf36e2_inst.sngfifo36e2_n_68 ;
+  wire \gf36e2_inst.sngfifo36e2_n_69 ;
+  wire \gf36e2_inst.sngfifo36e2_n_70 ;
+  wire \gf36e2_inst.sngfifo36e2_n_71 ;
+  wire \gf36e2_inst.sngfifo36e2_n_72 ;
+  wire \gf36e2_inst.sngfifo36e2_n_73 ;
+  wire \gf36e2_inst.sngfifo36e2_n_74 ;
+  wire \gf36e2_inst.sngfifo36e2_n_75 ;
+  wire \gf36e2_inst.sngfifo36e2_n_76 ;
+  wire \gf36e2_inst.sngfifo36e2_n_77 ;
+  wire \gf36e2_inst.sngfifo36e2_n_78 ;
+  wire \gf36e2_inst.sngfifo36e2_n_79 ;
+  wire \gf36e2_inst.sngfifo36e2_n_80 ;
+  wire \gf36e2_inst.sngfifo36e2_n_81 ;
+  wire \gf36e2_inst.sngfifo36e2_n_82 ;
+  wire \gf36e2_inst.sngfifo36e2_n_83 ;
+  wire \gf36e2_inst.sngfifo36e2_n_84 ;
+  wire \gf36e2_inst.sngfifo36e2_n_85 ;
+  wire \gf36e2_inst.sngfifo36e2_n_86 ;
+  wire \gf36e2_inst.sngfifo36e2_n_87 ;
+  wire \gf36e2_inst.sngfifo36e2_n_88 ;
+  wire \gf36e2_inst.sngfifo36e2_n_89 ;
+  wire \gf36e2_inst.sngfifo36e2_n_90 ;
+  wire \gf36e2_inst.sngfifo36e2_n_91 ;
+  wire \gf36e2_inst.sngfifo36e2_n_92 ;
+  wire \gf36e2_inst.sngfifo36e2_n_93 ;
+  wire \gf36e2_inst.sngfifo36e2_n_94 ;
+  wire \gf36e2_inst.sngfifo36e2_n_95 ;
+  wire \gf36e2_inst.sngfifo36e2_n_96 ;
+  wire \gf36e2_inst.sngfifo36e2_n_97 ;
+  wire \gf36e2_inst.sngfifo36e2_n_98 ;
+  wire \gf36e2_inst.sngfifo36e2_n_99 ;
+  wire p_4_out;
+  wire p_5_out;
   wire p_6_out;
   wire p_7_out;
   wire rd_en;
@@ -792,11 +822,14 @@ module fifo_addr_builtin_prim
   wire wr_rst_busy;
 
   (* box_type = "PRIMITIVE" *) 
-  FIFO18E2 #(
+  FIFO36E2 #(
     .CASCADE_ORDER("NONE"),
     .CLOCK_DOMAINS("COMMON"),
+    .EN_ECC_PIPE("FALSE"),
+    .EN_ECC_READ("FALSE"),
+    .EN_ECC_WRITE("FALSE"),
     .FIRST_WORD_FALL_THROUGH("TRUE"),
-    .INIT(36'h000000000),
+    .INIT(72'h000000000000000000),
     .IS_RDCLK_INVERTED(1'b0),
     .IS_RDEN_INVERTED(1'b0),
     .IS_RSTREG_INVERTED(1'b0),
@@ -806,45 +839,50 @@ module fifo_addr_builtin_prim
     .PROG_EMPTY_THRESH(4),
     .PROG_FULL_THRESH(511),
     .RDCOUNT_TYPE("EXTENDED_DATACOUNT"),
-    .READ_WIDTH(36),
+    .READ_WIDTH(72),
     .REGISTER_MODE("REGISTERED"),
     .RSTREG_PRIORITY("REGCE"),
     .SLEEP_ASYNC("FALSE"),
-    .SRVAL(36'h000000000),
+    .SRVAL(72'h000000000000000000),
     .WRCOUNT_TYPE("EXTENDED_DATACOUNT"),
-    .WRITE_WIDTH(36)) 
-    \gf18e2_inst.sngfifo18e2 
-       (.CASDIN({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
-        .CASDINP({1'b0,1'b0,1'b0,1'b0}),
+    .WRITE_WIDTH(72)) 
+    \gf36e2_inst.sngfifo36e2 
+       (.CASDIN({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
+        .CASDINP({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
         .CASDOMUX(1'b0),
         .CASDOMUXEN(1'b1),
-        .CASDOUT({\gf18e2_inst.sngfifo18e2_n_36 ,\gf18e2_inst.sngfifo18e2_n_37 ,\gf18e2_inst.sngfifo18e2_n_38 ,\gf18e2_inst.sngfifo18e2_n_39 ,\gf18e2_inst.sngfifo18e2_n_40 ,\gf18e2_inst.sngfifo18e2_n_41 ,\gf18e2_inst.sngfifo18e2_n_42 ,\gf18e2_inst.sngfifo18e2_n_43 ,\gf18e2_inst.sngfifo18e2_n_44 ,\gf18e2_inst.sngfifo18e2_n_45 ,\gf18e2_inst.sngfifo18e2_n_46 ,\gf18e2_inst.sngfifo18e2_n_47 ,\gf18e2_inst.sngfifo18e2_n_48 ,\gf18e2_inst.sngfifo18e2_n_49 ,\gf18e2_inst.sngfifo18e2_n_50 ,\gf18e2_inst.sngfifo18e2_n_51 ,\gf18e2_inst.sngfifo18e2_n_52 ,\gf18e2_inst.sngfifo18e2_n_53 ,\gf18e2_inst.sngfifo18e2_n_54 ,\gf18e2_inst.sngfifo18e2_n_55 ,\gf18e2_inst.sngfifo18e2_n_56 ,\gf18e2_inst.sngfifo18e2_n_57 ,\gf18e2_inst.sngfifo18e2_n_58 ,\gf18e2_inst.sngfifo18e2_n_59 ,\gf18e2_inst.sngfifo18e2_n_60 ,\gf18e2_inst.sngfifo18e2_n_61 ,\gf18e2_inst.sngfifo18e2_n_62 ,\gf18e2_inst.sngfifo18e2_n_63 ,\gf18e2_inst.sngfifo18e2_n_64 ,\gf18e2_inst.sngfifo18e2_n_65 ,\gf18e2_inst.sngfifo18e2_n_66 ,\gf18e2_inst.sngfifo18e2_n_67 }),
-        .CASDOUTP({\gf18e2_inst.sngfifo18e2_n_100 ,\gf18e2_inst.sngfifo18e2_n_101 ,\gf18e2_inst.sngfifo18e2_n_102 ,\gf18e2_inst.sngfifo18e2_n_103 }),
-        .CASNXTEMPTY(\gf18e2_inst.sngfifo18e2_n_0 ),
+        .CASDOUT({\gf36e2_inst.sngfifo36e2_n_40 ,\gf36e2_inst.sngfifo36e2_n_41 ,\gf36e2_inst.sngfifo36e2_n_42 ,\gf36e2_inst.sngfifo36e2_n_43 ,\gf36e2_inst.sngfifo36e2_n_44 ,\gf36e2_inst.sngfifo36e2_n_45 ,\gf36e2_inst.sngfifo36e2_n_46 ,\gf36e2_inst.sngfifo36e2_n_47 ,\gf36e2_inst.sngfifo36e2_n_48 ,\gf36e2_inst.sngfifo36e2_n_49 ,\gf36e2_inst.sngfifo36e2_n_50 ,\gf36e2_inst.sngfifo36e2_n_51 ,\gf36e2_inst.sngfifo36e2_n_52 ,\gf36e2_inst.sngfifo36e2_n_53 ,\gf36e2_inst.sngfifo36e2_n_54 ,\gf36e2_inst.sngfifo36e2_n_55 ,\gf36e2_inst.sngfifo36e2_n_56 ,\gf36e2_inst.sngfifo36e2_n_57 ,\gf36e2_inst.sngfifo36e2_n_58 ,\gf36e2_inst.sngfifo36e2_n_59 ,\gf36e2_inst.sngfifo36e2_n_60 ,\gf36e2_inst.sngfifo36e2_n_61 ,\gf36e2_inst.sngfifo36e2_n_62 ,\gf36e2_inst.sngfifo36e2_n_63 ,\gf36e2_inst.sngfifo36e2_n_64 ,\gf36e2_inst.sngfifo36e2_n_65 ,\gf36e2_inst.sngfifo36e2_n_66 ,\gf36e2_inst.sngfifo36e2_n_67 ,\gf36e2_inst.sngfifo36e2_n_68 ,\gf36e2_inst.sngfifo36e2_n_69 ,\gf36e2_inst.sngfifo36e2_n_70 ,\gf36e2_inst.sngfifo36e2_n_71 ,\gf36e2_inst.sngfifo36e2_n_72 ,\gf36e2_inst.sngfifo36e2_n_73 ,\gf36e2_inst.sngfifo36e2_n_74 ,\gf36e2_inst.sngfifo36e2_n_75 ,\gf36e2_inst.sngfifo36e2_n_76 ,\gf36e2_inst.sngfifo36e2_n_77 ,\gf36e2_inst.sngfifo36e2_n_78 ,\gf36e2_inst.sngfifo36e2_n_79 ,\gf36e2_inst.sngfifo36e2_n_80 ,\gf36e2_inst.sngfifo36e2_n_81 ,\gf36e2_inst.sngfifo36e2_n_82 ,\gf36e2_inst.sngfifo36e2_n_83 ,\gf36e2_inst.sngfifo36e2_n_84 ,\gf36e2_inst.sngfifo36e2_n_85 ,\gf36e2_inst.sngfifo36e2_n_86 ,\gf36e2_inst.sngfifo36e2_n_87 ,\gf36e2_inst.sngfifo36e2_n_88 ,\gf36e2_inst.sngfifo36e2_n_89 ,\gf36e2_inst.sngfifo36e2_n_90 ,\gf36e2_inst.sngfifo36e2_n_91 ,\gf36e2_inst.sngfifo36e2_n_92 ,\gf36e2_inst.sngfifo36e2_n_93 ,\gf36e2_inst.sngfifo36e2_n_94 ,\gf36e2_inst.sngfifo36e2_n_95 ,\gf36e2_inst.sngfifo36e2_n_96 ,\gf36e2_inst.sngfifo36e2_n_97 ,\gf36e2_inst.sngfifo36e2_n_98 ,\gf36e2_inst.sngfifo36e2_n_99 ,\gf36e2_inst.sngfifo36e2_n_100 ,\gf36e2_inst.sngfifo36e2_n_101 ,\gf36e2_inst.sngfifo36e2_n_102 ,\gf36e2_inst.sngfifo36e2_n_103 }),
+        .CASDOUTP({\gf36e2_inst.sngfifo36e2_n_168 ,\gf36e2_inst.sngfifo36e2_n_169 ,\gf36e2_inst.sngfifo36e2_n_170 ,\gf36e2_inst.sngfifo36e2_n_171 ,\gf36e2_inst.sngfifo36e2_n_172 ,\gf36e2_inst.sngfifo36e2_n_173 ,\gf36e2_inst.sngfifo36e2_n_174 ,\gf36e2_inst.sngfifo36e2_n_175 }),
+        .CASNXTEMPTY(\gf36e2_inst.sngfifo36e2_n_0 ),
         .CASNXTRDEN(1'b0),
         .CASOREGIMUX(1'b0),
         .CASOREGIMUXEN(1'b1),
         .CASPRVEMPTY(1'b0),
-        .CASPRVRDEN(\gf18e2_inst.sngfifo18e2_n_1 ),
-        .DIN({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,din}),
-        .DINP({1'b0,1'b0,1'b0,1'b0}),
-        .DOUT({\gf18e2_inst.sngfifo18e2_n_68 ,\gf18e2_inst.sngfifo18e2_n_69 ,\gf18e2_inst.sngfifo18e2_n_70 ,\gf18e2_inst.sngfifo18e2_n_71 ,\gf18e2_inst.sngfifo18e2_n_72 ,\gf18e2_inst.sngfifo18e2_n_73 ,\gf18e2_inst.sngfifo18e2_n_74 ,\gf18e2_inst.sngfifo18e2_n_75 ,\gf18e2_inst.sngfifo18e2_n_76 ,\gf18e2_inst.sngfifo18e2_n_77 ,\gf18e2_inst.sngfifo18e2_n_78 ,\gf18e2_inst.sngfifo18e2_n_79 ,\gf18e2_inst.sngfifo18e2_n_80 ,\gf18e2_inst.sngfifo18e2_n_81 ,dout}),
-        .DOUTP({\gf18e2_inst.sngfifo18e2_n_104 ,\gf18e2_inst.sngfifo18e2_n_105 ,\gf18e2_inst.sngfifo18e2_n_106 ,\gf18e2_inst.sngfifo18e2_n_107 }),
+        .CASPRVRDEN(\gf36e2_inst.sngfifo36e2_n_1 ),
+        .DBITERR(p_4_out),
+        .DIN(din[63:0]),
+        .DINP(din[71:64]),
+        .DOUT(dout[63:0]),
+        .DOUTP(dout[71:64]),
+        .ECCPARITY({\gf36e2_inst.sngfifo36e2_n_184 ,\gf36e2_inst.sngfifo36e2_n_185 ,\gf36e2_inst.sngfifo36e2_n_186 ,\gf36e2_inst.sngfifo36e2_n_187 ,\gf36e2_inst.sngfifo36e2_n_188 ,\gf36e2_inst.sngfifo36e2_n_189 ,\gf36e2_inst.sngfifo36e2_n_190 ,\gf36e2_inst.sngfifo36e2_n_191 }),
         .EMPTY(empty),
         .FULL(full),
-        .PROGEMPTY(\gf18e2_inst.sngfifo18e2_n_4 ),
-        .PROGFULL(\gf18e2_inst.sngfifo18e2_n_5 ),
+        .INJECTDBITERR(1'b0),
+        .INJECTSBITERR(1'b0),
+        .PROGEMPTY(\gf36e2_inst.sngfifo36e2_n_5 ),
+        .PROGFULL(\gf36e2_inst.sngfifo36e2_n_6 ),
         .RDCLK(clk),
-        .RDCOUNT({\gf18e2_inst.sngfifo18e2_n_10 ,\gf18e2_inst.sngfifo18e2_n_11 ,\gf18e2_inst.sngfifo18e2_n_12 ,\gf18e2_inst.sngfifo18e2_n_13 ,\gf18e2_inst.sngfifo18e2_n_14 ,\gf18e2_inst.sngfifo18e2_n_15 ,\gf18e2_inst.sngfifo18e2_n_16 ,\gf18e2_inst.sngfifo18e2_n_17 ,\gf18e2_inst.sngfifo18e2_n_18 ,\gf18e2_inst.sngfifo18e2_n_19 ,\gf18e2_inst.sngfifo18e2_n_20 ,\gf18e2_inst.sngfifo18e2_n_21 ,\gf18e2_inst.sngfifo18e2_n_22 }),
+        .RDCOUNT({\gf36e2_inst.sngfifo36e2_n_12 ,\gf36e2_inst.sngfifo36e2_n_13 ,\gf36e2_inst.sngfifo36e2_n_14 ,\gf36e2_inst.sngfifo36e2_n_15 ,\gf36e2_inst.sngfifo36e2_n_16 ,\gf36e2_inst.sngfifo36e2_n_17 ,\gf36e2_inst.sngfifo36e2_n_18 ,\gf36e2_inst.sngfifo36e2_n_19 ,\gf36e2_inst.sngfifo36e2_n_20 ,\gf36e2_inst.sngfifo36e2_n_21 ,\gf36e2_inst.sngfifo36e2_n_22 ,\gf36e2_inst.sngfifo36e2_n_23 ,\gf36e2_inst.sngfifo36e2_n_24 ,\gf36e2_inst.sngfifo36e2_n_25 }),
         .RDEN(rd_en),
         .RDERR(p_6_out),
         .RDRSTBUSY(rd_rst_busy),
         .REGCE(rd_en),
         .RST(srst),
         .RSTREG(srst),
+        .SBITERR(p_5_out),
         .SLEEP(1'b0),
         .WRCLK(clk),
-        .WRCOUNT({\gf18e2_inst.sngfifo18e2_n_23 ,\gf18e2_inst.sngfifo18e2_n_24 ,\gf18e2_inst.sngfifo18e2_n_25 ,\gf18e2_inst.sngfifo18e2_n_26 ,\gf18e2_inst.sngfifo18e2_n_27 ,\gf18e2_inst.sngfifo18e2_n_28 ,\gf18e2_inst.sngfifo18e2_n_29 ,\gf18e2_inst.sngfifo18e2_n_30 ,\gf18e2_inst.sngfifo18e2_n_31 ,\gf18e2_inst.sngfifo18e2_n_32 ,\gf18e2_inst.sngfifo18e2_n_33 ,\gf18e2_inst.sngfifo18e2_n_34 ,\gf18e2_inst.sngfifo18e2_n_35 }),
+        .WRCOUNT({\gf36e2_inst.sngfifo36e2_n_26 ,\gf36e2_inst.sngfifo36e2_n_27 ,\gf36e2_inst.sngfifo36e2_n_28 ,\gf36e2_inst.sngfifo36e2_n_29 ,\gf36e2_inst.sngfifo36e2_n_30 ,\gf36e2_inst.sngfifo36e2_n_31 ,\gf36e2_inst.sngfifo36e2_n_32 ,\gf36e2_inst.sngfifo36e2_n_33 ,\gf36e2_inst.sngfifo36e2_n_34 ,\gf36e2_inst.sngfifo36e2_n_35 ,\gf36e2_inst.sngfifo36e2_n_36 ,\gf36e2_inst.sngfifo36e2_n_37 ,\gf36e2_inst.sngfifo36e2_n_38 ,\gf36e2_inst.sngfifo36e2_n_39 }),
         .WREN(wr_en),
         .WRERR(p_7_out),
         .WRRSTBUSY(wr_rst_busy));
@@ -872,17 +910,17 @@ module fifo_addr_builtin_top
   output full;
   output rd_rst_busy;
   output wr_rst_busy;
-  output [17:0]dout;
+  output [71:0]dout;
   output valid;
   input clk;
   input rd_en;
   input srst;
   input wr_en;
-  input [17:0]din;
+  input [71:0]din;
 
   wire clk;
-  wire [17:0]din;
-  wire [17:0]dout;
+  wire [71:0]din;
+  wire [71:0]dout;
   wire empty;
   wire full;
   wire rd_en;
@@ -923,17 +961,17 @@ module fifo_addr_fifo_generator_top
   output full;
   output rd_rst_busy;
   output wr_rst_busy;
-  output [17:0]dout;
+  output [71:0]dout;
   output valid;
   input clk;
   input rd_en;
   input srst;
   input wr_en;
-  input [17:0]din;
+  input [71:0]din;
 
   wire clk;
-  wire [17:0]din;
-  wire [17:0]dout;
+  wire [71:0]din;
+  wire [71:0]dout;
   wire empty;
   wire full;
   wire rd_en;
@@ -966,10 +1004,10 @@ endmodule
 (* C_AXI_DATA_WIDTH = "64" *) (* C_AXI_ID_WIDTH = "1" *) (* C_AXI_LEN_WIDTH = "8" *) 
 (* C_AXI_LOCK_WIDTH = "1" *) (* C_AXI_RUSER_WIDTH = "1" *) (* C_AXI_TYPE = "1" *) 
 (* C_AXI_WUSER_WIDTH = "1" *) (* C_COMMON_CLOCK = "1" *) (* C_COUNT_TYPE = "0" *) 
-(* C_DATA_COUNT_WIDTH = "9" *) (* C_DEFAULT_VALUE = "BlankString" *) (* C_DIN_WIDTH = "18" *) 
+(* C_DATA_COUNT_WIDTH = "9" *) (* C_DEFAULT_VALUE = "BlankString" *) (* C_DIN_WIDTH = "72" *) 
 (* C_DIN_WIDTH_AXIS = "1" *) (* C_DIN_WIDTH_RACH = "32" *) (* C_DIN_WIDTH_RDCH = "64" *) 
 (* C_DIN_WIDTH_WACH = "1" *) (* C_DIN_WIDTH_WDCH = "64" *) (* C_DIN_WIDTH_WRCH = "2" *) 
-(* C_DOUT_RST_VAL = "0" *) (* C_DOUT_WIDTH = "18" *) (* C_ENABLE_RLOCS = "0" *) 
+(* C_DOUT_RST_VAL = "0" *) (* C_DOUT_WIDTH = "72" *) (* C_ENABLE_RLOCS = "0" *) 
 (* C_ENABLE_RST_SYNC = "1" *) (* C_EN_SAFETY_CKT = "0" *) (* C_ERROR_INJECTION_TYPE = "0" *) 
 (* C_ERROR_INJECTION_TYPE_AXIS = "0" *) (* C_ERROR_INJECTION_TYPE_RACH = "0" *) (* C_ERROR_INJECTION_TYPE_RDCH = "0" *) 
 (* C_ERROR_INJECTION_TYPE_WACH = "0" *) (* C_ERROR_INJECTION_TYPE_WDCH = "0" *) (* C_ERROR_INJECTION_TYPE_WRCH = "0" *) 
@@ -994,7 +1032,7 @@ endmodule
 (* C_IMPLEMENTATION_TYPE_WRCH = "1" *) (* C_INIT_WR_PNTR_VAL = "0" *) (* C_INTERFACE_TYPE = "0" *) 
 (* C_MEMORY_TYPE = "4" *) (* C_MIF_FILE_NAME = "BlankString" *) (* C_MSGON_VAL = "1" *) 
 (* C_OPTIMIZATION_MODE = "0" *) (* C_OVERFLOW_LOW = "0" *) (* C_POWER_SAVING_MODE = "0" *) 
-(* C_PRELOAD_LATENCY = "0" *) (* C_PRELOAD_REGS = "1" *) (* C_PRIM_FIFO_TYPE = "512x36" *) 
+(* C_PRELOAD_LATENCY = "0" *) (* C_PRELOAD_REGS = "1" *) (* C_PRIM_FIFO_TYPE = "512x72" *) 
 (* C_PRIM_FIFO_TYPE_AXIS = "1kx18" *) (* C_PRIM_FIFO_TYPE_RACH = "512x36" *) (* C_PRIM_FIFO_TYPE_RDCH = "512x72" *) 
 (* C_PRIM_FIFO_TYPE_WACH = "512x36" *) (* C_PRIM_FIFO_TYPE_WDCH = "512x72" *) (* C_PRIM_FIFO_TYPE_WRCH = "512x36" *) 
 (* C_PROG_EMPTY_THRESH_ASSERT_VAL = "4" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS = "1022" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH = "1022" *) 
@@ -1266,7 +1304,7 @@ module fifo_addr_fifo_generator_v13_2_1
   input wr_rst;
   input rd_clk;
   input rd_rst;
-  input [17:0]din;
+  input [71:0]din;
   input wr_en;
   input rd_en;
   input [8:0]prog_empty_thresh;
@@ -1279,7 +1317,7 @@ module fifo_addr_fifo_generator_v13_2_1
   input injectdbiterr;
   input injectsbiterr;
   input sleep;
-  output [17:0]dout;
+  output [71:0]dout;
   output full;
   output almost_full;
   output wr_ack;
@@ -1492,8 +1530,8 @@ module fifo_addr_fifo_generator_v13_2_1
   wire \<const0> ;
   wire \<const1> ;
   wire clk;
-  wire [17:0]din;
-  wire [17:0]dout;
+  wire [71:0]din;
+  wire [71:0]dout;
   wire empty;
   wire full;
   wire rd_en;
@@ -2057,17 +2095,17 @@ module fifo_addr_fifo_generator_v13_2_1_builtin
   output full;
   output rd_rst_busy;
   output wr_rst_busy;
-  output [17:0]dout;
+  output [71:0]dout;
   output valid;
   input clk;
   input rd_en;
   input srst;
   input wr_en;
-  input [17:0]din;
+  input [71:0]din;
 
   wire clk;
-  wire [17:0]din;
-  wire [17:0]dout;
+  wire [71:0]din;
+  wire [71:0]dout;
   wire empty;
   wire full;
   wire rd_en;
@@ -2108,17 +2146,17 @@ module fifo_addr_fifo_generator_v13_2_1_synth
   output full;
   output rd_rst_busy;
   output wr_rst_busy;
-  output [17:0]dout;
+  output [71:0]dout;
   output valid;
   input clk;
   input rd_en;
   input srst;
   input wr_en;
-  input [17:0]din;
+  input [71:0]din;
 
   wire clk;
-  wire [17:0]din;
-  wire [17:0]dout;
+  wire [71:0]din;
+  wire [71:0]dout;
   wire empty;
   wire full;
   wire rd_en;

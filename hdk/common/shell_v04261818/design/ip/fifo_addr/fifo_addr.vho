@@ -56,10 +56,10 @@ COMPONENT fifo_addr
   PORT (
     clk : IN STD_LOGIC;
     srst : IN STD_LOGIC;
-    din : IN STD_LOGIC_VECTOR(17 DOWNTO 0);
+    din : IN STD_LOGIC_VECTOR(71 DOWNTO 0);
     wr_en : IN STD_LOGIC;
     rd_en : IN STD_LOGIC;
-    dout : OUT STD_LOGIC_VECTOR(17 DOWNTO 0);
+    dout : OUT STD_LOGIC_VECTOR(71 DOWNTO 0);
     full : OUT STD_LOGIC;
     empty : OUT STD_LOGIC;
     valid : OUT STD_LOGIC;

@@ -57,10 +57,10 @@
 fifo_addr your_instance_name (
   .clk(clk),                  // input wire clk
   .srst(srst),                // input wire srst
-  .din(din),                  // input wire [17 : 0] din
+  .din(din),                  // input wire [71 : 0] din
   .wr_en(wr_en),              // input wire wr_en
   .rd_en(rd_en),              // input wire rd_en
-  .dout(dout),                // output wire [17 : 0] dout
+  .dout(dout),                // output wire [71 : 0] dout
   .full(full),                // output wire full
   .empty(empty),              // output wire empty
   .valid(valid),              // output wire valid
