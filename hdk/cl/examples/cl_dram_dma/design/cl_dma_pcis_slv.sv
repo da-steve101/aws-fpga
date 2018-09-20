@@ -42,7 +42,7 @@ axi_bus_t cl_sh_ddr_q();
 axi_bus_t cl_sh_ddr_q2();
 axi_bus_t sh_cl_pcis();
 
-reg output_available;
+logic output_available;
 // count 4k blocks
 reg [12:0] input_cnt;
 reg [12:0] output_cnt;
@@ -125,10 +125,10 @@ fifo_addr w_addr_fifo (
 assign w_last = ( w_cntr == 6'h0 );
 assign ddrc_add_cnt = cl_sh_ddr_q.bvalid;
 assign ddrc_sub_cnt = sh_cl_dma_pcis_q.arvalid & cl_sh_ddr_q.arready & output_available;
+assign output_available = ( output_cnt >= 1 );
 always_ff @( posedge aclk or negedge aresetn ) begin
    if ( !aresetn ) begin
       output_cnt <= 0;
-      output_available <= 0;
       w_cntr <= 6'h3f;
       trans_cntr <= 0;
    end
@@ -138,12 +138,6 @@ always_ff @( posedge aclk or negedge aresetn ) begin
       end
       if ( ddrc_sub_cnt & !ddrc_add_cnt ) begin
 	 output_cnt <= output_cnt - 1;
-      end
-      if ( output_available & output_cnt < 1 ) begin
-         output_available <= 0;
-      end
-      else if ( output_cnt >= 1 ) begin
-         output_available <= 1;
       end
       if ( ddra_sub_cnt ) begin
 	 trans_cntr <= trans_cntr + 1;
@@ -164,7 +158,7 @@ end
 
 // INTERNAL CONNECTIONS
 assign lcl_cl_sh_ddra_q.araddr = r_addr;
-assign lcl_cl_sh_ddra_q.arid = 0;
+assign lcl_cl_sh_ddra_q.arid = 1;
 assign lcl_cl_sh_ddra_q.arlen = r_len;
 assign lcl_cl_sh_ddra_q.arsize = 6;
 assign lcl_cl_sh_ddra_q.arvalid = ddra_sub_cnt;
@@ -174,7 +168,7 @@ assign lcl_cl_sh_ddra_q.rready = fifo_in_rdy;
 assign fifo_in_vld = lcl_cl_sh_ddra_q.rvalid;
 
 assign cl_sh_ddr_q.awaddr = w_addr;
-assign cl_sh_ddr_q.awid = 0;
+assign cl_sh_ddr_q.awid = 1;
 assign cl_sh_ddr_q.awlen = w_len;
 assign cl_sh_ddr_q.awsize = 6;
 assign cl_sh_ddr_q.awvalid = w_addr_vld;
