@@ -179,8 +179,8 @@ cl_dma_pcis_slv CL_DMA_PCIS_SLV (
 
     .sh_cl_dma_pcis_q(sh_cl_dma_pcis_q),
 
-    .cl_sh_ddr_bus     (cl_sh_ddr_bus),
-
+    // .cl_sh_ddr_bus(cl_sh_ddr_bus),
+    .cl_sh_ddr_bus( lcl_cl_sh_ddrb ),
     .fifo_in_bits( fifo_in_bits ),
     .fifo_in_vld( fifo_in_vld ),
     .fifo_in_rdy( fifo_in_rdy ),

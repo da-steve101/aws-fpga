@@ -28,7 +28,7 @@
 `define SH_CL_ASYNC
 
 // Uncomment to disable Virtual JTAG
-//`define DISABLE_VJTAG_DEBUG
+`define DISABLE_VJTAG_DEBUG
 
 // AXI Master Block Registers
 `define CL_DRAM_DMA_AXI_MSTR_CCR_ADDR   32'h0000_0000
@@ -37,7 +37,7 @@
 `define CL_DRAM_DMA_AXI_MSTR_CWDR_ADDR  32'h0000_000C
 `define CL_DRAM_DMA_AXI_MSTR_CRDR_ADDR  32'h0000_0010
 
-`define DDR_B_ABSENT
+// `define DDR_B_ABSENT
 `define DDR_D_ABSENT
 
 // Defining local macros that will instantiate the desired DDR controllers in
