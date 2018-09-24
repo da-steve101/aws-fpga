@@ -46,7 +46,7 @@ logic output_available;
 // count 4k blocks
 reg [12:0] input_cnt;
 reg [12:0] output_cnt;
-logic ddra_add_cnt, ddra_sub_cnt, ddrc_add_cnt, ddrc_sub_cnt;
+logic ddra_add_cnt, ddra_sub_cnt, ddrc_add_cnt, ddrc_sub_cnt, ddrc_rdy_wr;
 
 // send read request
 logic r_addr_vld;
@@ -63,7 +63,11 @@ logic [63:0] w_addr;
 logic [71:0] w_addr_and_len;
 logic [7:0]  w_len;
 logic w_last;
-reg [5:0] w_cntr;
+reg w_done;
+reg w_addr_rdy;
+reg [7:0] w_cntr;
+reg [7:0] w_cntr_nxt;
+reg w_cntr_nxt_vld;
 reg [12:0] trans_cntr;
 
 assign w_addr = w_addr_and_len[71:8];
@@ -97,7 +101,7 @@ fifo_addr r_addr_fifo (
 // process input logic
 assign ddra_add_cnt = lcl_cl_sh_ddra_q.bvalid & lcl_cl_sh_ddra_q.bready;
 assign ddra_sub_cnt = r_addr_vld & lcl_cl_sh_ddra_q.arready & input_cnt > 0;
-always_ff @( posedge aclk or negedge aresetn ) begin
+always_ff @( posedge aclk ) begin
    if ( !aresetn ) begin
       input_cnt <= 0;
    end
@@ -116,21 +120,26 @@ fifo_addr w_addr_fifo (
   .srst( rd_fifo_areset ),
   .din( r_addr_and_len ),
   .wr_en( ddra_sub_cnt ),
-  .rd_en( cl_sh_ddr_q.awready & cl_sh_ddr_q.awvalid ),
+  .rd_en( ddrc_rdy_wr ),
   .dout( w_addr_and_len ),
   .valid( w_addr_vld )
 );
 
 // process output logic
-assign w_last = ( w_cntr == 6'h0 );
+assign w_last = ( w_cntr == 0 );
 assign ddrc_add_cnt = cl_sh_ddr_q.bvalid;
 assign ddrc_sub_cnt = sh_cl_dma_pcis_q.arvalid & cl_sh_ddr_q.arready & output_available;
+assign ddrc_rdy_wr = cl_sh_ddr_q.awready & cl_sh_ddr_q.awvalid;
 assign output_available = ( output_cnt >= 1 );
-always_ff @( posedge aclk or negedge aresetn ) begin
+assign awvalid = w_addr_vld & w_addr_rdy & trans_cntr > 0 & !w_cntr_nxt_vld;
+always_ff @( posedge aclk ) begin
    if ( !aresetn ) begin
       output_cnt <= 0;
-      w_cntr <= 6'h3f;
+      w_cntr <= 0;
+      w_done <= 1;
       trans_cntr <= 0;
+      w_cntr_nxt_vld <= 0;
+      w_addr_rdy <= 1;
    end
    else begin
       if ( ddrc_add_cnt & !ddrc_sub_cnt ) begin
@@ -139,18 +148,27 @@ always_ff @( posedge aclk or negedge aresetn ) begin
       if ( ddrc_sub_cnt & !ddrc_add_cnt ) begin
 	 output_cnt <= output_cnt - 1;
       end
-      if ( ddra_sub_cnt ) begin
+      if ( ddra_sub_cnt & !ddrc_rdy_wr ) begin
 	 trans_cntr <= trans_cntr + 1;
       end
-      else if ( trans_cntr > 0 & cl_sh_ddr_q.awready & cl_sh_ddr_q.awvalid ) begin
+      if ( ddrc_rdy_wr & !ddra_sub_cnt ) begin
 	 trans_cntr <= trans_cntr - 1;
       end
-      if ( fifo_out_vld & fifo_out_rdy ) begin
+      if ( ddrc_rdy_wr & !w_cntr_nxt_vld ) begin
+	 w_cntr_nxt <= cl_sh_ddr_q.awlen;
+	 w_cntr_nxt_vld <= 1;
+	 w_addr_rdy <= 0;
+      end
+      if ( w_done & w_cntr_nxt_vld ) begin
+	 w_done <= 0;
+	 w_cntr <= w_cntr_nxt;
+	 w_cntr_nxt_vld <= 0;
+	 w_addr_rdy <= 1;
+      end // extra write address causing screw up? writing stats?
+      if ( fifo_out_vld & fifo_out_rdy & !w_done ) begin
+	 w_cntr <= w_cntr - 1;
 	 if ( w_last ) begin
-            w_cntr <= 6'h3f;
-	 end
-	 else begin
-	    w_cntr <= w_cntr - 1;
+	    w_done <= 1;
 	 end
       end
    end
@@ -171,7 +189,7 @@ assign cl_sh_ddr_q.awaddr = w_addr;
 assign cl_sh_ddr_q.awid = 1;
 assign cl_sh_ddr_q.awlen = w_len;
 assign cl_sh_ddr_q.awsize = 6;
-assign cl_sh_ddr_q.awvalid = w_addr_vld;
+assign cl_sh_ddr_q.awvalid = awvalid;
 
 assign cl_sh_ddr_q.bready = 1'b1;
 

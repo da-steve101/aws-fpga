@@ -160,7 +160,7 @@ int fpga_driver_write_buffer_to_cl(int slot_id, int channel, int fd, size_t buff
         rc = pwrite(fd,
             write_buffer + write_offset,
             buffer_size - write_offset,
-            0x10000000 + channel*MEM_16G + write_offset);
+            address + write_offset);
         if (rc < 0) {
             fail_on((rc = (rc < 0)? errno:0), out, "call to pwrite failed.");
         }
@@ -183,7 +183,7 @@ int fpga_driver_read_cl_to_buffer(int slot_id, int channel, int fd, size_t buffe
         rc = pread(fd,
             read_buffer + read_offset,
             buffer_size - read_offset,
-            0x10000000 + channel*MEM_16G + read_offset);
+            address + read_offset);
         if (rc < 0) {
             fail_on((rc = (rc < 0)? errno:0), out, "call to pread failed.");
         }

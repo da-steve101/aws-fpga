@@ -264,6 +264,7 @@ end
          error_count++;
       end
       //For Questa simulator the first 8 bytes are not transmitted correctly, so the buffer is transferred with 8 extra bytes and those bytes are removed here.
+      rd_buffer = "";
       for (int i = 0 ; i < 8; i++) begin
          rd_buffer = {rd_buffer, "A"};
       end
