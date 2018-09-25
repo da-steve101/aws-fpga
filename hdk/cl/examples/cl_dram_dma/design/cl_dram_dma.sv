@@ -69,6 +69,7 @@ logic         fifo_in_rdy;
 logic [511:0] fifo_out_bits;
 logic         fifo_out_vld;
 logic         fifo_out_rdy;
+logic         img_buffered;
 
 //----------------------------
 // End Internal signals
@@ -186,7 +187,8 @@ cl_dma_pcis_slv CL_DMA_PCIS_SLV (
     .fifo_in_rdy( fifo_in_rdy ),
     .fifo_out_bits( fifo_out_bits ),
     .fifo_out_vld( fifo_out_vld ),
-    .fifo_out_rdy( fifo_out_rdy )
+    .fifo_out_rdy( fifo_out_rdy ),
+    .img_buffered( img_buffered )
   );
 
 (* dont_touch = "true" *) logic dma_tnn_sync_rst_n;
@@ -200,7 +202,8 @@ cl_dram_dma_tnn CL_DRAM_DMA_TNN (
     .fifo_in_rdy( fifo_in_rdy ),
     .fifo_out_bits( fifo_out_bits ),
     .fifo_out_vld( fifo_out_vld ),
-    .fifo_out_rdy( fifo_out_rdy )
+    .fifo_out_rdy( fifo_out_rdy ),
+    .img_buffered( img_buffered )
 );
 
 //-----------------------------------------
