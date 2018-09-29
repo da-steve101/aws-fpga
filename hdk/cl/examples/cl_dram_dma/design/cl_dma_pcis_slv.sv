@@ -43,35 +43,26 @@ axi_bus_t cl_sh_ddr_q();
 axi_bus_t cl_sh_ddr_q2();
 axi_bus_t sh_cl_pcis();
 
-logic output_available;
-// count 4k blocks
-reg [12:0] input_cnt;
-reg [23:0] output_cnt;
-logic ddra_add_cnt, ddra_sub_cnt, ddrc_add_cnt, ddrc_sub_cnt, ddrc_rdy_wr;
+reg output_available;
 
 // send read request
-logic r_addr_vld;
-logic [63:0] r_addr;
-logic [71:0] r_addr_and_len;
-logic [7:0]  r_len;
-
-assign r_addr = r_addr_and_len[71:8];
-assign r_len = r_addr_and_len[7:0];
+reg arvalid;
+reg [33:0] r_addr;
+reg [33:0] written_until;
 
 // send write request
-logic w_addr_vld;
-logic [63:0] w_addr;
-logic [71:0] w_addr_and_len;
-logic [7:0]  w_len;
+reg [33:0] w_addr;
 logic w_last;
 reg w_done;
-reg w_addr_rdy;
+reg [1:0] w_addr_rdy;
 reg [7:0] w_cntr;
+reg [33:0] read_until;
+reg running;
+logic awvalid;
+logic [71:0] written_addr;
+logic [33:0] rd_request_addr;
 
 reg [511:0] debug_data_reg;
-
-assign w_addr = w_addr_and_len[71:8];
-assign w_len = w_addr_and_len[7:0];
 //----------------------------
 // End Internal signals
 //----------------------------
@@ -88,97 +79,102 @@ lib_pipe #(.WIDTH(1), .STAGES(4)) SLR2_PIPE_RST_N (.clk(aclk), .rst_n(1'b1), .in
 lib_pipe #(.WIDTH(1), .STAGES(4)) RD_FIFO_RST_N (.clk(aclk), .rst_n(1'b1), .in_bus(!aresetn), .out_bus(rd_fifo_areset));
 lib_pipe #(.WIDTH(1), .STAGES(4)) WR_FIFO_RST_N (.clk(aclk), .rst_n(1'b1), .in_bus(!aresetn), .out_bus(wr_fifo_areset));
 
+// write transactions are alot of small writes
 fifo_addr r_addr_fifo (
   .clk( aclk ),
   .srst( rd_fifo_areset ),
-  .din( { lcl_cl_sh_ddra_q.awaddr, lcl_cl_sh_ddra_q.awlen } ),
+  .din( { 38'h0, lcl_cl_sh_ddra_q.awaddr[33:0] + ( ( lcl_cl_sh_ddra_q.awlen + 1 ) << 6 ) } ),
   .wr_en( lcl_cl_sh_ddra_q.awvalid & lcl_cl_sh_ddra_q.awready & lcl_cl_sh_ddra_q.awid[5:0] == 0),
-  .rd_en( ddra_sub_cnt ),
-  .dout( r_addr_and_len ),
-  .valid( r_addr_vld )
+  .rd_en( lcl_cl_sh_ddra_q.bvalid & lcl_cl_sh_ddra_q.bready & lcl_cl_sh_ddra_q.bid[5:0] == 0  ),
+  .dout( written_addr ),
+  .valid( wr_vld )
 );
 
-// write transactions are alot of small writes
-
 // process input logic
-assign ddra_add_cnt = lcl_cl_sh_ddra_q.bvalid & lcl_cl_sh_ddra_q.bready & lcl_cl_sh_ddra_q.bid[5:0] == 0;
-assign ddra_sub_cnt = r_addr_vld & lcl_cl_sh_ddra_q.arready & input_cnt > 0;
 always_ff @( posedge aclk ) begin
    if ( !aresetn ) begin
-      input_cnt <= 0;
-      debug_data_reg <= 0;
+      r_addr <= 0;
+      arvalid <= 0;
+      written_until <= 0;
    end
    else begin
-      if ( ddra_add_cnt & !ddra_sub_cnt ) begin
-	 input_cnt <= input_cnt + 1;
+      if ( lcl_cl_sh_ddra_q.bvalid & lcl_cl_sh_ddra_q.bready & lcl_cl_sh_ddra_q.bid[5:0] == 0 ) begin
+	 written_until <= written_addr[33:0];
       end
-      if ( ddra_sub_cnt & !ddra_add_cnt ) begin
-	 input_cnt <= input_cnt - 1;
+      if ( lcl_cl_sh_ddra_q.arvalid & lcl_cl_sh_ddra_q.arready ) begin
+	 r_addr <= r_addr + 4096;
+	 arvalid <= 0;
       end
-      if ( cl_sh_ddr_q.arvalid & cl_sh_ddr_q.arready & cl_sh_ddr_q.arid[5:0] == 0 ) begin
-	 debug_data_reg <= { debug_data_reg[476:0],
-			     cl_sh_ddr_q.araddr[23:0],
-			     cl_sh_ddr_q.arlen,
-			     1'h0,
-			     cl_sh_ddr_q.arsize };
+      if ( !arvalid & ( (written_until - r_addr >= 4096) | ( r_addr > 34'h3c0000000 & written_until < 34'h3fffffff ) ) ) begin
+	 arvalid <= 1;
       end
    end
 end
 
 // process output logic
-assign w_last = ( w_cntr == 0 );
-assign ddrc_add_cnt = cl_sh_ddr_q.bvalid;
-assign ddrc_sub_cnt = sh_cl_dma_pcis_q.arvalid & sh_cl_dma_pcis_q.arready;
-assign ddrc_rdy_wr = cl_sh_ddr_q.awready & cl_sh_ddr_q.awvalid;
-assign output_available = ( output_cnt >= 1 );
-assign awvalid = w_addr_vld & w_addr_rdy;
+assign w_last = ( w_cntr[5:0] == 0 );
+assign awvalid = w_addr_rdy > 0;
+assign rd_request_addr = sh_cl_dma_pcis_q.araddr[33:0] + ( ( sh_cl_dma_pcis_q.arlen + 1 ) << 6 );
 always_ff @( posedge aclk ) begin
    if ( !aresetn ) begin
-      output_cnt <= 0;
       w_cntr <= 0;
       w_done <= 1;
+      w_addr <= 0;
+      read_until <= 0;
       w_addr_rdy <= 0;
+      running <= 0;
+      output_available <= 0;
    end
    else begin
       // read transactions are two reads for each 4096 written ... no idea why :/
-      if ( ddrc_add_cnt & !ddrc_sub_cnt ) begin
-	 output_cnt <= output_cnt + 2;
+      if ( cl_sh_ddr_q.bvalid ) begin
+	 read_until <= read_until + 4096;
       end
-      if ( ddrc_add_cnt & ddrc_sub_cnt ) begin
-	 output_cnt <= output_cnt + 1;
+      if ( cl_sh_ddr_q.arready & sh_cl_dma_pcis_q.arvalid & !output_available ) begin
+	 // check the read addr
+	 if ( sh_cl_dma_pcis_q.arid[5:0] == 0 ) begin
+	    output_available <= ( read_until + 63 >= rd_request_addr ) | ( rd_request_addr > 34'h3c0000000 & read_until < 34'h3fffffff );
+	 end
+	 else begin
+	    output_available <= 1;
+	 end
       end
-      if ( ddrc_sub_cnt & !ddrc_add_cnt ) begin
-	 output_cnt <= output_cnt - 1;
+      if ( output_available ) begin
+	 output_available <= 0;
       end
+      // send two write transactions at once for whole image
       if ( cl_sh_ddr_q.awready & cl_sh_ddr_q.awvalid ) begin
-	 w_addr_rdy <= 0;
+	 w_addr_rdy <= w_addr_rdy - 1;
+	 w_addr <= w_addr + 4096;
       end
-      if ( w_done & img_buffered & !w_addr_rdy ) begin
+      if ( w_done & img_buffered & w_addr_rdy == 0 ) begin
 	 w_done <= 0;
-	 w_cntr <= 8'h3f;
-	 w_addr_rdy <= 1;
+	 running <= 1;
+	 w_cntr <= 8'h7f;
+	 w_addr_rdy <= 2;
       end // extra write address causing screw up? writing stats?
       if ( fifo_out_vld & fifo_out_rdy & !w_done ) begin
 	 w_cntr <= w_cntr - 1;
-	 if ( w_last ) begin
+	 if ( w_cntr == 0 ) begin
 	    w_done <= 1;
+	    running <= 0;
 	 end
       end
    end
 end
 
 // INTERNAL CONNECTIONS
-assign lcl_cl_sh_ddra_q.araddr = r_addr;
+assign lcl_cl_sh_ddra_q.araddr = { 30'h0, r_addr };
 assign lcl_cl_sh_ddra_q.arid = 1;
-assign lcl_cl_sh_ddra_q.arlen = r_len;
+assign lcl_cl_sh_ddra_q.arlen = 8'h3f;
 assign lcl_cl_sh_ddra_q.arsize = 6;
-assign lcl_cl_sh_ddra_q.arvalid = ddra_sub_cnt;
+assign lcl_cl_sh_ddra_q.arvalid = arvalid;
 
 assign fifo_in_bits = lcl_cl_sh_ddra_q.rdata;
 assign lcl_cl_sh_ddra_q.rready = fifo_in_rdy;
 assign fifo_in_vld = lcl_cl_sh_ddra_q.rvalid;
 
-assign cl_sh_ddr_q.awaddr = w_addr;
+assign cl_sh_ddr_q.awaddr = { 30'h0, w_addr };
 assign cl_sh_ddr_q.awid = 1;
 assign cl_sh_ddr_q.awlen = 8'h3f;
 assign cl_sh_ddr_q.awsize = 6;
@@ -190,8 +186,8 @@ assign cl_sh_ddr_q.wdata = fifo_out_bits;
 assign cl_sh_ddr_q.wid = 0;
 assign cl_sh_ddr_q.wlast = w_last;
 assign cl_sh_ddr_q.wstrb = 64'hffffffffffffffff;
-assign cl_sh_ddr_q.wvalid = fifo_out_vld & !w_done;
-assign fifo_out_rdy = cl_sh_ddr_q.wready & !w_done;
+assign cl_sh_ddr_q.wvalid = fifo_out_vld & running;
+assign fifo_out_rdy = cl_sh_ddr_q.wready & running;
 
 //----------------------------
 // flop the dma_pcis interface input of CL
@@ -266,10 +262,10 @@ assign lcl_cl_sh_ddra_q.wid[15:6] = 10'b0;
 assign cl_sh_ddr_q.araddr = {sh_cl_dma_pcis_q.araddr[63:37], 1'b0, sh_cl_dma_pcis_q.araddr[35:0]};
 assign cl_sh_ddr_q.arid = sh_cl_dma_pcis_q.arid;
 assign cl_sh_ddr_q.arlen = sh_cl_dma_pcis_q.arlen;
-assign sh_cl_dma_pcis_q.arready = cl_sh_ddr_q.arready & output_available;
+assign sh_cl_dma_pcis_q.arready = cl_sh_ddr_q.arready & ( output_available | sh_cl_dma_pcis_q.arid[5:0] != 0 );
 assign cl_sh_ddr_q.arsize = sh_cl_dma_pcis_q.arsize;
-assign cl_sh_ddr_q.arvalid = sh_cl_dma_pcis_q.arvalid & output_available;
-assign sh_cl_dma_pcis_q.rdata = /*sh_cl_dma_pcis_q.rid[5:0] == 0 ? debug_data_reg :*/ cl_sh_ddr_q.rdata;
+assign cl_sh_ddr_q.arvalid = sh_cl_dma_pcis_q.arvalid & ( output_available | sh_cl_dma_pcis_q.arid[5:0] != 0 );
+assign sh_cl_dma_pcis_q.rdata = cl_sh_ddr_q.rdata;
 assign sh_cl_dma_pcis_q.rid[5:0] = cl_sh_ddr_q.rid;
 assign sh_cl_dma_pcis_q.rlast = cl_sh_ddr_q.rlast;
 assign cl_sh_ddr_q.rready = sh_cl_dma_pcis_q.rready;

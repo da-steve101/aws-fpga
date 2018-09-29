@@ -48,6 +48,7 @@ ${HDK_SHELL_DESIGN_DIR}/ip/axi_register_slice/sim/axi_register_slice.v
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_register_slice_light/sim/axi_register_slice_light.v
 ${HDK_SHELL_DESIGN_DIR}/ip/fifo_addr/hdl/fifo_generator_v13_2_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/fifo_addr/sim/fifo_addr.v
+${HDK_SHELL_DESIGN_DIR}/ip/fifo_sync_512/sim/fifo_sync_512.v
 ${HDK_SHELL_DESIGN_DIR}/ip/cl_axi_interconnect/ipshared/9909/hdl/axi_data_fifo_v2_1_vl_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/cl_axi_interconnect/ipshared/c631/hdl/axi_crossbar_v2_1_vl_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/cl_axi_interconnect/ip/cl_axi_interconnect_xbar_0/sim/cl_axi_interconnect_xbar_0.v
