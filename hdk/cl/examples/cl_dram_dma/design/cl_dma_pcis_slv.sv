@@ -258,6 +258,7 @@ assign fifo_out_rdy = cl_sh_ddr_q.wready & running;
 assign sh_cl_dma_pcis_q.rid[15:6] = 10'b0;
 assign sh_cl_dma_pcis_q.bid[15:6] = 10'b0;
 assign lcl_cl_sh_ddra_q.wid[15:6] = 10'b0;
+assign lcl_cl_sh_ddra_q.awid[15:6] = 10'b0;
 
 assign cl_sh_ddr_q.araddr = {sh_cl_dma_pcis_q.araddr[63:37], 1'b0, sh_cl_dma_pcis_q.araddr[35:0]};
 assign cl_sh_ddr_q.arid = sh_cl_dma_pcis_q.arid;
