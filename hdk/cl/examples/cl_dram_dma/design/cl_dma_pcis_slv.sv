@@ -47,22 +47,23 @@ reg output_available;
 
 // send read request
 reg arvalid;
-reg [33:0] r_addr;
+reg [32:0] r_addr_reg;
+logic [33:0] r_addr;
 reg [33:0] written_until;
 
 // send write request
-reg [33:0] w_addr;
+reg [32:0] w_addr_reg;
+logic [33:0] w_addr;
 logic w_last;
-reg w_done;
 reg [1:0] w_addr_rdy;
 reg [7:0] w_cntr;
-reg [33:0] read_until;
+reg [32:0] read_until;
 reg running;
+reg w_toggle;
 logic awvalid;
 logic [71:0] written_addr;
-logic [33:0] rd_request_addr;
+logic [32:0] rd_request_addr;
 
-reg [511:0] debug_data_reg;
 //----------------------------
 // End Internal signals
 //----------------------------
@@ -83,7 +84,7 @@ lib_pipe #(.WIDTH(1), .STAGES(4)) WR_FIFO_RST_N (.clk(aclk), .rst_n(1'b1), .in_b
 fifo_addr r_addr_fifo (
   .clk( aclk ),
   .srst( rd_fifo_areset ),
-  .din( { 38'h0, lcl_cl_sh_ddra_q.awaddr[33:0] + ( ( lcl_cl_sh_ddra_q.awlen + 1 ) << 6 ) } ),
+  .din( { 4'h0, lcl_cl_sh_ddra_q.awaddr[33:0] + ( ( lcl_cl_sh_ddra_q.awlen + 1 ) << 6 ), lcl_cl_sh_ddra_q.awaddr[33:0] } ),
   .wr_en( lcl_cl_sh_ddra_q.awvalid & lcl_cl_sh_ddra_q.awready & lcl_cl_sh_ddra_q.awid[5:0] == 0),
   .rd_en( lcl_cl_sh_ddra_q.bvalid & lcl_cl_sh_ddra_q.bready & lcl_cl_sh_ddra_q.bid[5:0] == 0  ),
   .dout( written_addr ),
@@ -91,21 +92,27 @@ fifo_addr r_addr_fifo (
 );
 
 // process input logic
+assign r_addr = r_addr_reg + 34'h200000000;
 always_ff @( posedge aclk ) begin
    if ( !aresetn ) begin
-      r_addr <= 0;
+      r_addr_reg <= 0;
       arvalid <= 0;
-      written_until <= 0;
+      written_until <= 34'h200000000;
    end
    else begin
-      if ( lcl_cl_sh_ddra_q.bvalid & lcl_cl_sh_ddra_q.bready & lcl_cl_sh_ddra_q.bid[5:0] == 0 ) begin
-	 written_until <= written_addr[33:0];
+      if ( lcl_cl_sh_ddra_q.bvalid & lcl_cl_sh_ddra_q.bready & lcl_cl_sh_ddra_q.bid[5:0] == 0 & lcl_cl_sh_ddra_q.bresp == 0 ) begin
+	 if ( written_addr[33:0] <= written_until ) begin
+	    written_until <= written_addr[67:34];
+	 end
       end
       if ( lcl_cl_sh_ddra_q.arvalid & lcl_cl_sh_ddra_q.arready ) begin
-	 r_addr <= r_addr + 4096;
+	 r_addr_reg <= r_addr_reg + 4096;
 	 arvalid <= 0;
       end
-      if ( !arvalid & ( (written_until - r_addr >= 4096) | ( r_addr > 34'h3c0000000 & written_until < 34'h3fffffff ) ) ) begin
+      if ( !arvalid & (
+	   ( written_until > r_addr & written_until - r_addr >= 8192 ) | // wait until is 4096 ahead of what we are reading
+	   ( r_addr > 34'h3c0000000 & written_until < 34'h240000000 & written_until > 34'h200002000 ) )
+	   ) begin
 	 arvalid <= 1;
       end
    end
@@ -114,28 +121,30 @@ end
 // process output logic
 assign w_last = ( w_cntr[5:0] == 0 );
 assign awvalid = w_addr_rdy > 0;
-assign rd_request_addr = sh_cl_dma_pcis_q.araddr[33:0] + ( ( sh_cl_dma_pcis_q.arlen + 1 ) << 6 );
+assign rd_request_addr = sh_cl_dma_pcis_q.araddr[32:0] + ( ( sh_cl_dma_pcis_q.arlen + 1 ) << 6 );
+assign w_addr = w_addr_reg + 34'h200000000;
 always_ff @( posedge aclk ) begin
    if ( !aresetn ) begin
       w_cntr <= 0;
-      w_done <= 1;
-      w_addr <= 0;
+      w_addr_reg <= 0;
       read_until <= 0;
       w_addr_rdy <= 0;
       running <= 0;
       output_available <= 0;
+      w_toggle <= 0;
    end
    else begin
+      w_toggle <= fifo_out_vld & cl_sh_ddr_q.wready & !w_toggle;
       // read transactions are two reads for each 4096 written ... no idea why :/
-      if ( cl_sh_ddr_q.bvalid ) begin
+      if ( cl_sh_ddr_q.bvalid & cl_sh_ddr_q.bid[5:0] == 1 & cl_sh_ddr_q.bresp == 0 ) begin
 	 read_until <= read_until + 4096;
       end
       if ( cl_sh_ddr_q.arready & sh_cl_dma_pcis_q.arvalid & !output_available ) begin
 	 // check the read addr
 	 if ( sh_cl_dma_pcis_q.arid[5:0] == 0 ) begin
-	    output_available <= ( read_until + 63 >= rd_request_addr ) | ( rd_request_addr > 34'h3c0000000 & read_until < 34'h3fffffff );
+            output_available <= ( read_until >= rd_request_addr ) | ( rd_request_addr > 33'h1c0000000 & read_until < 33'h40000000 );
 	 end
-	 else begin
+         else begin
 	    output_available <= 1;
 	 end
       end
@@ -145,18 +154,18 @@ always_ff @( posedge aclk ) begin
       // send two write transactions at once for whole image
       if ( cl_sh_ddr_q.awready & cl_sh_ddr_q.awvalid ) begin
 	 w_addr_rdy <= w_addr_rdy - 1;
-	 w_addr <= w_addr + 4096;
+	 w_addr_reg <= w_addr_reg + 4096;
+	 if ( w_addr_rdy == 1 ) begin
+	    running <= 1;
+	    w_cntr <= 8'h7f;
+	 end
       end
-      if ( w_done & img_buffered & w_addr_rdy == 0 ) begin
-	 w_done <= 0;
-	 running <= 1;
-	 w_cntr <= 8'h7f;
+      if ( !running & img_buffered & w_addr_rdy == 0 ) begin
 	 w_addr_rdy <= 2;
-      end // extra write address causing screw up? writing stats?
-      if ( fifo_out_vld & fifo_out_rdy & !w_done ) begin
+      end
+      if ( fifo_out_vld & fifo_out_rdy ) begin
 	 w_cntr <= w_cntr - 1;
 	 if ( w_cntr == 0 ) begin
-	    w_done <= 1;
 	    running <= 0;
 	 end
       end
@@ -183,11 +192,11 @@ assign cl_sh_ddr_q.awvalid = awvalid;
 assign cl_sh_ddr_q.bready = 1'b1;
 
 assign cl_sh_ddr_q.wdata = fifo_out_bits;
-assign cl_sh_ddr_q.wid = 0;
+assign cl_sh_ddr_q.wid = 1;
 assign cl_sh_ddr_q.wlast = w_last;
 assign cl_sh_ddr_q.wstrb = 64'hffffffffffffffff;
-assign cl_sh_ddr_q.wvalid = fifo_out_vld & running;
-assign fifo_out_rdy = cl_sh_ddr_q.wready & running;
+assign cl_sh_ddr_q.wvalid = fifo_out_vld & running & w_toggle;
+assign fifo_out_rdy = cl_sh_ddr_q.wready & running & w_toggle;
 
 //----------------------------
 // flop the dma_pcis interface input of CL
@@ -259,9 +268,10 @@ assign sh_cl_dma_pcis_q.rid[15:6] = 10'b0;
 assign sh_cl_dma_pcis_q.bid[15:6] = 10'b0;
 assign lcl_cl_sh_ddra_q.wid[15:6] = 10'b0;
 assign lcl_cl_sh_ddra_q.awid[15:6] = 10'b0;
+assign cl_sh_ddr_q.arid[15:6] = 10'b0;
 
 assign cl_sh_ddr_q.araddr = {sh_cl_dma_pcis_q.araddr[63:37], 1'b0, sh_cl_dma_pcis_q.araddr[35:0]};
-assign cl_sh_ddr_q.arid = sh_cl_dma_pcis_q.arid;
+assign cl_sh_ddr_q.arid[5:0] = sh_cl_dma_pcis_q.arid[5:0];
 assign cl_sh_ddr_q.arlen = sh_cl_dma_pcis_q.arlen;
 assign sh_cl_dma_pcis_q.arready = cl_sh_ddr_q.arready & ( output_available | sh_cl_dma_pcis_q.arid[5:0] != 0 );
 assign cl_sh_ddr_q.arsize = sh_cl_dma_pcis_q.arsize;
@@ -273,8 +283,23 @@ assign cl_sh_ddr_q.rready = sh_cl_dma_pcis_q.rready;
 assign sh_cl_dma_pcis_q.rresp = cl_sh_ddr_q.rresp;
 assign sh_cl_dma_pcis_q.rvalid = cl_sh_ddr_q.rvalid;
 
+/*
+assign cl_sh_ddr_q.araddr = 64'h200000000 + offset;
+assign cl_sh_ddr_q.arid[5:0] = 0;
+assign cl_sh_ddr_q.arlen = 8'h3f;
+assign sh_cl_dma_pcis_q.arready = cl_sh_ddr_q.arready & ( output_available | sh_cl_dma_pcis_q.arid[5:0] != 0 );
+assign cl_sh_ddr_q.arsize = 6;
+assign cl_sh_ddr_q.arvalid = ( output_available | sh_cl_dma_pcis_q.arid[5:0] != 0 );
+assign sh_cl_dma_pcis_q.rdata = cl_sh_ddr_q.rdata;
+assign sh_cl_dma_pcis_q.rid[5:0] = cl_sh_ddr_q.rid;
+assign sh_cl_dma_pcis_q.rlast = cl_sh_ddr_q.rlast;
+assign cl_sh_ddr_q.rready = 1;
+assign sh_cl_dma_pcis_q.rresp = cl_sh_ddr_q.rresp;
+assign sh_cl_dma_pcis_q.rvalid = 0;
+*/
+
 assign lcl_cl_sh_ddra_q.awaddr = {sh_cl_dma_pcis_q.awaddr[63:37], 1'b0, sh_cl_dma_pcis_q.awaddr[35:0]};
-assign lcl_cl_sh_ddra_q.awid[5:0] = sh_cl_dma_pcis_q.awid;
+assign lcl_cl_sh_ddra_q.awid[5:0] = sh_cl_dma_pcis_q.awid[5:0];
 assign lcl_cl_sh_ddra_q.awlen = sh_cl_dma_pcis_q.awlen;
 assign sh_cl_dma_pcis_q.awready = lcl_cl_sh_ddra_q.awready;
 assign lcl_cl_sh_ddra_q.awsize = sh_cl_dma_pcis_q.awsize;
@@ -284,7 +309,7 @@ assign lcl_cl_sh_ddra_q.bready = sh_cl_dma_pcis_q.bready;
 assign sh_cl_dma_pcis_q.bresp = lcl_cl_sh_ddra_q.bresp;
 assign sh_cl_dma_pcis_q.bvalid = lcl_cl_sh_ddra_q.bvalid;
 assign lcl_cl_sh_ddra_q.wdata = sh_cl_dma_pcis_q.wdata;
-assign lcl_cl_sh_ddra_q.wid = sh_cl_dma_pcis_q.wid;
+assign lcl_cl_sh_ddra_q.wid[5:0] = sh_cl_dma_pcis_q.wid;
 assign lcl_cl_sh_ddra_q.wlast = sh_cl_dma_pcis_q.wlast;
 assign sh_cl_dma_pcis_q.wready = lcl_cl_sh_ddra_q.wready;
 assign lcl_cl_sh_ddra_q.wstrb = sh_cl_dma_pcis_q.wstrb;
