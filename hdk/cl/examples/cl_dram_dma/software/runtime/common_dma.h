@@ -45,24 +45,6 @@ void rand_string(char *str, size_t size);
 
 int dma_example(int slot_id);
 
-int interrupt_example(int slot_id, int interrupt_number);
-
-int axi_mstr_example(int slot_id);
-
-int axi_mstr_ddr_access(int slot_id, pci_bar_handle_t pci_bar_handle, uint32_t ddr_hi_addr, uint32_t ddr_lo_addr, uint32_t  ddr_data);
-
-int fpga_driver_write_buffer_to_cl(int slot_id, int channel, int fd, size_t buffer_size, size_t address);
-
-int fpga_driver_read_cl_to_buffer(int slot_id, int channel, int fd, size_t buffer_size, size_t address);
-
-void fpga_write_buffer_to_cl(int slot_id, int channel, int fd, size_t buffer_size, size_t address);
-
-void fpga_read_cl_to_buffer(int slot_id, int channel, int fd, size_t buffer_size, size_t address);
-
-int dma_example_hwsw_cosim(int slot_id);
-
-int dma_memcmp(size_t buffer_size);
-
 int open_dma_queue(int slot_id, int *write_fd, int *read_fd);
 
 #endif

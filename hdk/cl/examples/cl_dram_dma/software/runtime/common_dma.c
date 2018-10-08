@@ -32,8 +32,8 @@ void usage(const char* program_name) {
 void
 rand_string(char *str, size_t size)
 {
-    static const char charset[] =
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRTSUVWXYZ1234567890";
+  //static const char charset[] =
+  //"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRTSUVWXYZ1234567890";
     static bool seeded = false;
     int i;
 
@@ -43,11 +43,11 @@ rand_string(char *str, size_t size)
     }
 
     for(i = 0; i < size; ++i) {
-        unsigned int key = rand() % (sizeof charset - 1);
-        str[i] = charset[key];
+      //unsigned int key = i % (sizeof charset - 1);
+      str[i] = ( rand() % 256 );
     }
 
-    str[size-1] = '\0';
+    //str[size-1] = '\0';
 }
 
 #ifndef SV_TEST
@@ -128,17 +128,17 @@ int open_dma_queue(int slot_id, int *write_fd, int *read_fd)
                "To remove and re-add your XDMA driver and reset the device file mappings, run\n"
                "`sudo rmmod xdma && sudo insmod <aws-fpga>/sdk/linux_kernel_drivers/xdma/xdma.ko`\n",
                (write_fd < 0) ? write_device_file_name : read_device_file_name);
-        
+
         /* cleanup */
         if (write_fd_tmp >= 0) {
-            close(write_fd_tmp); 
+            close(write_fd_tmp);
         }
         if (read_fd_tmp >= 0) {
-            close(read_fd_tmp); 
+            close(read_fd_tmp);
         }
         fail_on(rc, out, "unable to open DMA queue");
     }
-    
+
     /* setup return params */
     *write_fd = write_fd_tmp;
     *read_fd = read_fd_tmp;
@@ -147,125 +147,3 @@ out:
 }
 
 #endif
-
-int fpga_driver_write_buffer_to_cl(int slot_id, int channel, int fd, size_t buffer_size, size_t address){
-    int rc;
-    size_t write_offset =0;
-
-    while (write_offset < buffer_size) {
-        if (write_offset != 0) {
-            printf("Partial write by driver, trying again with remainder of buffer (%lu bytes)\n",
-                buffer_size - write_offset);
-        }
-        rc = pwrite(fd,
-            write_buffer + write_offset,
-            buffer_size - write_offset,
-            address + write_offset);
-        if (rc < 0) {
-            fail_on((rc = (rc < 0)? errno:0), out, "call to pwrite failed.");
-        }
-        write_offset += rc;
-    }
-    rc = 0;
-out:
-    return rc;
-}
-
-int fpga_driver_read_cl_to_buffer(int slot_id, int channel, int fd, size_t buffer_size, size_t address)
-{
-    size_t read_offset = 0;
-    int rc;
-    while (read_offset < buffer_size) {
-        if (read_offset != 0) {
-            printf("Partial read by driver, trying again with remainder of buffer (%lu bytes)\n",
-                   buffer_size - read_offset);
-        }
-        rc = pread(fd,
-            read_buffer + read_offset,
-            buffer_size - read_offset,
-            address + read_offset);
-        if (rc < 0) {
-            fail_on((rc = (rc < 0)? errno:0), out, "call to pread failed.");
-        }
-        read_offset += rc;
-    }
-    rc = 0;
-out:
-    return rc;
-}
-
-void fpga_read_cl_to_buffer(int slot_id, int channel, int fd, size_t buffer_size, size_t address) {
-#ifdef SV_TEST
-    sv_fpga_start_cl_to_buffer(slot_id, channel, buffer_size, address);
-#else
-    fpga_driver_read_cl_to_buffer(slot_id, channel, fd, buffer_size, address);
-#endif
-    dma_memcmp(buffer_size);
-}
-
-void fpga_write_buffer_to_cl(int slot_id, int channel, int fd, size_t buffer_size, size_t address){
-#ifdef SV_TEST
-    sv_fpga_start_buffer_to_cl(slot_id, channel, buffer_size, write_buffer, address);
-#else
-    fpga_driver_write_buffer_to_cl(slot_id, channel, fd, buffer_size, address);
-#endif
-}
-
-int dma_memcmp(size_t buffer_size) {
-    int rc = 0;
-    if (memcmp(write_buffer, read_buffer, buffer_size) == 0) {
-        printf("DRAM DMA read the same string as it wrote on channel %d (it worked correctly!)\n", channel);
-    } else {
-       int i;
-       printf("Bytes written to channel %d:\n", channel);
-       for (i = 0; i < buffer_size; ++i) {
-           printf("%c", write_buffer[i]);
-       }
-
-       printf("\n\n");
-
-       printf("Bytes read:\n");
-       for (i = 0; i < buffer_size; ++i) {
-           printf("%c", read_buffer[i]);
-       }
-       printf("\n\n");
-#ifndef SV_TEST
-       rc = 1; 
-       fail_on(rc, out, "Data read from DMA did not match data written with DMA. Was there an fsync() between the read and write?");
-#else
-       error_count++;
-#endif
-    }
-out:
-    return rc;
-}
-
-#ifdef SV_TEST
-
-int send_rdbuf_to_c(char* rd_buf)
-
-{
-// Vivado does not support svGetScopeFromName
-  #ifndef VIVADO_SIM
-    svScope scope;
-    scope = svGetScopeFromName("tb");
-    svSetScope(scope);
-  #endif
-
-    int i;
-
-   //For Questa simulator the first 8 bytes are not transmitted correctly, so the buffer is transferred with 8 extra bytes and those bytes are removed here. Made this default for all the simulators.
-    for (i = 0; i < buffer_size; ++i) {
-        read_buffer[i] = rd_buf[i+8];
-    }
-
-    //end of line character is not transferered correctly. So assign that here. 
-    read_buffer[buffer_size - 1] = '\0';
-
-    return 0;
-} 
-
-#endif
-
-
-

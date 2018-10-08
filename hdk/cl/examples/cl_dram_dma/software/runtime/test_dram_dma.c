@@ -20,10 +20,24 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <poll.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <time.h>
 
 #include "common_dma.h"
+#include "airplane.h"
+#include "automobile.h"
+#include "bird.h"
+#include "cat.h"
+#include "deer.h"
+#include "dog.h"
+#include "frog.h"
+#include "horse.h"
+#include "ship.h"
+#include "truck.h"
 
 #define	MEM_16G		(1ULL << 34)
+#define	MEM_8G		(1ULL << 33)
 #define USER_INTERRUPTS_MAX  (16)
 
 #ifndef SV_TEST
@@ -62,52 +76,176 @@ int main(int argc, char **argv) {
     fail_on(rc, out, "DMA example failed");
 
 out:
-    if (rc || (error_count > 0)) {
-        printf("TEST FAILED \n");
-	rc = (rc) ? rc : 1;
-    }
-    else {
-        printf("TEST PASSED \n");
-    }
     return rc;
 }
 
-/* 
+struct image_info {
+  int buffer_size;
+  int image_size;
+  int fd;
+  char * buffer;
+};
+
+// thread to copy images to FPGA
+void * copy_to_fpga( void * args ) {
+  struct image_info * image_buffer = ( struct image_info * ) args;
+  long addr = 0;
+  int i, j, j_idx, rc, idx;
+  char * img_buf_a, *img_buf_b, * tmp_buff;
+  char * src_imgs;
+  int no_imgs = image_buffer->buffer_size/image_buffer->image_size;
+  j_idx = 0;
+  posix_memalign((void**)&(src_imgs), 4096, 10*image_buffer->image_size);
+  posix_memalign((void**)&(img_buf_a), 4096, image_buffer->buffer_size);
+  posix_memalign((void**)&(img_buf_b), 4096, image_buffer->buffer_size);
+  /*
+  src_imgs = (char*)malloc( 10*image_buffer->image_size );
+  img_buf_a = (char*)malloc( image_buffer->buffer_size );
+  img_buf_b = (char*)malloc( image_buffer->buffer_size );
+  */
+  const unsigned long * img_list[10] = { airplane4_image, automobile5_image, bird10_image,
+					 cat9_image, deer7_image, dog9_image, frog10_image,
+					 horse5_image, ship7_image, truck8_image };
+  for ( j = 0; j < 10; j++ ) {
+    const unsigned long * img = img_list[j % 10];
+    for ( i = 0; i < image_buffer->image_size; i++ ) {
+      idx = ( image_buffer -> image_size - i - 1 )/8;
+      src_imgs[j*image_buffer->image_size + i] = ( img[ idx ] >> (8*( i % 8 )) ) % 256;
+    }
+  }
+  for ( i = 0; i < image_buffer->buffer_size; i ++ ) {
+    img_buf_b[i] = 0xaa;
+    img_buf_a[i] = 0xaa;
+  }
+  j_idx = 0;
+  while( 1 ) {
+    for( j = 0; j < no_imgs; j++ ) {
+      memcpy( ( char*)( img_buf_a + j*image_buffer->image_size ),
+	      src_imgs + j_idx*image_buffer->image_size,
+	      image_buffer->image_size );
+      j_idx = ( j_idx + 1 ) % 10;
+    }
+    rc = pwrite( image_buffer->fd, img_buf_a, image_buffer->buffer_size, MEM_8G + addr );
+    if ( rc != image_buffer->buffer_size )
+      printf( "write error %d\n", rc );
+    addr = ( addr + image_buffer->buffer_size ) % MEM_8G;
+    tmp_buff = img_buf_a;
+    img_buf_a = img_buf_b;
+    img_buf_b = tmp_buff;
+  }
+  printf( "freeing ...\n" );
+  free( src_imgs );
+  free( img_buf_a );
+  free( img_buf_b );
+  printf( "to fpga done\n" );
+  return (void*)src_imgs;
+}
+
+// thread to copy result from FPGA to mem
+void copy_from_fpga( void * args ) {
+  struct image_info * image_buffer = ( struct image_info * ) args;
+  long addr = 0;
+  int rc;
+  int i, j, idx, j_idx, img_cnt;
+  char * src_imgs;
+  int no_imgs = image_buffer->buffer_size/image_buffer->image_size;
+  posix_memalign((void**)&(src_imgs), 4096, 10*image_buffer->image_size);
+  // src_imgs = (char*)malloc( 10*(image_buffer->image_size) );
+  const unsigned long * img_list[10] = { airplane4_image, automobile5_image, bird10_image,
+					 cat9_image, deer7_image, dog9_image, frog10_image,
+					 horse5_image, ship7_image, truck8_image };
+  clock_t start_time = clock();
+  for ( j = 0; j < 10; j++ ) {
+    const unsigned long * img = img_list[j % 10];
+    for ( i = 0; i < image_buffer->image_size; i++ ) {
+      idx = ( image_buffer -> image_size - i - 1 )/8;
+      src_imgs[j*image_buffer->image_size + i] = ( img[ idx ] >> (8*( i % 8 )) ) % 256;
+    }
+  }
+  j_idx = 0;
+  img_cnt = 0;
+  printf( "starting loop ...\n" );
+  while( 1 ) {
+    rc = pread( image_buffer->fd,
+		image_buffer->buffer,
+		image_buffer->buffer_size,
+	        0x200000000 + addr );
+    if ( rc != image_buffer->buffer_size )
+      printf( "read error %d\n", rc );
+    addr = ( addr + image_buffer->buffer_size ) % MEM_8G;
+    img_cnt += 1;
+    for ( j = 0; j < no_imgs; j++ ) {
+      if ( memcmp( image_buffer->buffer + j*image_buffer->image_size,
+		   ( src_imgs + j_idx*image_buffer->image_size ),
+		   image_buffer->image_size ) ) {
+	for (i = 0; i < image_buffer->image_size; ++i)
+	  printf("%02x", src_imgs[i + j_idx*image_buffer->image_size] & 0xff);
+	printf( "\n" );
+	for (i = 0; i < image_buffer->image_size; ++i)
+	  printf("%02x", image_buffer->buffer[i +j*image_buffer->image_size] & 0xff);
+	printf( "\n" );
+	printf( "mismatch (%d, %d, %d)\n", img_cnt, j, j_idx );
+	return;
+      }
+      j_idx = ( j_idx + 1 ) % 10;
+    }
+    if ( img_cnt % 1000 == 0 ) {
+      clock_t diff = clock() - start_time;
+      double secs = ((double)diff)/CLOCKS_PER_SEC;
+      printf( "rate = %f buffers/sec\n", img_cnt/secs );
+    }
+
+  }
+  printf( "from fpga done\n" );
+  return;
+}
+
+/*
  * Write 4 identical buffers to the 4 different DRAM channels of the AFI
  */
-
 int dma_example(int slot_id) {
-    int write_fd, read_fd, rc;
-
-    read_buffer = NULL;
-    write_buffer = NULL;
+    int image_size = 8192;
+    int no_img_in_buffer = 64;
+    int write_fd, read_fd;
+    struct image_info *image_in, *image_out;
+    image_in = (struct image_info *)malloc( sizeof(struct image_info) );
+    image_out = (struct image_info *)malloc( sizeof(struct image_info) );
+    image_in->buffer_size = image_size * no_img_in_buffer;
+    image_out->buffer_size = image_size * no_img_in_buffer;
+    image_in->image_size = image_size;
+    image_out->image_size = image_size;
+    posix_memalign((void**)&read_buffer, 4096, (image_in->buffer_size));
+    posix_memalign((void**)&write_buffer, 4096, (image_out->buffer_size));
+    /*
+    read_buffer = (char*)malloc( image_in->buffer_size );
+    write_buffer = (char*)malloc( image_out->buffer_size );
+    */
+    image_out->buffer = read_buffer;
+    image_in->buffer = write_buffer;
     write_fd = -1;
     read_fd = -1;
 
-    write_buffer = (char *)malloc(buffer_size);
-    read_buffer = (char *)malloc(buffer_size);
-    if (write_buffer == NULL || read_buffer == NULL) {
-        rc = -ENOMEM;
-        goto out;
+    if ( read_buffer == NULL || write_buffer == NULL ) {
+      printf( "Could not allocate memory\n" );
+      return 1;
     }
 
-    rc = open_dma_queue(slot_id, &write_fd, &read_fd);
-    fail_on(rc, out, "open_dma_queue failed");
+    open_dma_queue(slot_id, &write_fd, &read_fd);
 
-    channel = 0;
-    for ( int addr = 0; addr < buffer_size; addr += buffer_size ) {
-        rand_string(write_buffer, buffer_size);
-        fpga_write_buffer_to_cl(slot_id, channel, write_fd, buffer_size, (0x00000000 + channel*MEM_16G + addr));
-        fpga_read_cl_to_buffer(slot_id, channel, read_fd, buffer_size, (0x00000000 + channel*MEM_16G + addr));
-    }
+    image_in->fd = write_fd;
+    image_out->fd = read_fd;
 
-out:
-    if (write_buffer != NULL) {
-        free(write_buffer);
-    }
-    if (read_buffer != NULL) {
-        free(read_buffer);
-    }
+    pthread_t * cpy_to_fpga_thd = (pthread_t *)malloc(sizeof(pthread_t));
+
+    pthread_create(cpy_to_fpga_thd, NULL, (void*)copy_to_fpga, image_in );
+    // copy_to_fpga( image_in );
+    copy_from_fpga( image_out );
+    printf( "done ... \n" );
+    free(read_buffer);
+    free(write_buffer);
+    free( image_in );
+    free( image_out );
+    free( cpy_to_fpga_thd );
     if (write_fd >= 0) {
         close(write_fd);
     }
@@ -115,5 +253,5 @@ out:
         close(read_fd);
     }
     /* if there is an error code, exit with status 1 */
-    return (rc != 0 ? 1 : 0);
+    return 0;
 }
