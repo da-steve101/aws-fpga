@@ -147,3 +147,20 @@ out:
 }
 
 #endif
+
+int send_rdbuf_to_c(char* rd_buf)
+{
+// Vivado does not support svGetScopeFromName
+  #ifndef VIVADO_SIM
+    svScope scope;
+    scope = svGetScopeFromName("tb");
+    svSetScope(scope);
+  #endif
+    int i;
+    for (i = 0; i < buffer_size; ++i) {
+      read_buffer[i] = rd_buf[i+8];
+    }
+    //end of line character is not transferered correctly. So assign that here. 
+    read_buffer[buffer_size - 1] = '\0';
+    return 0;
+} 

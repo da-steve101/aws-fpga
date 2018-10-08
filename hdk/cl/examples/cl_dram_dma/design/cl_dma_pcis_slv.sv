@@ -34,6 +34,9 @@ module cl_dma_pcis_slv
     input          img_buffered
 );
 
+`define LWR_ADDR 34'h10000000
+`define UPR_ADDR 34'h30000000
+
 //----------------------------
 // Internal signals
 //----------------------------
@@ -47,22 +50,21 @@ reg output_available;
 
 // send read request
 reg arvalid;
-reg [32:0] r_addr_reg;
-logic [33:0] r_addr;
+reg [33:0] r_addr;
 reg [33:0] written_until;
+logic wr_vld;
 
 // send write request
-reg [32:0] w_addr_reg;
-logic [33:0] w_addr;
+reg [33:0] w_addr;
 logic w_last;
 reg [1:0] w_addr_rdy;
 reg [7:0] w_cntr;
-reg [32:0] read_until;
+reg [33:0] read_until;
 reg running;
 reg w_toggle;
 logic awvalid;
 logic [71:0] written_addr;
-logic [32:0] rd_request_addr;
+logic [33:0] rd_request_addr;
 
 //----------------------------
 // End Internal signals
@@ -92,26 +94,25 @@ fifo_addr r_addr_fifo (
 );
 
 // process input logic
-assign r_addr = r_addr_reg + 34'h200000000;
 always_ff @( posedge aclk ) begin
    if ( !aresetn ) begin
-      r_addr_reg <= 0;
+      r_addr <= 0;
       arvalid <= 0;
-      written_until <= 34'h200000000;
+      written_until <= 0;
    end
    else begin
       if ( lcl_cl_sh_ddra_q.bvalid & lcl_cl_sh_ddra_q.bready & lcl_cl_sh_ddra_q.bid[5:0] == 0 & lcl_cl_sh_ddra_q.bresp == 0 ) begin
-	 if ( written_addr[33:0] <= written_until ) begin
+	 if ( written_addr[33:0] <= written_until | ( written_until <= `LWR_ADDR & written_addr[33:0] >= `UPR_ADDR ) ) begin
 	    written_until <= written_addr[67:34];
 	 end
       end
       if ( lcl_cl_sh_ddra_q.arvalid & lcl_cl_sh_ddra_q.arready ) begin
-	 r_addr_reg <= r_addr_reg + 4096;
+	 r_addr <= r_addr + 4096;
 	 arvalid <= 0;
       end
       if ( !arvalid & (
 	   ( written_until > r_addr & written_until - r_addr >= 8192 ) | // wait until is 4096 ahead of what we are reading
-	   ( r_addr > 34'h3c0000000 & written_until < 34'h240000000 & written_until > 34'h200002000 ) )
+	   ( r_addr > `UPR_ADDR & written_until < `LWR_ADDR ) )
 	   ) begin
 	 arvalid <= 1;
       end
@@ -121,12 +122,11 @@ end
 // process output logic
 assign w_last = ( w_cntr[5:0] == 0 );
 assign awvalid = w_addr_rdy > 0;
-assign rd_request_addr = sh_cl_dma_pcis_q.araddr[32:0] + ( ( sh_cl_dma_pcis_q.arlen + 1 ) << 6 );
-assign w_addr = w_addr_reg + 34'h200000000;
+assign rd_request_addr = sh_cl_dma_pcis_q.araddr[33:0] + ( ( sh_cl_dma_pcis_q.arlen + 1 ) << 6 );
 always_ff @( posedge aclk ) begin
    if ( !aresetn ) begin
       w_cntr <= 0;
-      w_addr_reg <= 0;
+      w_addr <= 0;
       read_until <= 0;
       w_addr_rdy <= 0;
       running <= 0;
@@ -142,7 +142,7 @@ always_ff @( posedge aclk ) begin
       if ( cl_sh_ddr_q.arready & sh_cl_dma_pcis_q.arvalid & !output_available ) begin
 	 // check the read addr
 	 if ( sh_cl_dma_pcis_q.arid[5:0] == 0 ) begin
-            output_available <= ( read_until >= rd_request_addr ) | ( rd_request_addr > 33'h1c0000000 & read_until < 33'h40000000 );
+            output_available <= ( read_until >= rd_request_addr ) | ( rd_request_addr > UPR_ADDR & read_until < LWR_ADDR );
 	 end
          else begin
 	    output_available <= 1;
@@ -154,7 +154,7 @@ always_ff @( posedge aclk ) begin
       // send two write transactions at once for whole image
       if ( cl_sh_ddr_q.awready & cl_sh_ddr_q.awvalid ) begin
 	 w_addr_rdy <= w_addr_rdy - 1;
-	 w_addr_reg <= w_addr_reg + 4096;
+	 w_addr <= w_addr + 4096;
 	 if ( w_addr_rdy == 1 ) begin
 	    running <= 1;
 	    w_cntr <= 8'h7f;
@@ -282,21 +282,6 @@ assign sh_cl_dma_pcis_q.rlast = cl_sh_ddr_q.rlast;
 assign cl_sh_ddr_q.rready = sh_cl_dma_pcis_q.rready;
 assign sh_cl_dma_pcis_q.rresp = cl_sh_ddr_q.rresp;
 assign sh_cl_dma_pcis_q.rvalid = cl_sh_ddr_q.rvalid;
-
-/*
-assign cl_sh_ddr_q.araddr = 64'h200000000 + offset;
-assign cl_sh_ddr_q.arid[5:0] = 0;
-assign cl_sh_ddr_q.arlen = 8'h3f;
-assign sh_cl_dma_pcis_q.arready = cl_sh_ddr_q.arready & ( output_available | sh_cl_dma_pcis_q.arid[5:0] != 0 );
-assign cl_sh_ddr_q.arsize = 6;
-assign cl_sh_ddr_q.arvalid = ( output_available | sh_cl_dma_pcis_q.arid[5:0] != 0 );
-assign sh_cl_dma_pcis_q.rdata = cl_sh_ddr_q.rdata;
-assign sh_cl_dma_pcis_q.rid[5:0] = cl_sh_ddr_q.rid;
-assign sh_cl_dma_pcis_q.rlast = cl_sh_ddr_q.rlast;
-assign cl_sh_ddr_q.rready = 1;
-assign sh_cl_dma_pcis_q.rresp = cl_sh_ddr_q.rresp;
-assign sh_cl_dma_pcis_q.rvalid = 0;
-*/
 
 assign lcl_cl_sh_ddra_q.awaddr = {sh_cl_dma_pcis_q.awaddr[63:37], 1'b0, sh_cl_dma_pcis_q.awaddr[35:0]};
 assign lcl_cl_sh_ddra_q.awid[5:0] = sh_cl_dma_pcis_q.awid[5:0];
