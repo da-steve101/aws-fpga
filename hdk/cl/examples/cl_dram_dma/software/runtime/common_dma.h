@@ -43,6 +43,12 @@ void usage(const char* program_name);
 
 void rand_string(char *str, size_t size);
 
+void fpga_write_buffer_to_cl(int slot_id, int channel, int fd, size_t buffer_size, size_t address);
+
+void fpga_read_cl_to_buffer(int slot_id, int channel, int fd, size_t buffer_size, size_t address);
+
+int dma_example_hwsw_cosim(int slot_id);
+
 int dma_example(int slot_id);
 
 int open_dma_queue(int slot_id, int *write_fd, int *read_fd);
