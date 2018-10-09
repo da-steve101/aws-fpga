@@ -1,8 +1,8 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2017.4.op (lin64) Build 2193837 Tue Apr 10 18:06:59 MDT 2018
-// Date        : Mon Sep 24 14:04:30 2018
-// Host        : ip-172-31-19-213.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.5.1804 (Core)
+// Date        : Tue Oct  9 22:18:26 2018
+// Host        : ip-172-31-31-8.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.5.1804 (Core)
 // Command     : write_verilog -force -mode funcsim
 //               /home/centos/ip_proj/ip_proj.srcs/sources_1/ip/axis_dwidth_converter_512_to_64/axis_dwidth_converter_512_to_64_sim_netlist.v
 // Design      : axis_dwidth_converter_512_to_64

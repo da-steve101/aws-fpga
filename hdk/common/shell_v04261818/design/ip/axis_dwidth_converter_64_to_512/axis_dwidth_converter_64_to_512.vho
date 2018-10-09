@@ -61,7 +61,7 @@ COMPONENT axis_dwidth_converter_64_to_512
     s_axis_tdata : IN STD_LOGIC_VECTOR(63 DOWNTO 0);
     m_axis_tvalid : OUT STD_LOGIC;
     m_axis_tready : IN STD_LOGIC;
-    m_axis_tdata : OUT STD_LOGIC_VECTOR(511 DOWNTO 0)
+    m_axis_tdata : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
   );
 END COMPONENT;
 -- COMP_TAG_END ------ End COMPONENT Declaration ------------
