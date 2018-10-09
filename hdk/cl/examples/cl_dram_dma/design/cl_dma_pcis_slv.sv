@@ -34,8 +34,8 @@ module cl_dma_pcis_slv
     input          img_buffered
 );
 
-`define LWR_ADDR 34'h10000000
-`define UPR_ADDR 34'h30000000
+`define LWR_ADDR 34'h10000000 // 4GB
+`define UPR_ADDR 34'h30000000 // 12GB
 
 //----------------------------
 // Internal signals
@@ -142,7 +142,7 @@ always_ff @( posedge aclk ) begin
       if ( cl_sh_ddr_q.arready & sh_cl_dma_pcis_q.arvalid & !output_available ) begin
 	 // check the read addr
 	 if ( sh_cl_dma_pcis_q.arid[5:0] == 0 ) begin
-            output_available <= ( read_until >= rd_request_addr ) | ( rd_request_addr > UPR_ADDR & read_until < LWR_ADDR );
+            output_available <= ( read_until >= rd_request_addr ) | ( rd_request_addr > `UPR_ADDR & read_until < `LWR_ADDR );
 	 end
          else begin
 	    output_available <= 1;

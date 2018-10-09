@@ -146,7 +146,7 @@ out:
     return rc;
 }
 
-#endif
+#else
 
 int send_rdbuf_to_c(char* rd_buf)
 {
@@ -164,3 +164,4 @@ int send_rdbuf_to_c(char* rd_buf)
     read_buffer[buffer_size - 1] = '\0';
     return 0;
 } 
+#endif
