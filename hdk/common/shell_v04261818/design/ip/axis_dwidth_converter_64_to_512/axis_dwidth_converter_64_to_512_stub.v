@@ -1,8 +1,8 @@
 // Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2017.4.op (lin64) Build 2193837 Tue Apr 10 18:06:59 MDT 2018
-// Date        : Tue Oct  9 22:31:21 2018
-// Host        : ip-172-31-31-8.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.5.1804 (Core)
+// Date        : Thu Oct 11 02:12:25 2018
+// Host        : ip-172-31-23-75.ap-southeast-2.compute.internal running 64-bit CentOS Linux release 7.5.1804 (Core)
 // Command     : write_verilog -force -mode synth_stub
 //               /home/centos/ip_proj/ip_proj.srcs/sources_1/ip/axis_dwidth_converter_64_to_512/axis_dwidth_converter_64_to_512_stub.v
 // Design      : axis_dwidth_converter_64_to_512
@@ -16,7 +16,7 @@
 (* X_CORE_INFO = "axis_dwidth_converter_v1_1_14_axis_dwidth_converter,Vivado 2017.4.op" *)
 module axis_dwidth_converter_64_to_512(aclk, aresetn, s_axis_tvalid, s_axis_tready, 
   s_axis_tdata, m_axis_tvalid, m_axis_tready, m_axis_tdata)
-/* synthesis syn_black_box black_box_pad_pin="aclk,aresetn,s_axis_tvalid,s_axis_tready,s_axis_tdata[63:0],m_axis_tvalid,m_axis_tready,m_axis_tdata[15:0]" */;
+/* synthesis syn_black_box black_box_pad_pin="aclk,aresetn,s_axis_tvalid,s_axis_tready,s_axis_tdata[63:0],m_axis_tvalid,m_axis_tready,m_axis_tdata[511:0]" */;
   input aclk;
   input aresetn;
   input s_axis_tvalid;
@@ -24,5 +24,5 @@ module axis_dwidth_converter_64_to_512(aclk, aresetn, s_axis_tvalid, s_axis_trea
   input [63:0]s_axis_tdata;
   output m_axis_tvalid;
   input m_axis_tready;
-  output [15:0]m_axis_tdata;
+  output [511:0]m_axis_tdata;
 endmodule
