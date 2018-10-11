@@ -88,9 +88,6 @@ const struct logger *logger = &logger_stdout;
 
 out:
 
-#ifndef SV_TEST
-   return rc;
-#else
    if (error_count > 0) {
       printf("TEST FAILED \n");
    }
@@ -104,7 +101,6 @@ out:
    #else 
    *exit_code = 0;
    #endif
-#endif
 }
 
 /* 
@@ -112,7 +108,7 @@ out:
  */
 
 int dma_example_hwsw_cosim(int slot_id) {
-    int write_fd, read_fd, rc;
+  int write_fd, read_fd, rc, i;
 
     read_buffer = NULL;
     write_buffer = NULL;
@@ -136,9 +132,20 @@ int dma_example_hwsw_cosim(int slot_id) {
     rand_string(write_buffer, buffer_size);
     channel=0;
     sv_fpga_start_buffer_to_cl(slot_id, channel, buffer_size, write_buffer, 0);
-    for ( int addr = 0; addr < 20*buffer_size; addr += buffer_size ) {
+    for ( int addr = 0; addr < buffer_size; addr += buffer_size ) {
       sv_fpga_start_buffer_to_cl(slot_id, channel, buffer_size, write_buffer, addr + buffer_size);
       sv_fpga_start_cl_to_buffer(slot_id, channel, buffer_size, addr);
+      if( memcmp( write_buffer, read_buffer, buffer_size ) != 0 ) {
+	error_count += 1;
+	printf("Written:\n" );
+	for ( i = 0; i < buffer_size; i++ )
+	  printf( "%c", write_buffer[i] );
+	printf( "\n\n" );
+	printf("Read:\n" );
+	for ( i = 0; i < buffer_size; i++ )
+	  printf( "%c", read_buffer[i] );
+	printf( "\n\n" );
+      }
     }
 
 out:

@@ -195,6 +195,7 @@ cl_dma_pcis_slv CL_DMA_PCIS_SLV (
 lib_pipe #(.WIDTH(1), .STAGES(4)) DMA_TNN_SLC_RST_N (.clk(clk), .rst_n(1'b1), .in_bus(sync_rst_n), .out_bus(dma_tnn_sync_rst_n));
 cl_dram_dma_tnn CL_DRAM_DMA_TNN (
     .aclk(clk),
+    .clk_a1( clk_extra_a1 ),
     .aresetn(dma_tnn_sync_rst_n),
 
     .fifo_in_bits( fifo_in_bits ),

@@ -85,6 +85,10 @@ read_ip [ list \
   $HDK_SHELL_DESIGN_DIR/ip/ila_vio_counter/ila_vio_counter.xci \
   $HDK_SHELL_DESIGN_DIR/ip/vio_0/vio_0.xci \
   ${HDK_SHELL_DESIGN_DIR}/ip/fifo_addr/fifo_addr.xci \
+  ${HDK_SHELL_DESIGN_DIR}/ip/fifo_async_512_input/fifo_async_512_input.xci \
+  ${HDK_SHELL_DESIGN_DIR}/ip/fifo_async_512_output/fifo_async_512_output.xci \
+  ${HDK_SHELL_DESIGN_DIR}/ip/axis_dwidth_converter_512_to_64/axis_dwidth_converter_512_to_64.xci \
+  ${HDK_SHELL_DESIGN_DIR}/ip/axis_dwidth_converter_64_to_512/axis_dwidth_converter_64_to_512.xci \
   ${HDK_SHELL_DESIGN_DIR}/ip/fifo_sync_512/fifo_sync_512.xci
 ]
 

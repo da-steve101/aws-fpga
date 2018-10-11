@@ -48,7 +48,15 @@ ${HDK_SHELL_DESIGN_DIR}/ip/axi_register_slice/sim/axi_register_slice.v
 ${HDK_SHELL_DESIGN_DIR}/ip/axi_register_slice_light/sim/axi_register_slice_light.v
 ${HDK_SHELL_DESIGN_DIR}/ip/fifo_addr/hdl/fifo_generator_v13_2_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/fifo_addr/sim/fifo_addr.v
-${HDK_SHELL_DESIGN_DIR}/ip/fifo_sync_512/sim/fifo_sync_512.v
+${HDK_SHELL_DESIGN_DIR}/ip/fifo_async_512_input/sim/fifo_async_512_input.v
+${HDK_SHELL_DESIGN_DIR}/ip/fifo_async_512_output/sim/fifo_async_512_output.v
+${HDK_SHELL_DESIGN_DIR}/ip/clk_div/clk_div.v
+${HDK_SHELL_DESIGN_DIR}/ip/clk_div/clk_div_clk_wiz.v
+${HDK_SHELL_DESIGN_DIR}/ip/axis_dwidth_converter_512_to_64/sim/axis_dwidth_converter_512_to_64.v
+${HDK_SHELL_DESIGN_DIR}/ip/axis_dwidth_converter_64_to_512/sim/axis_dwidth_converter_64_to_512.v
+${HDK_SHELL_DESIGN_DIR}/ip/axis_dwidth_converter_512_to_64/hdl/axis_dwidth_converter_v1_1_vl_rfs.v
+${HDK_SHELL_DESIGN_DIR}/ip/axis_dwidth_converter_512_to_64/hdl/axis_register_slice_v1_1_vl_rfs.v
+${HDK_SHELL_DESIGN_DIR}/ip/axis_dwidth_converter_512_to_64/hdl/axis_infrastructure_v1_1_vl_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/cl_axi_interconnect/ipshared/9909/hdl/axi_data_fifo_v2_1_vl_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/cl_axi_interconnect/ipshared/c631/hdl/axi_crossbar_v2_1_vl_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/cl_axi_interconnect/ip/cl_axi_interconnect_xbar_0/sim/cl_axi_interconnect_xbar_0.v

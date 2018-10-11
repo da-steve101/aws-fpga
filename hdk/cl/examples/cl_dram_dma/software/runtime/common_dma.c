@@ -32,22 +32,22 @@ void usage(const char* program_name) {
 void
 rand_string(char *str, size_t size)
 {
-  //static const char charset[] =
-  //"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRTSUVWXYZ1234567890";
-    static bool seeded = false;
-    int i;
+  static const char charset[] =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRTSUVWXYZ1234567890";
+  static bool seeded = false;
+  int i;
 
-    if (!seeded) {
-        srand(time(NULL));
-        seeded = true;
-    }
+  if (!seeded) {
+    srand(time(NULL));
+    seeded = true;
+  }
 
-    for(i = 0; i < size; ++i) {
-      //unsigned int key = i % (sizeof charset - 1);
-      str[i] = ( rand() % 256 );
-    }
+  for(i = 0; i < size; ++i) {
+    unsigned int key = i % (sizeof charset - 1);
+    str[i] = charset[key];
+  }
 
-    //str[size-1] = '\0';
+  str[size-1] = '\0';
 }
 
 #ifndef SV_TEST
@@ -99,7 +99,7 @@ int open_dma_queue(int slot_id, int *write_fd, int *read_fd)
 
     /* check fd input params and initialize */
     if (!write_fd || !read_fd) {
-        fail_on((rc = -EINVAL), out, 
+        fail_on((rc = -EINVAL), out,
                 "%s is NULL", (!write_fd) ? "write_fd" : "read_fd");
     }
     *write_fd = -1;
@@ -160,8 +160,8 @@ int send_rdbuf_to_c(char* rd_buf)
     for (i = 0; i < buffer_size; ++i) {
       read_buffer[i] = rd_buf[i+8];
     }
-    //end of line character is not transferered correctly. So assign that here. 
+    //end of line character is not transferered correctly. So assign that here.
     read_buffer[buffer_size - 1] = '\0';
     return 0;
-} 
+}
 #endif

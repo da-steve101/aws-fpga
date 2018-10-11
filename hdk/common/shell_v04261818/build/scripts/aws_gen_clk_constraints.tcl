@@ -29,8 +29,8 @@ switch $clock_recipe_a {
     "A1" {
         set clk_main_a0_period        4
         set clk_main_a0_half_period   2
-        set clk_extra_a1_period       8
-        set clk_extra_a1_half_period  4
+        set clk_extra_a1_period       6
+        set clk_extra_a1_half_period  3
         set clk_extra_a2_period       2.667
         set clk_extra_a2_half_period  1.333
         set clk_extra_a3_period       2
