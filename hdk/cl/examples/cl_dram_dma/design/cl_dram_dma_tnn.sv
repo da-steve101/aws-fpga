@@ -65,12 +65,22 @@ axis_dwidth_converter_512_to_64 downsizer
  .m_axis_tdata( image_pixel )
 );
 
-always_ff @( posedge clk_a1 ) begin
-   image_pixel_reg <= image_pixel;
-   image_vld_reg <= image_vld;
-end
-assign res_bits = image_pixel_reg;
-assign res_vld = image_vld_reg;
+AWSVggWrapper tnn
+(
+ .clock( clk_a1 ),
+ .reset( rst_n_a1 ),
+ // .io_dataIn_ready(),
+ .io_dataIn_valid( image_vld ),
+ .io_dataIn_bits_0( image_pixel[15:0] ),
+ .io_dataIn_bits_1( image_pixel[31:16] ),
+ .io_dataIn_bits_2( image_pixel[47:32] ),
+ .io_dataOut_ready( 1'b1 ),
+ .io_dataOut_valid( res_vld ),
+ .io_dataOut_bits_0( res_bits[15:0] ),
+ .io_dataOut_bits_1( res_bits[31:16] ),
+ .io_dataOut_bits_2( res_bits[47:32] ),
+ .io_dataOut_bits_3( res_bits[63:48] )
+);
 
 axis_dwidth_converter_64_to_512 upsizer
 (
