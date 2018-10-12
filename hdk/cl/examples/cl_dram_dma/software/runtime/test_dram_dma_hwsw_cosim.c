@@ -28,6 +28,16 @@
 #endif
 
 #include "common_dma.h"
+#include "airplane.h"
+#include "automobile.h"
+#include "bird.h"
+#include "cat.h"
+#include "deer.h"
+#include "dog.h"
+#include "frog.h"
+#include "horse.h"
+#include "ship.h"
+#include "truck.h"
 
 #ifndef SV_TEST
 /* use the stdout logger */
@@ -103,6 +113,50 @@ out:
    #endif
 }
 
+char * fill_image_inputs() {
+  const unsigned long * img_list[10] = { airplane4_image, automobile5_image, bird10_image,
+					 cat9_image, deer7_image, dog9_image, frog10_image,
+					 horse5_image, ship7_image, truck8_image };
+  int i, j, idx, image_size;
+  image_size = 8192;
+  for ( j = 0; j < buffer_size/image_size; j++ ) {
+    const unsigned long * img = img_list[j % 10];
+    for ( i = 0; i < image_size; i++ ) {
+      idx = ( image_size - i - 1 )/8;
+      write_buffer[j*image_size + i] = ( img[ idx ] >> (8*( i % 8 )) ) % 256;
+    }
+  }
+  return write_buffer;
+}
+
+int cmp_image_outputs() {
+  const unsigned long * img_list[10] = { airplane4_image, automobile5_image, bird10_image,
+					 cat9_image, deer7_image, dog9_image, frog10_image,
+					 horse5_image, ship7_image, truck8_image };
+  int i, j, idx, image_size;
+  image_size = 8192;
+  char * res_image = (char*)malloc( buffer_size );
+  for ( j = 0; j < buffer_size/image_size; j++ ) {
+    const unsigned long * img = img_list[j % 10];
+    for ( i = 0; i < image_size; i++ ) {
+      idx = ( image_size - i - 1 )/8;
+      res_image[j*image_size + i] = ( img[ idx ] >> (8*( i % 8 )) ) % 256;
+    }
+  }  
+  if( memcmp( write_buffer, res_image, buffer_size ) != 0 ) {
+    error_count += 1;
+    printf("Written:\n" );
+    for ( i = 0; i < buffer_size; i++ )
+      printf( "%02x", write_buffer[i] & 0xff );
+    printf( "\n\n" );
+    printf("Expected:\n" );
+    for ( i = 0; i < buffer_size; i++ )
+      printf( "%02x", res_image[i] & 0xff );
+    printf( "\n\n" );
+  }
+  return write_buffer;
+}
+    
 /* 
  * Write 4 identical buffers to the 4 different DRAM channels of the AFI
  */

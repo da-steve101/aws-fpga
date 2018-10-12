@@ -15,17 +15,14 @@ module cl_dram_dma_tnn
 
 logic output_fifo_full, input_fifo_full, img_done_n, img_buffered_n;
 
-logic [511:0] data_in_bits;
-logic data_in_vld;
-logic data_in_rdy;
-
 logic [63:0] res_bits;
 logic res_vld;
 
 logic [63:0] image_pixel;
 reg [63:0] image_pixel_reg;
+reg [9:0] img_cntr;
 logic image_vld;
-reg image_vld_reg;
+reg runnning;
 
 logic [511:0] data_out_bits;
 logic data_out_vld;
@@ -38,7 +35,7 @@ assign fifo_in_rdy = !input_fifo_full;
 assign data_out_rdy = !output_fifo_full;
 assign img_buffered = !img_done_n;
 
-fifo_async_512_input input_fifo
+fifo_async_512_to_64 input_fifo
 (
  .wr_clk( aclk ),
  .rd_clk( clk_a1 ),
@@ -46,31 +43,37 @@ fifo_async_512_input input_fifo
  .din( fifo_in_bits ),
  .wr_en( fifo_in_vld & fifo_in_rdy ),
  .full( input_fifo_full ),
- .rd_en( data_in_rdy & data_in_vld ),
- .valid( data_in_vld ),
- .dout( data_in_bits ),
+ .rd_en( running ),
+ .valid( image_vld ),
+ .dout( image_pixel ),
  .prog_empty( img_buffered_n )
 );
 
+always_ff @( posedge clk_a1 ) begin
+   if ( rst_n_a1 ) begin
+      running <= 0;
+      img_cntr <= 0;
+   end else begin
+      if ( !img_buffered_n & img_cntr == 0 ) begin
+	 running <= 1;
+	 img_cntr <= 10'h3ff;
+      end else begin
+	 if ( img_cntr == 0 ) begin
+	    running <= 0;
+	 end else begin
+	    img_cntr <= img_cntr - 1;
+	 end
+      end
+   end
+end
 
-axis_dwidth_converter_512_to_64 downsizer
-(
- .aclk( clk_a1 ),
- .aresetn( rst_n_a1 ),
- .s_axis_tvalid( data_in_vld ),
- .s_axis_tready( data_in_rdy ),
- .s_axis_tdata( data_in_bits ),
- .m_axis_tvalid( image_vld ),
- .m_axis_tready( 1'b1 ),
- .m_axis_tdata( image_pixel )
-);
-
+// need to wait for image to be buffered
 AWSVggWrapper tnn
 (
  .clock( clk_a1 ),
  .reset( rst_n_a1 ),
  // .io_dataIn_ready(),
- .io_dataIn_valid( image_vld ),
+ .io_dataIn_valid( running ),
  .io_dataIn_bits_0( image_pixel[15:0] ),
  .io_dataIn_bits_1( image_pixel[31:16] ),
  .io_dataIn_bits_2( image_pixel[47:32] ),

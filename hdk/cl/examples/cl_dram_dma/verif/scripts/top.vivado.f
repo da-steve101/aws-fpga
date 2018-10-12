@@ -50,6 +50,8 @@ ${HDK_SHELL_DESIGN_DIR}/ip/fifo_addr/hdl/fifo_generator_v13_2_rfs.v
 ${HDK_SHELL_DESIGN_DIR}/ip/fifo_addr/sim/fifo_addr.v
 ${HDK_SHELL_DESIGN_DIR}/ip/fifo_async_512_input/sim/fifo_async_512_input.v
 ${HDK_SHELL_DESIGN_DIR}/ip/fifo_async_512_output/sim/fifo_async_512_output.v
+${HDK_SHELL_DESIGN_DIR}/ip/fifo_async_512_to_64/sim/fifo_async_512_to_64.v
+${HDK_SHELL_DESIGN_DIR}/ip/fifo_async_1024bits/sim/fifo_1024bits.v
 ${HDK_SHELL_DESIGN_DIR}/ip/clk_div/clk_div.v
 ${HDK_SHELL_DESIGN_DIR}/ip/clk_div/clk_div_clk_wiz.v
 ${HDK_SHELL_DESIGN_DIR}/ip/axis_dwidth_converter_512_to_64/sim/axis_dwidth_converter_512_to_64.v
