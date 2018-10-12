@@ -22,7 +22,7 @@ logic [63:0] image_pixel;
 reg [63:0] image_pixel_reg;
 reg [9:0] img_cntr;
 logic image_vld;
-reg runnning;
+reg running;
 
 logic [511:0] data_out_bits;
 logic data_out_vld;
