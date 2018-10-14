@@ -87,3 +87,9 @@ ${CL_ROOT}/design/cl_sda_slv.sv
 ${CL_ROOT}/design/cl_dram_dma_axi_mstr.sv
 ${CL_ROOT}/design/cl_dram_dma.sv
 ${CL_ROOT}/design/cl_dram_dma_tnn.sv
+${CL_ROOT}/design/Queue_1024.v
+${CL_ROOT}/design/Queue_2048.v
+${CL_ROOT}/design/Queue_4096.v
+${CL_ROOT}/design/AWSVggWrapper.v
+${CL_ROOT}/design/Vgg7.v
+      

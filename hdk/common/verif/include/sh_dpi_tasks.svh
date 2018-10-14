@@ -218,12 +218,12 @@ end
 
 `ifdef DMA_TEST
    //DPI task to transfer HOST to CL data.
-   task sv_fpga_start_buffer_to_cl(input int slot_id = 0, int chan, input int buf_size, input string wr_buffer, input longint unsigned cl_addr);
+   task sv_fpga_start_buffer_to_cl(input int slot_id = 0, int chan, input int buf_size, input byte wr_buffer[`BUF_SIZE], input longint unsigned cl_addr);
       int timeout_count, status, error_count;
       logic [63:0] host_memory_buffer_address;
       
       host_memory_buffer_address = 64'h0 + chan*64'h0_0000_3000;
-      que_buffer_to_cl(.slot_id(0), .chan(chan), .src_addr(host_memory_buffer_address), .cl_addr(cl_addr), .len(buf_size));
+      que_buffer_to_cl(.slot_id(0), .chan(chan), .src_addr(host_memory_buffer_address), .cl_addr(cl_addr), .len(`BUF_SIZE));
       // Put test pattern in host memory
       for (int i = 0 ; i < buf_size ; i++) begin
          hm_put_byte(.addr(host_memory_buffer_address), .d(wr_buffer[i]));

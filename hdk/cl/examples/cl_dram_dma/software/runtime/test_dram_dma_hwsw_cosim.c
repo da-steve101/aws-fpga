@@ -49,10 +49,10 @@ const struct logger *logger = &logger_stdout;
 //For cadence and questa simulators the main has to return some value
    #ifdef INT_MAIN
    int test_main(uint32_t *exit_code) {
-   #else 
+   #else
    void test_main(uint32_t *exit_code) {
-   #endif 
-#else 
+   #endif
+#else
     int main(int argc, char **argv) {
 #endif
     //The statements within SCOPE ifdef below are needed for HW/SW co-simulation with VCS
@@ -108,7 +108,7 @@ out:
    #ifdef INT_MAIN
    *exit_code = 0;
    return 0;
-   #else 
+   #else
    *exit_code = 0;
    #endif
 }
@@ -117,47 +117,50 @@ char * fill_image_inputs() {
   const unsigned long * img_list[10] = { airplane4_image, automobile5_image, bird10_image,
 					 cat9_image, deer7_image, dog9_image, frog10_image,
 					 horse5_image, ship7_image, truck8_image };
-  int i, j, idx, image_size;
+  int i, j, k, idx, image_size;
   image_size = 8192;
   for ( j = 0; j < buffer_size/image_size; j++ ) {
     const unsigned long * img = img_list[j % 10];
-    for ( i = 0; i < image_size; i++ ) {
-      idx = ( image_size - i - 1 )/8;
-      write_buffer[j*image_size + i] = ( img[ idx ] >> (8*( i % 8 )) ) % 256;
+    for ( i = 0; i < image_size/64; i++ ) {
+      for ( k = 0; k < 64; k++ ) {
+	idx = ( ( image_size - (i+1)*64 + k )/8 ) % 1024;
+	write_buffer[j*image_size + i*64 + k] = ( img[ idx ] >> (8*( k % 8 ) ) ) % 256;
+      }
     }
   }
   return write_buffer;
 }
 
 int cmp_image_outputs() {
-  const unsigned long * img_list[10] = { airplane4_image, automobile5_image, bird10_image,
-					 cat9_image, deer7_image, dog9_image, frog10_image,
-					 horse5_image, ship7_image, truck8_image };
+  const unsigned long * img_list[10] = { airplane4_mp_3, automobile5_mp_3, bird10_mp_3,
+					 cat9_mp_3, deer7_mp_3, dog9_mp_3, frog10_mp_3,
+					 horse5_mp_3, ship7_mp_3, truck8_mp_3 };
   int i, j, idx, image_size;
   image_size = 8192;
   char * res_image = (char*)malloc( buffer_size );
   for ( j = 0; j < buffer_size/image_size; j++ ) {
     const unsigned long * img = img_list[j % 10];
     for ( i = 0; i < image_size; i++ ) {
-      idx = ( image_size - i - 1 )/8;
+      idx = ( ( image_size - i - 1 )/8 ) % 1024;
       res_image[j*image_size + i] = ( img[ idx ] >> (8*( i % 8 )) ) % 256;
     }
-  }  
-  if( memcmp( write_buffer, res_image, buffer_size ) != 0 ) {
+  }
+  int cmp = memcmp( read_buffer, res_image, buffer_size );
+  if( cmp != 0 ) {
     error_count += 1;
-    printf("Written:\n" );
+    printf("Read:\n" );
     for ( i = 0; i < buffer_size; i++ )
-      printf( "%02x", write_buffer[i] & 0xff );
+      printf( "%02x", read_buffer[i] & 0xff );
     printf( "\n\n" );
     printf("Expected:\n" );
     for ( i = 0; i < buffer_size; i++ )
       printf( "%02x", res_image[i] & 0xff );
     printf( "\n\n" );
   }
-  return write_buffer;
+  return cmp;
 }
-    
-/* 
+
+/*
  * Write 4 identical buffers to the 4 different DRAM channels of the AFI
  */
 
@@ -169,8 +172,8 @@ int dma_example_hwsw_cosim(int slot_id) {
     write_fd = -1;
     read_fd = -1;
 
-    write_buffer = (char *)malloc(buffer_size);
-    read_buffer = (char *)malloc(buffer_size);
+    write_buffer = (char *)malloc(buffer_size + 8);
+    read_buffer = (char *)malloc(buffer_size + 8);
     if (write_buffer == NULL || read_buffer == NULL) {
         rc = -ENOMEM;
         goto out;
@@ -183,23 +186,15 @@ int dma_example_hwsw_cosim(int slot_id) {
     init_ddr();
 #endif
 
-    rand_string(write_buffer, buffer_size);
+    // rand_string(write_buffer, buffer_size);
+    fill_image_inputs();
     channel=0;
     sv_fpga_start_buffer_to_cl(slot_id, channel, buffer_size, write_buffer, 0);
     for ( int addr = 0; addr < buffer_size; addr += buffer_size ) {
       sv_fpga_start_buffer_to_cl(slot_id, channel, buffer_size, write_buffer, addr + buffer_size);
+      sv_pause(30);
       sv_fpga_start_cl_to_buffer(slot_id, channel, buffer_size, addr);
-      if( memcmp( write_buffer, read_buffer, buffer_size ) != 0 ) {
-	error_count += 1;
-	printf("Written:\n" );
-	for ( i = 0; i < buffer_size; i++ )
-	  printf( "%c", write_buffer[i] );
-	printf( "\n\n" );
-	printf("Read:\n" );
-	for ( i = 0; i < buffer_size; i++ )
-	  printf( "%c", read_buffer[i] );
-	printf( "\n\n" );
-      }
+      cmp_image_outputs();
     }
 
 out:

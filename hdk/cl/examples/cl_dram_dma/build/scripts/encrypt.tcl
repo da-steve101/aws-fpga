@@ -39,6 +39,11 @@ file copy -force $CL_DIR/design/cl_dram_dma_defines.vh             $TARGET_DIR
 file copy -force $CL_DIR/design/cl_id_defines.vh                   $TARGET_DIR
 file copy -force $CL_DIR/design/cl_dram_dma_pkg.sv                 $TARGET_DIR
 file copy -force $CL_DIR/design/cl_dram_dma.sv                     $TARGET_DIR
+file copy -force $CL_DIR/design/Queue_1024.v                       $TARGET_DIR
+file copy -force $CL_DIR/design/Queue_2048.v                       $TARGET_DIR
+file copy -force $CL_DIR/design/Queue_4096.v                       $TARGET_DIR
+file copy -force $CL_DIR/design/AWSVggWrapper.v                    $TARGET_DIR
+file copy -force $CL_DIR/design/Vgg7.v                             $TARGET_DIR
 file copy -force $CL_DIR/design/cl_dram_dma_tnn.sv                 $TARGET_DIR
 file copy -force $CL_DIR/design/cl_dma_pcis_slv.sv                 $TARGET_DIR
 file copy -force $UNUSED_TEMPLATES_DIR/unused_sh_bar1_template.inc $TARGET_DIR

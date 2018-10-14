@@ -19,9 +19,8 @@ logic [63:0] res_bits;
 logic res_vld;
 
 logic [63:0] image_pixel;
-reg [63:0] image_pixel_reg;
-reg [9:0] img_cntr;
 logic image_vld;
+reg [9:0] img_cntr;
 reg running;
 
 logic [511:0] data_out_bits;
@@ -50,11 +49,11 @@ fifo_async_512_to_64 input_fifo
 );
 
 always_ff @( posedge clk_a1 ) begin
-   if ( rst_n_a1 ) begin
+   if ( !rst_n_a1 ) begin
       running <= 0;
       img_cntr <= 0;
    end else begin
-      if ( !img_buffered_n & img_cntr == 0 ) begin
+      if ( (!img_buffered_n) & img_cntr == 0 ) begin
 	 running <= 1;
 	 img_cntr <= 10'h3ff;
       end else begin
@@ -71,7 +70,7 @@ end
 AWSVggWrapper tnn
 (
  .clock( clk_a1 ),
- .reset( rst_n_a1 ),
+ .reset( !rst_n_a1 ),
  // .io_dataIn_ready(),
  .io_dataIn_valid( running ),
  .io_dataIn_bits_0( image_pixel[15:0] ),
@@ -84,6 +83,9 @@ AWSVggWrapper tnn
  .io_dataOut_bits_2( res_bits[47:32] ),
  .io_dataOut_bits_3( res_bits[63:48] )
 );
+
+//assign res_bits = image_pixel;
+//assign res_vld = running;
 
 axis_dwidth_converter_64_to_512 upsizer
 (
