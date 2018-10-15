@@ -90,7 +90,7 @@ struct image_info {
 void * copy_to_fpga( void * args ) {
   struct image_info * image_buffer = ( struct image_info * ) args;
   long addr = 0;
-  int i, j, j_idx, rc, idx;
+  int i, j, k, j_idx, rc, idx;
   char * img_buf_a, *img_buf_b, * tmp_buff;
   char * src_imgs;
   int no_imgs = image_buffer->buffer_size/image_buffer->image_size;
@@ -104,8 +104,13 @@ void * copy_to_fpga( void * args ) {
   for ( j = 0; j < 10; j++ ) {
     const unsigned long * img = img_list[j % 10];
     for ( i = 0; i < image_buffer->image_size; i++ ) {
-      idx = ( image_buffer -> image_size - i - 1 )/8;
-      src_imgs[j*image_buffer->image_size + i] = ( img[ idx ] >> (8*( i % 8 )) ) % 256;
+      const unsigned long * img = img_list[j % 10];
+      for ( i = 0; i < image_size/64; i++ ) {
+	for ( k = 0; k < 64; k++ ) {
+	  idx = ( ( image_size - (i+1)*64 + k )/8 ) % 1024;
+	  src_imgs[j*image_size + i*64 + k] = ( img[ idx ] >> (8*( k % 8 ) ) ) % 256;
+	}
+      }
     }
   }
   j_idx = 0;
