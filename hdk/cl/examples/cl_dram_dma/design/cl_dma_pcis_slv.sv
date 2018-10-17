@@ -534,7 +534,7 @@ assign lcl_cl_sh_ddra_q.wvalid = sh_cl_dma_pcis_q.wvalid;
        .s_axi_wstrb    (0),
        .s_axi_wlast    (0),
        .s_axi_wvalid   (0),
-       .s_axi_wready   (0),
+       .s_axi_wready   (),
        .s_axi_bid      (),
        .s_axi_bresp    (),
        .s_axi_bvalid   (),
