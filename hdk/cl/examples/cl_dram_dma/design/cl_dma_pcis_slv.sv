@@ -36,6 +36,8 @@ module cl_dma_pcis_slv
 
 `define LWR_ADDR 34'h10000000 // 4GB
 `define UPR_ADDR 34'h30000000 // 12GB
+`define WAIT_LEN 8192
+`define PAGE_SIZE 4096
 
 //----------------------------
 // Internal signals
@@ -107,12 +109,12 @@ always_ff @( posedge aclk ) begin
 	 end
       end
       if ( lcl_cl_sh_ddra_q.arvalid & lcl_cl_sh_ddra_q.arready ) begin
-	 r_addr <= r_addr + 4096;
+	 r_addr <= r_addr + `PAGE_SIZE;
 	 arvalid <= 0;
       end
       if ( !arvalid & (
-	   ( written_until > r_addr & written_until - r_addr >= 8192 ) | // wait until is 4096 ahead of what we are reading
-	   ( r_addr > `UPR_ADDR & written_until < `LWR_ADDR ) )
+	   ( written_until > r_addr & written_until - r_addr >= `WAIT_LEN ) | // wait until is ahead of what we are reading
+	   ( r_addr > `UPR_ADDR & written_until < `LWR_ADDR & written_until > `WAIT_LEN ) )
 	   ) begin
 	 arvalid <= 1;
       end
@@ -137,12 +139,13 @@ always_ff @( posedge aclk ) begin
       w_toggle <= fifo_out_vld & cl_sh_ddr_q.wready & !w_toggle;
       // read transactions are two reads for each 4096 written ... no idea why :/
       if ( cl_sh_ddr_q.bvalid & cl_sh_ddr_q.bid[5:0] == 1 & cl_sh_ddr_q.bresp == 0 ) begin
-	 read_until <= read_until + 4096;
+	 read_until <= read_until + `PAGE_SIZE;
       end
       if ( cl_sh_ddr_q.arready & sh_cl_dma_pcis_q.arvalid & !output_available ) begin
 	 // check the read addr
 	 if ( sh_cl_dma_pcis_q.arid[5:0] == 0 ) begin
-            output_available <= ( read_until >= rd_request_addr ) | ( rd_request_addr > `UPR_ADDR & read_until < `LWR_ADDR );
+            output_available <= ( read_until >= rd_request_addr & read_until - rd_request_addr > `WAIT_LEN ) |
+				( rd_request_addr > `UPR_ADDR & read_until < `LWR_ADDR & read_until > `WAIT_LEN );
 	 end
          else begin
 	    output_available <= 1;
@@ -154,7 +157,7 @@ always_ff @( posedge aclk ) begin
       // send two write transactions at once for whole image
       if ( cl_sh_ddr_q.awready & cl_sh_ddr_q.awvalid ) begin
 	 w_addr_rdy <= w_addr_rdy - 1;
-	 w_addr <= w_addr + 4096;
+	 w_addr <= w_addr + `PAGE_SIZE;
 	 if ( w_addr_rdy == 1 ) begin
 	    running <= 1;
 	    w_cntr <= 8'h7f;

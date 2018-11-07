@@ -132,9 +132,14 @@ char * fill_image_inputs() {
 }
 
 int cmp_image_outputs() {
+  /*
   const unsigned long * img_list[10] = { airplane4_mp_3, automobile5_mp_3, bird10_mp_3,
 					 cat9_mp_3, deer7_mp_3, dog9_mp_3, frog10_mp_3,
 					 horse5_mp_3, ship7_mp_3, truck8_mp_3 };
+  */
+  const unsigned long * img_list[10] = { airplane4_image, automobile5_image, bird10_image,
+					 cat9_image, deer7_image, dog9_image, frog10_image,
+					 horse5_image, ship7_image, truck8_image };
   int i, j, idx, image_size;
   image_size = 8192;
   char * res_image = (char*)malloc( buffer_size );
@@ -156,7 +161,8 @@ int cmp_image_outputs() {
     for ( i = 0; i < buffer_size; i++ )
       printf( "%02x", res_image[i] & 0xff );
     printf( "\n\n" );
-  }
+  } else
+    printf( "matched\n" );
   return cmp;
 }
 
@@ -190,8 +196,11 @@ int dma_example_hwsw_cosim(int slot_id) {
     fill_image_inputs();
     channel=0;
     sv_fpga_start_buffer_to_cl(slot_id, channel, buffer_size, write_buffer, 0);
+    sv_fpga_start_buffer_to_cl(slot_id, channel, buffer_size, write_buffer, buffer_size);
+    sv_fpga_start_buffer_to_cl(slot_id, channel, buffer_size, write_buffer, 2*buffer_size);
+    sv_fpga_start_buffer_to_cl(slot_id, channel, buffer_size, write_buffer, 3*buffer_size);
     for ( int addr = 0; addr < buffer_size; addr += buffer_size ) {
-      sv_fpga_start_buffer_to_cl(slot_id, channel, buffer_size, write_buffer, addr + buffer_size);
+      sv_fpga_start_buffer_to_cl(slot_id, channel, buffer_size, write_buffer, addr + 4*buffer_size);
       sv_pause(30);
       sv_fpga_start_cl_to_buffer(slot_id, channel, buffer_size, addr);
       cmp_image_outputs();

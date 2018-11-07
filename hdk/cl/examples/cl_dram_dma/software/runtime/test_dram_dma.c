@@ -82,6 +82,7 @@ struct image_info {
   int buffer_size;
   int image_size;
   sem_t * wrt_ahead;
+  sem_t * rd_ahead;
   int fd;
   char * buffer;
 };
@@ -103,13 +104,10 @@ void * copy_to_fpga( void * args ) {
 					 horse5_image, ship7_image, truck8_image };
   for ( j = 0; j < 10; j++ ) {
     const unsigned long * img = img_list[j % 10];
-    for ( i = 0; i < image_buffer->image_size; i++ ) {
-      const unsigned long * img = img_list[j % 10];
-      for ( i = 0; i < image_size/64; i++ ) {
-	for ( k = 0; k < 64; k++ ) {
-	  idx = ( ( image_size - (i+1)*64 + k )/8 ) % 1024;
-	  src_imgs[j*image_size + i*64 + k] = ( img[ idx ] >> (8*( k % 8 ) ) ) % 256;
-	}
+    for ( i = 0; i < image_buffer->image_size/64; i++ ) {
+      for ( k = 0; k < 64; k++ ) {
+	idx = ( ( image_buffer->image_size - (i+1)*64 + k )/8 ) % 1024;
+	src_imgs[j*image_buffer->image_size + i*64 + k] = ( img[ idx ] >> (8*( k % 8 ) ) ) % 256;
       }
     }
   }
@@ -122,6 +120,7 @@ void * copy_to_fpga( void * args ) {
       j_idx = ( j_idx + 1 ) % 10;
     }
     sem_wait( image_buffer->wrt_ahead );
+    sem_post( image_buffer->rd_ahead );
     rc = pwrite( image_buffer->fd, img_buf_a, image_buffer->buffer_size, addr );
     if ( rc != image_buffer->buffer_size )
       printf( "write error %d\n", rc );
@@ -147,9 +146,9 @@ void copy_from_fpga( void * args ) {
   char * src_imgs;
   int no_imgs = image_buffer->buffer_size/image_buffer->image_size;
   posix_memalign((void**)&(src_imgs), 4096, 10*image_buffer->image_size);
-  const unsigned long * img_list[10] = { airplane4_image, automobile5_image, bird10_image,
-					 cat9_image, deer7_image, dog9_image, frog10_image,
-					 horse5_image, ship7_image, truck8_image };
+  const unsigned long * img_list[10] = { airplane4_mp_3, automobile5_mp_3, bird10_mp_3,
+					 cat9_mp_3, deer7_mp_3, dog9_mp_3, frog10_mp_3,
+					 horse5_mp_3, ship7_mp_3, truck8_mp_3 };
   clock_t start_time = clock();
   for ( j = 0; j < 10; j++ ) {
     const unsigned long * img = img_list[j % 10];
@@ -161,7 +160,10 @@ void copy_from_fpga( void * args ) {
   j_idx = 0;
   img_cnt = 0;
   printf( "starting loop ...\n" );
+  sem_wait( image_buffer->rd_ahead ); // give a buffer for read
+  sem_wait( image_buffer->rd_ahead ); // give a buffer for read
   while( 1 ) {
+    sem_wait( image_buffer->rd_ahead );
     rc = pread( image_buffer->fd,
 		image_buffer->buffer,
 		image_buffer->buffer_size,
@@ -186,7 +188,7 @@ void copy_from_fpga( void * args ) {
       }
       j_idx = ( j_idx + 1 ) % 10;
     }
-    if ( img_cnt % 10000 == 0 ) {
+    if ( img_cnt % 1000 == 0 ) {
       clock_t diff = clock() - start_time;
       double secs = ((double)diff)/CLOCKS_PER_SEC;
       printf( "rate = %f buffers/sec\n", img_cnt/secs );
@@ -202,11 +204,13 @@ void copy_from_fpga( void * args ) {
  */
 int dma_example(int slot_id) {
     int image_size = 8192;
-    int no_img_in_buffer = 64;
-    int sem_cnt_2G = 262144/no_img_in_buffer;
+    int no_img_in_buffer = 16;
+    int sem_cnt_2G = 16;
     int write_fd, read_fd;
     sem_t * wrt_ahead = (sem_t*)malloc( sizeof( sem_t ) );
+    sem_t * rd_ahead = (sem_t*)malloc( sizeof( sem_t ) );
     sem_init( wrt_ahead, 0, sem_cnt_2G );
+    sem_init( rd_ahead, 0, 0 );
     struct image_info *image_in, *image_out;
     image_in = (struct image_info *)malloc( sizeof(struct image_info) );
     image_out = (struct image_info *)malloc( sizeof(struct image_info) );
@@ -214,6 +218,8 @@ int dma_example(int slot_id) {
     image_out->buffer_size = image_size * no_img_in_buffer;
     image_in->wrt_ahead = wrt_ahead;
     image_out->wrt_ahead = wrt_ahead;
+    image_in->rd_ahead = rd_ahead;
+    image_out->rd_ahead = rd_ahead;
     image_in->image_size = image_size;
     image_out->image_size = image_size;
     posix_memalign((void**)&read_buffer, 4096, (image_in->buffer_size));
