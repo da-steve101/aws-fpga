@@ -22,7 +22,7 @@ CFLAGS = -DCONFIG_LOGLEVEL=4 -std=gnu99 -g -Wall -Werror $(INCLUDES)
 
 LDLIBS = -lfpga_mgmt -lrt -lpthread
 
-SRC = common_dma.c $(TEST).c 
+SRC = common_dma.c $(TEST).c compute_classification.c
 OBJ = $(SRC:.c=.o)
 BIN = $(TEST)
 

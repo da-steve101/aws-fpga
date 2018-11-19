@@ -25,19 +25,19 @@
 #include <time.h>
 
 #include "common_dma.h"
-#include "airplane.h"
-#include "automobile.h"
-#include "bird.h"
-#include "cat.h"
-#include "deer.h"
-#include "dog.h"
-#include "frog.h"
-#include "horse.h"
-#include "ship.h"
-#include "truck.h"
+#include "dataset.h"
+#include "compute_classification.h"
 
 #define	MEM_16G		(1ULL << 34)
 #define USER_INTERRUPTS_MAX  (16)
+//#define CLASSIFY 1
+#define PAGE_SIZE 4096
+
+#ifdef CLASSIFY
+#define IMG_CNT_RPT 100
+#else
+#define IMG_CNT_RPT 10000
+#endif
 
 #ifndef SV_TEST
 /* use the stdout logger */
@@ -91,19 +91,16 @@ struct image_info {
 void * copy_to_fpga( void * args ) {
   struct image_info * image_buffer = ( struct image_info * ) args;
   long addr = 0;
-  int i, j, k, j_idx, rc, idx;
+  int i, j, k, j_idx, rc, idx, trans_idx;
   char * img_buf_a, *img_buf_b, * tmp_buff;
   char * src_imgs;
   int no_imgs = image_buffer->buffer_size/image_buffer->image_size;
   j_idx = 0;
-  posix_memalign((void**)&(src_imgs), 4096, 10*image_buffer->image_size);
-  posix_memalign((void**)&(img_buf_a), 4096, image_buffer->buffer_size);
-  posix_memalign((void**)&(img_buf_b), 4096, image_buffer->buffer_size);
-  const unsigned long * img_list[10] = { airplane4_image, automobile5_image, bird10_image,
-					 cat9_image, deer7_image, dog9_image, frog10_image,
-					 horse5_image, ship7_image, truck8_image };
+  posix_memalign((void**)&(src_imgs), PAGE_SIZE, 10*image_buffer->image_size);
+  posix_memalign((void**)&(img_buf_a), PAGE_SIZE, image_buffer->buffer_size);
+  posix_memalign((void**)&(img_buf_b), PAGE_SIZE, image_buffer->buffer_size);
   for ( j = 0; j < 10; j++ ) {
-    const unsigned long * img = img_list[j % 10];
+    const unsigned long * img = sample_img_inputs[j % 10];
     for ( i = 0; i < image_buffer->image_size/64; i++ ) {
       for ( k = 0; k < 64; k++ ) {
 	idx = ( ( image_buffer->image_size - (i+1)*64 + k )/8 ) % 1024;
@@ -111,13 +108,14 @@ void * copy_to_fpga( void * args ) {
       }
     }
   }
-  j_idx = 0;
+  trans_idx = 0;
   while( 1 ) {
     for( j = 0; j < no_imgs; j++ ) {
+      j_idx = idx_translate[trans_idx]; //( j_idx + 1 ) % 10;
+      trans_idx = ( trans_idx + 1 ) % IDX_TRANS_LEN;
       memcpy( ( char*)( img_buf_a + j*image_buffer->image_size ),
 	      src_imgs + j_idx*image_buffer->image_size,
 	      image_buffer->image_size );
-      j_idx = ( j_idx + 1 ) % 10;
     }
     sem_wait( image_buffer->wrt_ahead );
     sem_post( image_buffer->rd_ahead );
@@ -142,26 +140,22 @@ void copy_from_fpga( void * args ) {
   struct image_info * image_buffer = ( struct image_info * ) args;
   long addr = 0;
   int rc;
-  int i, j, idx, j_idx, img_cnt;
+  int i, j, idx, img_cnt;
   char * src_imgs;
   int no_imgs = image_buffer->buffer_size/image_buffer->image_size;
-  posix_memalign((void**)&(src_imgs), 4096, 10*image_buffer->image_size);
-  const unsigned long * img_list[10] = { airplane4_mp_3, automobile5_mp_3, bird10_mp_3,
-					 cat9_mp_3, deer7_mp_3, dog9_mp_3, frog10_mp_3,
-					 horse5_mp_3, ship7_mp_3, truck8_mp_3 };
+  posix_memalign((void**)&(src_imgs), PAGE_SIZE, 10*image_buffer->image_size);
   clock_t start_time = clock();
   for ( j = 0; j < 10; j++ ) {
-    const unsigned long * img = img_list[j % 10];
+    const unsigned long * img = sample_img_outputs[j % 10];
     for ( i = 0; i < image_buffer->image_size; i++ ) {
       idx = ( image_buffer -> image_size - i - 1 )/8;
       src_imgs[j*image_buffer->image_size + i] = ( img[ idx ] >> (8*( i % 8 )) ) % 256;
     }
   }
-  j_idx = 0;
   img_cnt = 0;
+  int trans_idx, j_idx;
+  trans_idx = 0;
   printf( "starting loop ...\n" );
-  sem_wait( image_buffer->rd_ahead ); // give a buffer for read
-  sem_wait( image_buffer->rd_ahead ); // give a buffer for read
   while( 1 ) {
     sem_wait( image_buffer->rd_ahead );
     rc = pread( image_buffer->fd,
@@ -174,6 +168,23 @@ void copy_from_fpga( void * args ) {
     addr = ( addr + image_buffer->buffer_size ) % MEM_16G;
     img_cnt += 1;
     for ( j = 0; j < no_imgs; j++ ) {
+      j_idx = idx_translate[trans_idx]; //( j_idx + 1 ) % 10;
+      trans_idx = ( trans_idx + 1 ) % IDX_TRANS_LEN;
+#ifdef CLASSIFY
+      short output_ary[10];
+      const short * input_img = (short*)(image_buffer->buffer + j*image_buffer->image_size);
+      compute_mat( input_img, (short*)output_ary );
+      short max = output_ary[0];
+      int max_idx = 0;
+      for ( i = 1; i < 10; i++ ) {
+	if ( output_ary[i] > max ) {
+	  max = output_ary[i];
+	  max_idx = i;
+	}
+      }
+      if ( max_idx != j_idx )
+	printf( "mismatch expected class %i, got class %i\n", j_idx, max_idx );
+#else
       if ( memcmp( image_buffer->buffer + j*image_buffer->image_size,
 		   ( src_imgs + j_idx*image_buffer->image_size ),
 		   image_buffer->image_size ) ) {
@@ -186,12 +197,12 @@ void copy_from_fpga( void * args ) {
 	printf( "mismatch (%d, %d, %d)\n", img_cnt, j, j_idx );
 	return;
       }
-      j_idx = ( j_idx + 1 ) % 10;
+#endif
     }
-    if ( img_cnt % 1000 == 0 ) {
+    if ( img_cnt % IMG_CNT_RPT == 0 ) {
       clock_t diff = clock() - start_time;
       double secs = ((double)diff)/CLOCKS_PER_SEC;
-      printf( "rate = %f buffers/sec\n", img_cnt/secs );
+      printf( "rate = %f imgs/sec\n", no_imgs*img_cnt/secs );
     }
 
   }
@@ -205,7 +216,7 @@ void copy_from_fpga( void * args ) {
 int dma_example(int slot_id) {
     int image_size = 8192;
     int no_img_in_buffer = 16;
-    int sem_cnt_2G = 16;
+    int sem_cnt_2G = 64;
     int write_fd, read_fd;
     sem_t * wrt_ahead = (sem_t*)malloc( sizeof( sem_t ) );
     sem_t * rd_ahead = (sem_t*)malloc( sizeof( sem_t ) );
@@ -222,8 +233,8 @@ int dma_example(int slot_id) {
     image_out->rd_ahead = rd_ahead;
     image_in->image_size = image_size;
     image_out->image_size = image_size;
-    posix_memalign((void**)&read_buffer, 4096, (image_in->buffer_size));
-    posix_memalign((void**)&write_buffer, 4096, (image_out->buffer_size));
+    posix_memalign((void**)&read_buffer, PAGE_SIZE, (image_in->buffer_size));
+    posix_memalign((void**)&write_buffer, PAGE_SIZE, (image_out->buffer_size));
     image_out->buffer = read_buffer;
     image_in->buffer = write_buffer;
     write_fd = -1;

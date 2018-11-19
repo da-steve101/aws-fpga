@@ -104,7 +104,8 @@ always_ff @( posedge aclk ) begin
    end
    else begin
       if ( lcl_cl_sh_ddra_q.bvalid & lcl_cl_sh_ddra_q.bready & lcl_cl_sh_ddra_q.bid[5:0] == 0 & lcl_cl_sh_ddra_q.bresp == 0 ) begin
-	 if ( written_addr[33:0] <= written_until | ( written_until <= `LWR_ADDR & written_addr[33:0] >= `UPR_ADDR ) ) begin
+	 if ( written_addr[33:0] <= written_until |
+	      ( written_until <= `LWR_ADDR & written_addr[33:0] >= `UPR_ADDR & written_until <= written_addr[67:34] ) ) begin
 	    written_until <= written_addr[67:34];
 	 end
       end
