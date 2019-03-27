@@ -69,6 +69,12 @@ read_ip [ list \
   $HDK_SHELL_DESIGN_DIR/ip/ddr4_core/ddr4_core.xci 
 ]
 
+# read user IP
+read_ip [ list \
+  $HDK_SHELL_DESIGN_DIR/ip/input_fifo/input_fifo.xci  \
+  $HDK_SHELL_DESIGN_DIR/ip/output_fifo/output_fifo.xci
+]
+
 #Read IP for axi register slices
 read_ip [ list \
   $HDK_SHELL_DESIGN_DIR/ip/axi_register_slice/axi_register_slice.xci \
