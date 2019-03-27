@@ -57,13 +57,15 @@
 input_fifo your_instance_name (
   .clk(clk),                  // input wire clk
   .srst(srst),                // input wire srst
-  .din(din),                  // input wire [63 : 0] din
+  .din(din),                  // input wire [511 : 0] din
   .wr_en(wr_en),              // input wire wr_en
   .rd_en(rd_en),              // input wire rd_en
   .dout(dout),                // output wire [63 : 0] dout
   .full(full),                // output wire full
   .empty(empty),              // output wire empty
   .valid(valid),              // output wire valid
+  .prog_full(prog_full),      // output wire prog_full
+  .prog_empty(prog_empty),    // output wire prog_empty
   .wr_rst_busy(wr_rst_busy),  // output wire wr_rst_busy
   .rd_rst_busy(rd_rst_busy)  // output wire rd_rst_busy
 );

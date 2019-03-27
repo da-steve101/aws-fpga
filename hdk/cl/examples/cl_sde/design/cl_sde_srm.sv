@@ -62,15 +62,15 @@ module cl_sde_srm (
 
    input ins_valid,
    input[511:0] ins_data,
-   input[63:0] ins_keep,
-   input[63:0] ins_user,
+   input[63:0] ins_keep, // assume this always 1's
+   input[63:0] ins_user, // ignore this
    input ins_last,
    output logic ins_ready,
 
    output logic ots_valid,
    output logic[511:0] ots_data,
    output logic[63:0] ots_keep,
-   output logic[63:0] ots_user,
+   output logic[63:0] ots_user, // ignore this
    output logic ots_last,
    input ots_ready
    );
@@ -78,14 +78,9 @@ module cl_sde_srm (
    assign srm_cfg_ack = 1;
    assign srm_cfg_rdata = 32'habcd1234;
 
-   wire  sig_in_tvalid;
-   wire  sig_in_full;
-   wire [63:0] sig_in_tdata;
-   // these are ignored
-   wire [7:0]  sig_in_tkeep;
-   wire        sig_in_tlast;
-   wire [7:0]  sig_in_tuser;
-
+   wire        ins_full;
+   wire        img_rdy_n;
+   assign ins_tready = !ins_full;
    wire        pixel_in_tvalid;
    wire        pixel_in_tready;
    wire [63:0] pixel_in_tdata;
@@ -93,44 +88,50 @@ module cl_sde_srm (
    wire        class_out_tvalid;
    wire [159:0] class_out_tdata;
    
-   // Data width converter to change from 512 bits to 64 bits ( while managing the keeps )
-   input_downsample downsampler_inst
-     (
-      .aclk(clk),
-      .aresetn(rst_n),
-      .s_axis_tvalid(ins_valid),
-      .s_axis_tready(ins_ready),
-      .s_axis_tdata(ins_data),
-      .s_axis_tkeep(ins_keep),
-      .s_axis_tlast(ins_last),
-      .s_axis_tuser(ins_user),
-      .m_axis_tvalid(sig_in_tvalid),
-      .m_axis_tready(!sig_in_full), 
-      .m_axis_tdata(sig_in_tdata),
-      .m_axis_tkeep(sig_in_tkeep),
-      .m_axis_tlast(sig_in_tlast),
-      .m_axis_tuser(sig_in_tuser)
-      );
-      
+
    // have an fifo to buffer images at the input
    input_fifo input_fifo_inst
      (
       .clk(clk),
       .srst(!rst_n),
-      .din(sig_in_tdata),
-      .wr_en(rst_n & sig_in_tvalid),
+      .din(ins_tdata),
+      .wr_en(rst_n & ins_tvalid),
       .rd_en(pixel_in_tready),
       .dout(pixel_in_tdata),
       .valid(pixel_in_tvalid),
-      .full(sig_in_full)
+      .prog_full(ins_full),
+      .prog_empty(img_rdy_n)
       );
 
    reg 		vld_cnn;
-   reg 		vld_toggle;
    reg [159:0] 	class_cnn;
    assign class_out_tdata = class_cnn;
    assign class_out_tvalid = vld_cnn;
-   // insert tmp placeholder
+   reg [9:0] 	img_cntr;
+   reg 		running;
+   assign pixel_in_tready = running;
+   // ensure image is buffered before starting
+   always @( posedge clk ) begin
+      if (!rst_n ) begin
+	 img_cntr <= 0;
+	 running <= 0;
+      end else begin
+	 if ( img_cntr == 0 ) begin
+	    if ( !img_rdy_n ) begin
+	       img_cntr <= img_cntr - 1;
+	       running <= 1;
+	    end else begin
+	       running <= 0;
+	    end
+	 end
+	 if ( img_cntr != 0 ) begin
+	    img_cntr <= img_cntr - 1;
+	 end
+      end
+   end
+   // *************************************************
+   // Replace with the TNN
+   reg 		vld_toggle;
    always @( posedge clk ) begin
       if (!rst_n ) begin
 	 vld_cnn <= 0;
@@ -143,6 +144,7 @@ module cl_sde_srm (
 	 class_cnn[159:128] <= pixel_in_tdata[31:0] ^ 32'h55555555;
       end
    end
+   // ***************************************************
    
    // have a fifo to store outputs of 160 bits and send to output
    output_fifo output_fifo_inst
