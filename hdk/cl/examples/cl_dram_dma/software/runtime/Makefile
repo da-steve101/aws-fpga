@@ -18,11 +18,11 @@ export TEST ?= test_dram_dma
 INCLUDES = -I$(SDK_DIR)/userspace/include
 
 CC = gcc
-CFLAGS = -DCONFIG_LOGLEVEL=4 -std=gnu99 -g -Wall -Werror $(INCLUDES)
+CFLAGS = -DCONFIG_LOGLEVEL=4 -std=gnu99 -g -Wall $(INCLUDES)
 
-LDLIBS = -lfpga_mgmt -lrt -lpthread
+LDLIBS = -lfpga_mgmt -lrt -lpthread -lm
 
-SRC = common_dma.c $(TEST).c compute_classification.c
+SRC = common_dma.c $(TEST).c compute_classification.c dataset.c
 OBJ = $(SRC:.c=.o)
 BIN = $(TEST)
 
