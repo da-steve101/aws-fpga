@@ -129,7 +129,7 @@ module cl_sde_srm (
 	 end
       end
    end
-   localparam USE_TNN = 1;
+`define USE_TNN 1
    // *************************************************
 `ifdef USE_TNN
    wire [1023:0] data_out;
@@ -259,7 +259,7 @@ module cl_sde_srm (
       .din(class_out_tdata),
       .wr_en(rst_n & class_out_tvalid),
       .rd_en( rst_n & ots_ready ),
-      .dout( ots_data ),
+      .dout( ots_data[159:0] ),
       .valid( ost_valid )
       );
    assign ots_data[511:160] = 0;
