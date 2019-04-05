@@ -68,6 +68,15 @@ file copy -force $CL_DIR/design/sde_desc.sv     $TARGET_DIR
 file copy -force $CL_DIR/design/sde_pm.sv       $TARGET_DIR
 file copy -force $CL_DIR/design/sde_ps_acc.sv   $TARGET_DIR
 file copy -force $CL_DIR/design/sde_ps.sv       $TARGET_DIR
+file copy -force $CL_DIR/design/AWSVggWrapper.v $TARGET_DIR
+file copy -force $CL_DIR/design/Queue_1024.v     $TARGET_DIR
+file copy -force $CL_DIR/design/Queue_2048.v     $TARGET_DIR
+file copy -force $CL_DIR/design/Queue_4096.v     $TARGET_DIR
+file copy -force $CL_DIR/design/Queue_4096.v     $TARGET_DIR
+file copy -force $CL_DIR/design/DenseBlackBox3f4b5cb0a2.v     $TARGET_DIR
+file copy -force $CL_DIR/design/DenseBlackBox255c5dd06e.v     $TARGET_DIR
+file copy -force $CL_DIR/design/Vgg7.v          $TARGET_DIR
+file copy -force $CL_DIR/design/GenericAddSub16.vhd           $TARGET_DIR
 
 file copy -force $CL_DIR/design/cl_id_defines.vh   $TARGET_DIR
 file copy -force $CL_DIR/design/cl_pkt_tst.sv $TARGET_DIR
