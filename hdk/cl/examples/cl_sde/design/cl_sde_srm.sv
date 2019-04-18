@@ -94,24 +94,100 @@ logic img_rdy_n;
    wire 	vgg_last;
    wire 	vgg_ready;
 
+   wire pixel_valid;
+   wire [511:0] pixel_data;
+   wire [63:0] 	pixel_keep;
+   wire [63:0] 	pixel_user;
+   wire 	pixel_last;
+   wire 	pixel_ready;
+
+
+fifo_axi_512 fifo_in (
+ .s_aclk(clk),
+ .s_aresetn(rst_n),
+ .s_axis_tvalid(ins_valid),
+ .s_axis_tready(ins_ready),
+ .s_axis_tdata(ins_data),
+ .s_axis_tkeep(ins_keep),
+ .s_axis_tlast(ins_last),
+ .s_axis_tuser(ins_user),
+ .m_axis_tvalid(pixel_valid),
+ .m_axis_tready(pixel_ready),
+ .m_axis_tdata(pixel_data),
+ .m_axis_tkeep(pixel_keep),
+ .m_axis_tlast(pixel_last),
+ .m_axis_tuser(pixel_user),
+ .axis_prog_empty( img_rdy_n )
+);
+   reg [6:0] 	img_cntr;
+   assign pixel_ready = ( !img_rdy_n | img_cntr != 0 );
+
+   always @( posedge clk ) begin
+      if ( !rst_n ) begin
+	 img_cntr <= 0;
+      end else begin
+	 if ( pixel_ready & pixel_valid ) begin
+	    img_cntr <= img_cntr + 1;
+	 end
+      end
+   end
+   
+// `define TNN 1
+`ifdef TNN
    AWSVggWrapper tnn
      (
       .clock( clk ),
       .reset( !rst_n ),
-      .io_dataIn_valid( ins_valid ),
-      .io_dataIn_ready( ins_ready ),
-      .io_dataIn_bits_0( ins_data[15:0] ),
-      .io_dataIn_bits_1( ins_data[31:16] ),
-      .io_dataIn_bits_2( ins_data[47:32] ),
+      .io_dataIn_valid( pixel_valid ),
+      .io_dataIn_ready( pixel_ready ),
+      .io_dataIn_bits_0( pixel_data[15:0] ),
+      .io_dataIn_bits_1( pixel_data[31:16] ),
+      .io_dataIn_bits_2( pixel_data[47:32] ),
       .io_dataOut_valid( vgg_valid ),
       .io_dataOut_ready( vgg_ready ),
-      .io_dataOut_bits_0( vgg_data[15:0] )
+      .io_dataOut_bits_0( vgg_data[15:0] ),
+      .io_dataOut_bits_1( vgg_data[31:16] ),
+      .io_dataOut_bits_2( vgg_data[47:32] ),
+      .io_dataOut_bits_3( vgg_data[63:48] ),
+      .io_dataOut_bits_4( vgg_data[79:64] ),
+      .io_dataOut_bits_5( vgg_data[95:80] ),
+      .io_dataOut_bits_6( vgg_data[111:96] ),
+      .io_dataOut_bits_7( vgg_data[127:112] ),
+      .io_dataOut_bits_8( vgg_data[143:128] ),
+      .io_dataOut_bits_9( vgg_data[159:144] )
       );
    
    assign vgg_last = 1;
    assign vgg_user = 0;
    assign vgg_keep = 64'hffffffffffffffffffff;
-   assign vgg_data[511:16] = 0;
+   assign vgg_data[511:160] = 0;
+`else
+
+   reg 		tmp_valid;
+   reg [511:0] 	tmp_data;
+   reg [63:0] 	tmp_keep;
+   reg [63:0] 	tmp_user;
+   reg 		tmp_last;
+
+   always @( posedge clk ) begin
+      if ( !rst_n ) begin
+	 tmp_valid <= 0;
+      end else begin
+	 tmp_valid <= pixel_ready & pixel_valid;
+      end
+      tmp_data <= pixel_data;// ^ 512'hAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6666666666666666666666666666666666666666666666666666666666666666;
+      tmp_keep <= pixel_keep;
+      tmp_last <= pixel_last;
+      tmp_user <= pixel_user;
+   end
+   
+   assign vgg_data = tmp_data;
+   assign vgg_valid = tmp_valid;
+   assign vgg_user = tmp_user;
+   assign vgg_keep = tmp_keep;
+   assign vgg_last = tmp_last;
+
+`endif
    
 fifo_axi_512 fifo_inst (
  .s_aclk(clk),
@@ -127,8 +203,7 @@ fifo_axi_512 fifo_inst (
  .m_axis_tdata(ots_data),
  .m_axis_tkeep(ots_keep),
  .m_axis_tlast(ots_last),
- .m_axis_tuser(ots_user),
- .axis_prog_empty( img_rdy_n )
+ .m_axis_tuser(ots_user)
 );
 
 endmodule
