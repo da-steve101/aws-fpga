@@ -132,14 +132,13 @@ fifo_axi_512 fifo_in (
       end
    end
    
-// `define TNN 1
+`define TNN 1
 `ifdef TNN
    AWSVggWrapper tnn
      (
       .clock( clk ),
       .reset( !rst_n ),
-      .io_dataIn_valid( pixel_valid ),
-      .io_dataIn_ready( pixel_ready ),
+      .io_dataIn_valid( pixel_valid & pixel_ready ),
       .io_dataIn_bits_0( pixel_data[15:0] ),
       .io_dataIn_bits_1( pixel_data[31:16] ),
       .io_dataIn_bits_2( pixel_data[47:32] ),
@@ -159,7 +158,7 @@ fifo_axi_512 fifo_in (
    
    assign vgg_last = 1;
    assign vgg_user = 0;
-   assign vgg_keep = 64'hffffffffffffffffffff;
+   assign vgg_keep = 64'hffffffffffffffff;
    assign vgg_data[511:160] = 0;
 `else
 

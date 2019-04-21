@@ -72,9 +72,10 @@ file copy -force $CL_DIR/design/AWSVggWrapper.v $TARGET_DIR
 file copy -force $CL_DIR/design/Queue_1024.v     $TARGET_DIR
 file copy -force $CL_DIR/design/Queue_2048.v     $TARGET_DIR
 file copy -force $CL_DIR/design/Queue_4096.v     $TARGET_DIR
-file copy -force $CL_DIR/design/Queue_4096.v     $TARGET_DIR
 file copy -force $CL_DIR/design/DenseBlackBox3f4b5cb0a2.v     $TARGET_DIR
 file copy -force $CL_DIR/design/DenseBlackBox255c5dd06e.v     $TARGET_DIR
+file copy -force $CL_DIR/design/DenseBlackBox4beeeb3293.v     $TARGET_DIR
+file copy -force $CL_DIR/design/DenseBlackBoxe7682c2e6f.v     $TARGET_DIR
 file copy -force $CL_DIR/design/Vgg7.v          $TARGET_DIR
 file copy -force $CL_DIR/design/GenericAddSub16.vhd           $TARGET_DIR
 
