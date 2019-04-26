@@ -273,6 +273,7 @@ if {$implement} {
       if {$psip} {
          append place_options " -fanout_opt"
       }
+      # read_checkpoint -incremental $CL_DIR/build/checkpoints/to_aws/19_04_22-094718.SH_CL_routed.dcp
       impl_step place_design $TOP $place_options $place_directive $place_preHookTcl $place_postHookTcl
    }
 

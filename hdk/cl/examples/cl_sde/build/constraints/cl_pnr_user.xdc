@@ -5,6 +5,10 @@ set_clock_groups -name TIG_SRAI_2 -asynchronous -group [get_clocks -of_objects [
 set_clock_groups -name TIG_SRAI_3 -asynchronous -group [get_clocks -of_objects [get_pins static_sh/SH_DEBUG_BRIDGE/inst/bsip/inst/USE_SOFTBSCAN.U_TAP_TCKBUFG/O]] -group [get_clocks -of_objects [get_pins static_sh/pcie_inst/inst/gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]]
 
 create_pblock pblock_CL_top
+add_cells_to_pblock [get_pblocks pblock_CL_top] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/CL_SDE_SRM/tnn/vgg/SparseMatMul/*}]
+add_cells_to_pblock [get_pblocks pblock_CL_top] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/CL_SDE_SRM/tnn/vgg/SparseMatMul_1/*}]
+add_cells_to_pblock [get_pblocks pblock_CL_top] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/CL_SDE_SRM/tnn/vgg/SparseMatMulSerial/*}]
+add_cells_to_pblock [get_pblocks pblock_CL_top] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/CL_SDE_SRM/tnn/vgg/SparseMatMulSerial_1/*}]
 resize_pblock [get_pblocks pblock_CL_top] -add {CLOCKREGION_X0Y10:CLOCKREGION_X5Y14}
 set_property PARENT pblock_CL [get_pblocks pblock_CL_top]
 
@@ -13,6 +17,7 @@ add_cells_to_pblock [get_pblocks pblock_CL_mid] [get_cells -quiet -hierarchical 
 add_cells_to_pblock [get_pblocks pblock_CL_mid] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/PCIM_REG_SLC_MID_SLR/*}]
 add_cells_to_pblock [get_pblocks pblock_CL_mid] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/PCIS_REG_SLC_MID_SLR/*}]
 add_cells_to_pblock [get_pblocks pblock_CL_mid] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/SDE/*}]
+add_cells_to_pblock [get_pblocks pblock_CL_mid] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/CL_SDE_SRM/tnn/vgg/SparseMatMulSerial_2/*}]
 add_cells_to_pblock [get_pblocks pblock_CL_mid] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/CL_TST_PCIM/*}]
 #not yet# add_cells_to_pblock [get_pblocks pblock_CL_mid] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/PIPE_RST_N_MID_SLR/*}]
 
@@ -32,6 +37,7 @@ set_property SNAPPING_MODE ON [get_pblocks pblock_CL_mid]
 set_property PARENT pblock_CL [get_pblocks pblock_CL_mid]
 
 create_pblock pblock_CL_bot
+add_cells_to_pblock [get_pblocks pblock_CL_bot] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/CL_SDE_SRM/tnn/vgg/SparseMatMulSerial_3/*}]
 add_cells_to_pblock [get_pblocks pblock_CL_bot] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/AXIL_OCL_REG_SLC_BOT_SLR/*}]
 add_cells_to_pblock [get_pblocks pblock_CL_bot] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/PCIS_REG_SLC_BOT_SLR/*}]
 #not yet# add_cells_to_pblock [get_pblocks pblock_CL_bot] [get_cells -quiet -hierarchical -filter {NAME =~ WRAPPER_INST/CL/PIPE_RST_N_BOT_SLR/*}]

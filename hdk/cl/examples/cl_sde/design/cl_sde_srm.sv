@@ -57,26 +57,26 @@ module cl_sde_srm (
    input cfg_srm_rd,
    input[31:0] cfg_srm_wdata,
 
-   output logic srm_cfg_ack,
-   output logic[31:0] srm_cfg_rdata,
+   output  srm_cfg_ack,
+   output [31:0] srm_cfg_rdata,
 
    input ins_valid,
    input[511:0] ins_data,
    input[63:0] ins_keep,
    input[63:0] ins_user,
    input ins_last,
-   output logic ins_ready,
+   output  ins_ready,
 
-   output logic ots_valid,
-   output logic[511:0] ots_data,
-   output logic[63:0] ots_keep,
-   output logic[63:0] ots_user,
-   output logic ots_last,
+   output  ots_valid,
+   output [511:0] ots_data,
+   output [63:0] ots_keep,
+   output [63:0] ots_user,
+   output  ots_last,
    input ots_ready
    );
 
 //Read ack/rdata
-logic inp_cfg_ack;
+reg inp_cfg_ack;
 always @(posedge clk)
 begin
    inp_cfg_ack <= (cfg_srm_wr || cfg_srm_rd);
@@ -85,8 +85,7 @@ end
 assign srm_cfg_ack = inp_cfg_ack;
 assign srm_cfg_rdata = 32'hDEADBEEF;
 
-logic img_rdy_n;
-   
+   wire img_rdy_n;
    wire vgg_valid;
    wire [511:0] vgg_data;
    wire [63:0] 	vgg_keep;
@@ -101,6 +100,7 @@ logic img_rdy_n;
    wire 	pixel_last;
    wire 	pixel_ready;
 
+   wire 	nxt_data;
 
 fifo_axi_512 fifo_in (
  .s_aclk(clk),
@@ -112,7 +112,7 @@ fifo_axi_512 fifo_in (
  .s_axis_tlast(ins_last),
  .s_axis_tuser(ins_user),
  .m_axis_tvalid(pixel_valid),
- .m_axis_tready(pixel_ready),
+ .m_axis_tready(pixel_ready & nxt_data),
  .m_axis_tdata(pixel_data),
  .m_axis_tkeep(pixel_keep),
  .m_axis_tlast(pixel_last),
@@ -120,7 +120,10 @@ fifo_axi_512 fifo_in (
  .axis_prog_empty( img_rdy_n )
 );
    reg [6:0] 	img_cntr;
+   reg 		data_vld;
+   reg  [511:0] pixel_data_reg;
    assign pixel_ready = ( !img_rdy_n | img_cntr != 0 );
+   assign nxt_data = img_cntr[2:0] == 0;
 
    always @( posedge clk ) begin
       if ( !rst_n ) begin
@@ -129,19 +132,25 @@ fifo_axi_512 fifo_in (
 	 if ( pixel_ready & pixel_valid ) begin
 	    img_cntr <= img_cntr + 1;
 	 end
+	 data_vld <= pixel_ready & pixel_valid;
+	 if ( img_cntr[2:0] == 0 ) begin
+	    pixel_data_reg <= pixel_data;
+	 end else begin
+	    pixel_data_reg <= { 64'h0, pixel_data_reg[511:64] };
+	 end
       end
    end
-   
+
 `define TNN 1
 `ifdef TNN
    AWSVggWrapper tnn
      (
       .clock( clk ),
       .reset( !rst_n ),
-      .io_dataIn_valid( pixel_valid & pixel_ready ),
-      .io_dataIn_bits_0( pixel_data[15:0] ),
-      .io_dataIn_bits_1( pixel_data[31:16] ),
-      .io_dataIn_bits_2( pixel_data[47:32] ),
+      .io_dataIn_valid( data_vld ),
+      .io_dataIn_bits_0( pixel_data_reg[15:0] ),
+      .io_dataIn_bits_1( pixel_data_reg[31:16] ),
+      .io_dataIn_bits_2( pixel_data_reg[47:32] ),
       .io_dataOut_valid( vgg_valid ),
       .io_dataOut_ready( vgg_ready ),
       .io_dataOut_bits_0( vgg_data[15:0] ),
@@ -155,7 +164,7 @@ fifo_axi_512 fifo_in (
       .io_dataOut_bits_8( vgg_data[143:128] ),
       .io_dataOut_bits_9( vgg_data[159:144] )
       );
-   
+
    assign vgg_last = 1;
    assign vgg_user = 0;
    assign vgg_keep = 64'hffffffffffffffff;
@@ -167,19 +176,28 @@ fifo_axi_512 fifo_in (
    reg [63:0] 	tmp_keep;
    reg [63:0] 	tmp_user;
    reg 		tmp_last;
+   reg [2:0] 	tmp_cntr;
 
    always @( posedge clk ) begin
       if ( !rst_n ) begin
 	 tmp_valid <= 0;
+	 tmp_cntr <= 0;
       end else begin
-	 tmp_valid <= pixel_ready & pixel_valid;
+	 if ( data_vld ) begin
+	    tmp_cntr <= tmp_cntr + 1;
+	 end
+	 tmp_valid <= ( tmp_cntr == 7 );
       end
-      tmp_data <= pixel_data;// ^ 512'hAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6666666666666666666666666666666666666666666666666666666666666666;
+      tmp_data <= { pixel_data_reg[63:0], tmp_data[511:64] };
       tmp_keep <= pixel_keep;
-      tmp_last <= pixel_last;
+      if ( tmp_cntr == 7 ) begin
+	 tmp_last <= pixel_last;
+      end else begin
+	 tmp_last <= 0;
+      end
       tmp_user <= pixel_user;
    end
-   
+
    assign vgg_data = tmp_data;
    assign vgg_valid = tmp_valid;
    assign vgg_user = tmp_user;
@@ -187,7 +205,7 @@ fifo_axi_512 fifo_in (
    assign vgg_last = tmp_last;
 
 `endif
-   
+
 fifo_axi_512 fifo_inst (
  .s_aclk(clk),
  .s_aresetn(rst_n),
@@ -206,4 +224,3 @@ fifo_axi_512 fifo_inst (
 );
 
 endmodule
-
