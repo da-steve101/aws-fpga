@@ -119,12 +119,11 @@ fifo_axi_512 fifo_in (
  .m_axis_tuser(pixel_user),
  .axis_prog_empty( img_rdy_n )
 );
-   reg [6:0] 	img_cntr;
+   reg [9:0] 	img_cntr;
    reg 		data_vld;
    reg  [511:0] pixel_data_reg;
    assign pixel_ready = ( !img_rdy_n | img_cntr != 0 );
    assign nxt_data = img_cntr[2:0] == 0;
-
    always @( posedge clk ) begin
       if ( !rst_n ) begin
 	 img_cntr <= 0;
@@ -164,9 +163,8 @@ fifo_axi_512 fifo_in (
       .io_dataOut_bits_8( vgg_data[143:128] ),
       .io_dataOut_bits_9( vgg_data[159:144] )
       );
-
    assign vgg_last = 1;
-   assign vgg_user = 0;
+   assign vgg_user = 64'h0;
    assign vgg_keep = 64'hffffffffffffffff;
    assign vgg_data[511:160] = 0;
 `else
@@ -176,7 +174,7 @@ fifo_axi_512 fifo_in (
    reg [63:0] 	tmp_keep;
    reg [63:0] 	tmp_user;
    reg 		tmp_last;
-   reg [2:0] 	tmp_cntr;
+   reg [9:0] 	tmp_cntr;
 
    always @( posedge clk ) begin
       if ( !rst_n ) begin
@@ -186,16 +184,12 @@ fifo_axi_512 fifo_in (
 	 if ( data_vld ) begin
 	    tmp_cntr <= tmp_cntr + 1;
 	 end
-	 tmp_valid <= ( tmp_cntr == 7 );
+	 tmp_valid <= ( tmp_cntr[2:0] == 7 );
       end
       tmp_data <= { pixel_data_reg[63:0], tmp_data[511:64] };
-      tmp_keep <= pixel_keep;
-      if ( tmp_cntr == 7 ) begin
-	 tmp_last <= pixel_last;
-      end else begin
-	 tmp_last <= 0;
-      end
-      tmp_user <= pixel_user;
+      tmp_keep <= 64'hffffffffffffffff;;
+      tmp_last <= ( tmp_cntr == 1023 );
+      tmp_user <= 64'h0;
    end
 
    assign vgg_data = tmp_data;
