@@ -40,6 +40,7 @@
 static uint32_t enabled_port_mask = 1;
 static uint32_t debug_mode = 0;
 static uint32_t num_loops = 0;
+static uint64_t lat_idx = 0;
 volatile uint8_t quit_signal_tx;
 volatile uint8_t quit_signal_rx;
 volatile uint64_t prev_t;
@@ -167,7 +168,9 @@ port_init(uint16_t port, struct rte_mempool *mbuf_pool)
 static inline void
 flush_one_port(struct output_buffer *outbuf, uint8_t outp)
 {
+  app_stats.tx.pkt_sent[lat_idx] = rte_rdtsc();
   unsigned int nb_tx = rte_eth_tx_burst(outp, 0, outbuf->mbufs, outbuf->count);
+  lat_idx = (lat_idx + 1 ) % LATENCY_BUFR;
   app_stats.tx.tx_pkts += outbuf->count;
   if (unlikely(nb_tx < outbuf->count)) {
     app_stats.tx.enqdrop_pkts +=  outbuf->count - nb_tx;
@@ -299,7 +302,6 @@ lcore_tx(void)
   uint64_t t_w = 0, t_w_old;
   t = rte_rdtsc() + freq;
   uint32_t k = 0;
-  uint64_t lat_idx = 0;
   while ( k < num_loops || num_loops == 0 ) {
     if (t < rte_rdtsc()) {
       print_stats();
@@ -317,13 +319,11 @@ lcore_tx(void)
 	t_w_old = t_w;
 	t_w = rte_rdtsc();
 	flush_one_port(outbuf, 0);
-	app_stats.tx.pkt_sent[lat_idx] = t_w;
-	lat_idx = (lat_idx + 1 ) % LATENCY_BUFR;
 	// slow down the transmission a bit
 	if ( unlikely( debug_mode ) )
-	  t_w_old += 50000000;
+	  t_w_old += 5000000;
 	else // use max speed with no dropped packets
-	  t_w_old += 37390;
+	  t_w_old += 37450;
 	while (rte_rdtsc() < t_w_old)
 	  rte_pause();
       }
