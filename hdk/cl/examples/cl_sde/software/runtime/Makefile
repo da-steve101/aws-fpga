@@ -1,40 +1,63 @@
-# Amazon FPGA Hardware Development Kit
-#
-# Copyright 2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Amazon Software License (the "License"). You may not use
-# this file except in compliance with the License. A copy of the License is
-# located at
-#
-#    http://aws.amazon.com/asl/
-#
-# or in the "license" file accompanying this file. This file is distributed on
-# an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or
-# implied. See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright(c) 2010-2014 Intel Corporation
 
-export TEST ?= test_sde_loopback
+# binary name
+APP = distributor_app
 
-INCLUDES = -I$(SDK_DIR)/userspace/include
+# all source are stored in SRCS-y
+SRCS-y := main.c
 
-CC = gcc
-CFLAGS = -DCONFIG_LOGLEVEL=4 -std=gnu99 -g -Wall -Werror $(INCLUDES)
+# Build using pkg-config variables if possible
+$(shell pkg-config --exists libdpdk)
+ifeq ($(.SHELLSTATUS),0)
 
-LDLIBS = -lfpga_mgmt -lrt -lpthread
+all: shared
+.PHONY: shared static
+shared: build/$(APP)-shared
+	ln -sf $(APP)-shared build/$(APP)
+static: build/$(APP)-static
+	ln -sf $(APP)-static build/$(APP)
 
-SRC = common_dma.c $(TEST).c 
-OBJ = $(SRC:.c=.o)
-BIN = $(TEST)
+PC_FILE := $(shell pkg-config --path libdpdk)
+CFLAGS += -O3 $(shell pkg-config --cflags libdpdk)
+LDFLAGS_SHARED = $(shell pkg-config --libs libdpdk)
+LDFLAGS_STATIC = -Wl,-Bstatic $(shell pkg-config --static --libs libdpdk)
 
-all: check_env
+build/$(APP)-shared: $(SRCS-y) Makefile $(PC_FILE) | build
+	$(CC) $(CFLAGS) $(SRCS-y) -o $@ $(LDFLAGS) $(LDFLAGS_SHARED)
 
-#$(BIN): $(OBJ)
-#	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+build/$(APP)-static: $(SRCS-y) Makefile $(PC_FILE) | build
+	$(CC) $(CFLAGS) $(SRCS-y) -o $@ $(LDFLAGS) $(LDFLAGS_STATIC)
 
+build:
+	@mkdir -p $@
+
+.PHONY: clean
 clean:
-	rm -f *.o $(BIN)
+	rm -f build/$(APP) build/$(APP)-static build/$(APP)-shared
+	rmdir --ignore-fail-on-non-empty build
 
-check_env:
-ifndef SDK_DIR
-    $(error SDK_DIR is undefined. Try "source sdk_setup.sh" to set the software environment)
+else
+
+ifeq ($(RTE_SDK),)
+$(error "Please define RTE_SDK environment variable")
+endif
+
+# Default target, can be overridden by command line or environment
+RTE_TARGET ?= x86_64-native-linuxapp-gcc
+
+include $(RTE_SDK)/mk/rte.vars.mk
+
+CFLAGS += $(WERROR_FLAGS)
+
+# workaround for a gcc bug with noreturn attribute
+# http://gcc.gnu.org/bugzilla/show_bug.cgi?id=12603
+ifeq ($(CONFIG_RTE_TOOLCHAIN_GCC),y)
+CFLAGS_main.o += -Wno-return-type
+endif
+
+EXTRA_CFLAGS += -O3 -Wfatal-errors
+
+include $(RTE_SDK)/mk/rte.extapp.mk
+
 endif

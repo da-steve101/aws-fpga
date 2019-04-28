@@ -99,7 +99,6 @@ assign srm_cfg_rdata = 32'hDEADBEEF;
    wire [63:0] 	pixel_user;
    wire 	pixel_last;
    wire 	pixel_ready;
-
    wire 	nxt_data;
 
 fifo_axi_512 fifo_in (
@@ -121,17 +120,19 @@ fifo_axi_512 fifo_in (
 );
    reg [9:0] 	img_cntr;
    reg 		data_vld;
-   reg  [511:0] pixel_data_reg;
-   assign pixel_ready = ( !img_rdy_n | img_cntr != 0 );
+   wire 	running;
+   reg [511:0] 	pixel_data_reg;
+   assign pixel_ready = ( !img_rdy_n | running );
    assign nxt_data = img_cntr[2:0] == 0;
+   assign running = img_cntr != 0;
    always @( posedge clk ) begin
       if ( !rst_n ) begin
 	 img_cntr <= 0;
       end else begin
-	 if ( pixel_ready & pixel_valid ) begin
+	 if ( ( pixel_ready & pixel_valid ) | running ) begin
 	    img_cntr <= img_cntr + 1;
 	 end
-	 data_vld <= pixel_ready & pixel_valid;
+	 data_vld <= ( pixel_ready & pixel_valid ) | running;
 	 if ( img_cntr[2:0] == 0 ) begin
 	    pixel_data_reg <= pixel_data;
 	 end else begin

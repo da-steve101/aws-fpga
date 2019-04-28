@@ -23,7 +23,6 @@
 #define NUM_MBUFS ((8*1024)-1)
 #define MBUF_CACHE_SIZE 0
 #define BURST_SIZE 1
-#define SCHED_RX_RING_SZ 8192
 #define BURST_SIZE_TX 1
 
 #define RTE_LOGTYPE_DISTRAPP RTE_LOGTYPE_USER1
@@ -31,11 +30,16 @@
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 #define IMG_SIZE 8192
-#define PACKET_SIZE RTE_PKTMBUF_HEADROOM + IMG_SIZE
+#define LATENCY_BUFR 1024
+#define NUM_IMGS 10000
+#define CLASSIFICATION_SIZE 64
+#define IMG_PACKET_SIZE RTE_PKTMBUF_HEADROOM + IMG_SIZE
+#define CLASSIFICATION_PACKET_SIZE RTE_PKTMBUF_HEADROOM + CLASSIFICATION_SIZE
 
-/* mask of enabled ports */
-static uint32_t enabled_port_mask;
-static uint32_t latency_mode = 0;
+
+static uint32_t enabled_port_mask = 1;
+static uint32_t debug_mode = 0;
+static uint32_t num_loops = 0;
 volatile uint8_t quit_signal_tx;
 volatile uint8_t quit_signal_rx;
 volatile uint64_t prev_t;
@@ -54,7 +58,7 @@ static volatile struct app_stats {
     uint64_t dequeue_pkts;
     uint64_t tx_pkts;
     uint64_t enqdrop_pkts;
-    uint64_t pkt_sent;
+    uint64_t pkt_sent[LATENCY_BUFR];
   } tx __rte_cache_aligned;
   int pad3 __rte_cache_aligned;
 
@@ -163,11 +167,8 @@ port_init(uint16_t port, struct rte_mempool *mbuf_pool)
 static inline void
 flush_one_port(struct output_buffer *outbuf, uint8_t outp)
 {
-  unsigned int nb_tx = rte_eth_tx_burst(outp, 0,
-					outbuf->mbufs, outbuf->count);
+  unsigned int nb_tx = rte_eth_tx_burst(outp, 0, outbuf->mbufs, outbuf->count);
   app_stats.tx.tx_pkts += outbuf->count;
-  if ( unlikely(latency_mode) )
-    app_stats.tx.pkt_sent = rte_rdtsc();
   if (unlikely(nb_tx < outbuf->count)) {
     app_stats.tx.enqdrop_pkts +=  outbuf->count - nb_tx;
     do {
@@ -183,42 +184,64 @@ lcore_rx(void)
   struct rte_mbuf *bufs[BURST_SIZE * 8];
   uint16_t i;
   uint16_t f_idx = 0;
+  uint16_t max_idx;
+  int16_t max_val, *tmp_val, j;
+  const char * cifar_classes[11] = {"airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck", "ERROR" };
 
+  FILE * f_pred = NULL;
+  f_pred = fopen( "preds", "w" );
+  int max_to_write = NUM_IMGS;
   app_stats.latency.sum = 0;
   app_stats.latency.count = 0;
   printf("\nCore %u acting as rx core.\n", rte_lcore_id());
+  uint16_t pkt_idx = 0;
   while (!quit_signal_rx) {
     const uint16_t nb_rx = rte_eth_rx_burst(0, 0, bufs, BURST_SIZE);
     if (nb_rx) {
-      if ( unlikely(latency_mode) ) {
-	uint64_t rx_time = rte_rdtsc();
-	double diff = ( double ) ( rx_time - app_stats.tx.pkt_sent );
-	app_stats.latency.sum += diff / freq;
-	app_stats.latency.count += 1;
-      }
+      uint64_t rx_time = rte_rdtsc();
+      double diff = ( double ) ( rx_time - app_stats.tx.pkt_sent[pkt_idx] );
+      pkt_idx = ( pkt_idx + 1 ) % LATENCY_BUFR;
+      app_stats.latency.sum += diff / freq;
+      app_stats.latency.count += 1;
       app_stats.rx.in_pkts += nb_rx;
-      const uint16_t nb_ret = nb_rx;
-      for ( i = 0; i < nb_ret; i++ ) {
-	if ( unlikely(latency_mode) ) {
+      for ( i = 0; i < nb_rx; i++ ) {
+	max_idx = 10;
+	max_val = -32768;
+	char * data_out = rte_pktmbuf_mtod( bufs[i], char * );
+	for ( j = 0; j < 10; j++ ) {
+	  tmp_val = ( int16_t * ) ( data_out + 2*j );
+	  if ( *tmp_val > max_val ) {
+	    max_idx = j;
+	    max_val = *tmp_val;
+	  }
+	}
+	if ( unlikely(debug_mode) ) {
 	  char fname[20];
-	  // should return 16'h000c, 16'hffc7, 16'hfeab, 16'hfe39, 16'hfec7, 16'hfe4b, 16'hfe0b, 16'hfe85, 16'hff62, 16'h03d2
-	  // for airplane4 image
 	  sprintf( fname, "pckt_ret_%i.dmp", f_idx );
 	  FILE * f = fopen( fname, "w" );
+	  fprintf( f, "image is %s with %i\n", cifar_classes[max_idx], max_val );
 	  rte_pktmbuf_dump( f, bufs[i], IMG_SIZE );
 	  fclose( f );
-	  f_idx = ( f_idx + 1 ) % 32;
+	  // so we dont run out of disk space super quickly
+	  f_idx = ( f_idx + 1 ) % 2048;
+	} else {
+	  char bfr[3];
+	  // only do the first 10000 in the test set
+	  if ( max_to_write > 0 ) {
+	    sprintf( bfr, "%i", max_idx ); // max_idx is between 0 and 9
+	    fwrite( bfr, 1, 1, f_pred );
+	    max_to_write--;
+	  }
 	}
 	rte_pktmbuf_free( bufs[i] );
       }
-      // check that the label of the image matches the class
-      app_stats.rx.ret_pkts += nb_ret;
+      app_stats.rx.ret_pkts += nb_rx;
     }
   }
+  fclose( f_pred );
   printf("\nCore %u exiting rx task.\n", rte_lcore_id());
   return 0;
 }
-
 
 static int
 lcore_tx(void)
@@ -227,12 +250,11 @@ lcore_tx(void)
   tx_buffer.count = 0;
   const int socket_id = rte_socket_id();
   uint16_t port;
-  uint16_t num_imgs = 32;
-  uint16_t i, j;
+  uint16_t num_imgs = NUM_IMGS;
+  uint16_t i;
   prev_t = rte_rdtsc() - 10000;
 
   RTE_ETH_FOREACH_DEV(port) {
-    /* skip ports that are not enabled */
     if ((enabled_port_mask & (1 << port)) == 0)
       continue;
 
@@ -247,69 +269,71 @@ lcore_tx(void)
 
   // make a mem_pool of membufs
   struct rte_mempool* mbuf_pool = rte_pktmbuf_pool_create("TX_MBUF_POOL",
-				      1024*num_imgs - 1, MBUF_CACHE_SIZE, 0,
-                                      PACKET_SIZE, rte_socket_id());
+				      ( 1 << 14 ) - 1, MBUF_CACHE_SIZE, 0,
+                                      IMG_PACKET_SIZE, rte_socket_id());
   if (mbuf_pool == NULL)
     rte_exit(EXIT_FAILURE, "Cannot create mbuf pool in tx\n");
-  // rte_pktmbuf_alloc, allocate the mbuf
   struct rte_mbuf * bufs[num_imgs];
   for ( i = 0; i < num_imgs; i++ )
     bufs[i] = NULL;
   int ret = rte_pktmbuf_alloc_bulk( mbuf_pool, bufs, num_imgs );
   if ( unlikely(ret) )
     rte_exit(EXIT_FAILURE, "Cannot allocate packets\n" );
-  void * opaque_arg = NULL;
   struct output_buffer *outbuf = &tx_buffer;
-  uint16_t nb_rx = 1; // num_imgs;
-
-  // set type: RTE_PTYPE_UNKNOWN?
+  uint16_t nb_rx = num_imgs;
+  printf( "Loading test set images...\n" );
+  FILE * f_test = fopen( "test_batches.hex", "r" );
+  if ( !f_test )
+    rte_exit(EXIT_FAILURE, "Cannot open test_batches.hex\n" );
   for ( i = 0; i < num_imgs; i++ ) {
-    rte_pktmbuf_init( mbuf_pool, opaque_arg, bufs[i], i );
     char * img = rte_pktmbuf_append( bufs[i], IMG_SIZE );
     if ( !img )
       rte_exit(EXIT_FAILURE, "Cannot append buffer\n" );
-    for ( j = 0; j < IMG_SIZE; j++ ) {
-      int shift = j % 8;
-      int pxl_idx = 1023 - ( j/8 );
-      img[j] = (char) ( ( airplane4_image[pxl_idx] >> ( 8*shift ) ) & 255 );
-    }
-    char fname[20];
-    sprintf( fname, "pckt_%i.dmp", i );
-    FILE * f = fopen( fname, "w" );
-    rte_pktmbuf_dump( f, bufs[i], IMG_SIZE );
-    fclose( f );
+    fread( img, 1, IMG_SIZE, f_test );
   }
-  printf( "\nGenerated images\n" );
-  // TODO: put all test images in memory in the mempool
+  fclose( f_test );
+  printf( "Loaded test set images\n" );
 
   printf("\nCore %u doing packet TX.\n", rte_lcore_id());
   uint64_t t;
-  uint64_t t_w;
+  uint64_t t_w = 0, t_w_old;
   t = rte_rdtsc() + freq;
-  while (!quit_signal_tx) {
+  uint32_t k = 0;
+  uint64_t lat_idx = 0;
+  while ( k < num_loops || num_loops == 0 ) {
     if (t < rte_rdtsc()) {
       print_stats();
       t = rte_rdtsc() + freq;
     }
-
     rte_prefetch_non_temporal((void *)bufs[0]);
     rte_prefetch_non_temporal((void *)bufs[1]);
     rte_prefetch_non_temporal((void *)bufs[2]);
+    if ( unlikely( num_loops > 0 && num_loops - k < num_imgs ) )
+      nb_rx = num_loops - k;
     for (i = 0; i < nb_rx; i++) {
       rte_prefetch_non_temporal((void *)bufs[( i + 3 ) % nb_rx]);
       outbuf->mbufs[outbuf->count++] = bufs[i];
       if (outbuf->count == BURST_SIZE_TX) {
+	t_w_old = t_w;
+	t_w = rte_rdtsc();
 	flush_one_port(outbuf, 0);
+	app_stats.tx.pkt_sent[lat_idx] = t_w;
+	lat_idx = (lat_idx + 1 ) % LATENCY_BUFR;
 	// slow down the transmission a bit
-	if ( unlikely( latency_mode ) ) // use speed so packet is finished before the next one is sent
-	  t_w = rte_rdtsc()+50000000; 
-	else // use max speed so no dropped packets
-	  t_w = rte_rdtsc()+18650;
-	while (rte_rdtsc() < t_w)
+	if ( unlikely( debug_mode ) )
+	  t_w_old += 50000000;
+	else // use max speed with no dropped packets
+	  t_w_old += 37390;
+	while (rte_rdtsc() < t_w_old)
 	  rte_pause();
       }
     }
+    k += nb_rx;
+    if ( quit_signal_tx )
+      break;
   }
+  usleep(1000);
+  quit_signal_rx = 1;
   printf("\nCore %u exiting tx task.\n", rte_lcore_id());
   return 0;
 }
@@ -368,8 +392,7 @@ print_stats(void)
 	  prev_app_stats.tx.enqdrop_pkts)/t_secs,
 	 ANSI_COLOR_RESET);
 
-  if ( latency_mode )
-    printf( "Average latency = %lf\n", app_stats.latency.sum/app_stats.latency.count );
+  printf( "Average latency = %lf\n", app_stats.latency.sum/app_stats.latency.count );
 
   prev_app_stats.rx.in_pkts = app_stats.rx.in_pkts;
   prev_app_stats.rx.ret_pkts = app_stats.rx.ret_pkts;
@@ -380,13 +403,15 @@ print_stats(void)
   prev_app_stats.tx.enqdrop_pkts = app_stats.tx.enqdrop_pkts;
 }
 
-/* display usage */
+// display usage
 static void
 print_usage(const char *prgname)
 {
-  printf("%s [EAL options] -- -p PORTMASK -m MODE\n"
-	 "  -p PORTMASK: hexadecimal bitmask of ports to configure\n"
-	 "  -m : mode use 'l' for latency mode\n",
+  printf("This program uses an FPGA to classify examples from the CIFAR10 dataset at 122K FPS and 20us latency"
+	 "%s [EAL options] -- -p PORTMASK -m MODE -i NO_IMG\n"
+	 "  -p PORTMASK: hexadecimal bitmask of ports to configure ( default is 1 )\n"
+	 "  -m MODE: mode use 'd' for debug mode, default is normal operation\n"
+	 "  -i NO_IMG: number of images to run before stopping, use 0 for continuous ( default )\n",
 	 prgname);
 }
 
@@ -395,8 +420,7 @@ parse_portmask(const char *portmask)
 {
   char *end = NULL;
   unsigned long pm;
-
-  /* parse hexadecimal string */
+  // parse hexadecimal string
   pm = strtoul(portmask, &end, 16);
   if ((portmask[0] == '\0') || (end == NULL) || (*end != '\0'))
     return -1;
@@ -405,7 +429,7 @@ parse_portmask(const char *portmask)
   return pm;
 }
 
-/* Parse the argument given in the command line of the application */
+// Parse the argument given in the command line of the application
 static int
 parse_args(int argc, char **argv)
 {
@@ -418,24 +442,25 @@ parse_args(int argc, char **argv)
   };
 
   argvopt = argv;
-
-  while ((opt = getopt_long(argc, argvopt, "p:m:s:",
+  while ((opt = getopt_long(argc, argvopt, "p:m:i:",
 			    lgopts, &option_index)) != EOF) {
-
     switch (opt) {
-      /* portmask */
     case 'p':
       enabled_port_mask = parse_portmask(optarg);
-      if (enabled_port_mask == 0) {
+      if (enabled_port_mask != 1) {
 	printf("invalid portmask\n");
 	print_usage(prgname);
 	return -1;
       }
       break;
 
+    case 'i':
+      num_loops = parse_portmask(optarg);
+      break;
+
     case 'm':
-      if ( optarg[0] == 'l' )
-	latency_mode = 1;
+      if ( optarg[0] == 'd' )
+	debug_mode = 1;
       break;
       
     default:
@@ -455,7 +480,6 @@ parse_args(int argc, char **argv)
   return 0;
 }
 
-/* Main function, does initialization and calls the per-lcore functions */
 int
 main(int argc, char *argv[])
 {
@@ -465,10 +489,9 @@ main(int argc, char *argv[])
   uint16_t portid;
   uint16_t nb_ports_available;
 
-  /* catch ctrl-c so we can print on exit */
   signal(SIGINT, int_handler);
 
-  /* init EAL */
+  // Begin initialization and parameter parsing
   int ret = rte_eal_init(argc, argv);
   if (ret < 0)
     rte_exit(EXIT_FAILURE, "Error with EAL initialization\n");
@@ -476,7 +499,6 @@ main(int argc, char *argv[])
   argv += ret;
   freq = rte_get_timer_hz();
 
-  /* parse application arguments (after the EAL ones) */
   ret = parse_args(argc, argv);
   if (ret < 0)
     rte_exit(EXIT_FAILURE, "Invalid parameters\n");
@@ -491,28 +513,23 @@ main(int argc, char *argv[])
   nb_ports = rte_eth_dev_count_avail();
   if (nb_ports == 0)
     rte_exit(EXIT_FAILURE, "Error: no ethernet ports detected\n");
-  if (nb_ports != 1 && (nb_ports & 1))
-    rte_exit(EXIT_FAILURE, "Error: number of ports must be even, except "
-	     "when using a single port\n");
+  if (nb_ports != 1)
+    rte_exit(EXIT_FAILURE, "Error: only for a single port\n");
 
-  mbuf_pool = rte_pktmbuf_pool_create("MBUF_POOL",
+  mbuf_pool = rte_pktmbuf_pool_create("RX_MBUF_POOL",
 				      NUM_MBUFS * nb_ports, MBUF_CACHE_SIZE, 0,
-				      PACKET_SIZE, rte_socket_id());
+				      CLASSIFICATION_PACKET_SIZE, rte_socket_id());
   if (mbuf_pool == NULL)
     rte_exit(EXIT_FAILURE, "Cannot create mbuf pool\n");
   nb_ports_available = nb_ports;
 
-  /* initialize all ports */
   RTE_ETH_FOREACH_DEV(portid) {
-    /* skip ports that are not enabled */
     if ((enabled_port_mask & (1 << portid)) == 0) {
       printf("\nSkipping disabled port %d\n", portid);
       nb_ports_available--;
       continue;
     }
-    /* init port */
     printf("Initializing port %u... done\n", portid);
-
     if (port_init(portid, mbuf_pool) != 0)
       rte_exit(EXIT_FAILURE, "Cannot initialize port %u\n",
 	       portid);
@@ -521,16 +538,14 @@ main(int argc, char *argv[])
     rte_exit(EXIT_FAILURE,
 	     "All available ports are disabled. Please set portmask.\n");
   }
+
+  // Launch the slave processes
   RTE_LCORE_FOREACH_SLAVE(lcore_id) {
     if (worker_id == 1) {
-      printf("Starting rx on lcore_id %d\n",
-	     lcore_id);
-      rte_eal_remote_launch(
-			    (lcore_function_t *)lcore_rx,
-			    NULL, lcore_id);
+      printf("Starting rx on lcore_id %d\n", lcore_id);
+      rte_eal_remote_launch((lcore_function_t *)lcore_rx, NULL, lcore_id);
     } else if (worker_id == 2) {
-      printf("Starting tx  on worker_id %d, lcore_id %d\n",
-	     worker_id, lcore_id);
+      printf("Starting tx on lcore_id %d\n", lcore_id);
       rte_eal_remote_launch((lcore_function_t *)lcore_tx, NULL, lcore_id);
     }
     worker_id++;
@@ -539,5 +554,22 @@ main(int argc, char *argv[])
     if (rte_eal_wait_lcore(lcore_id) < 0)
       return -1;
   }
+  printf( "Comparing files 'labels' and 'preds'\n" );
+  FILE * labels = fopen( "labels", "r" );
+  if ( !labels )
+    rte_exit(EXIT_FAILURE, "Cannot open labels\n" );
+  FILE * preds = fopen( "preds", "r" );
+  if ( !preds )
+    rte_exit(EXIT_FAILURE, "Cannot open preds\n" );
+  int i;
+  float correct_cnt = 0;
+  char l, p;
+  for ( i = 0; i < NUM_IMGS; i++ ) {
+    fread( &p, 1, 1, preds );
+    fread( &l, 1, 1, labels );
+    if ( l == p )
+      correct_cnt += 1;
+  }
+  printf( "accuracy on the first %i images is %f%%\n", NUM_IMGS, ( correct_cnt/NUM_IMGS ) * 100 );
   return 0;
 }
